@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import '../css/JoinRoom.css';
-
 interface GuessifyProps {}
+import { useNavigate } from 'react-router-dom';
 
 const JoinRoom: React.FC<GuessifyProps> = () => {
   const [code, setCode] = useState<string>('');
+  const navigate = useNavigate();
   
   const handleJoin = (e: React.MouseEvent<HTMLButtonElement> | React.KeyboardEvent<HTMLInputElement>): void => {
     e.preventDefault();
     if (code.trim()) {
       console.log('Joining room with code:', code);
+      navigate('/game');
       // Add your join room logic here
     }
   };
