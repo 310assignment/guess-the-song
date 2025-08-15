@@ -24,12 +24,12 @@ const InGamePage: React.FC<GuessifyProps> = () => {
 
   return (
     <div className="in-game-container">
-      <Scoreboard players={players} />
-      <GameHeader
+        <GameHeader
           roundNumber={roundNumber}
           timer={timer}
           inviteCode={inviteCode}
         />
+      <Scoreboard players={players} />
         {/* Placeholder for game content */}
         <div className="game-body">
         </div>
