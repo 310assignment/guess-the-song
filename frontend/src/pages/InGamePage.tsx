@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
+import '../css/InGamePage.css';
 interface GuessifyProps {}
 
 
 const InGamePage: React.FC<GuessifyProps> = () => {
-  return <h1>Welcome to the Game Page!</h1>;
+  return (
+    <div className="guessify-container">
+    </div>
+  );
 };
 
 export default InGamePage;
