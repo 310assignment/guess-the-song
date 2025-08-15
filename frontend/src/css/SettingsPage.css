@@ -1,0 +1,265 @@
+/* SettingsPage.css */
+
+.settings-page {
+  width: 100vw;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.settings-page-background {
+  width: 100%;
+  min-height: 100vh;
+  background-image: url(../assets/Background.png);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Header Styles */
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4rem 3rem 2rem 3rem;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 10;
+}
+
+/* Back Button */
+.joinroom-back-button {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 25px;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  z-index: 10;
+}
+
+.joinroom-back-button:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.back-arrow {
+  margin-right: 0.5rem;
+  font-size: 1.2rem;
+}
+
+.back-text {
+  font-size: 0.9rem;
+}
+
+/* Logo */
+.logo {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.logo-text {
+  font-size: 3rem;
+  font-weight: 800;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  letter-spacing: -0.02em;
+}
+
+/* Game Code Section */
+.game-code-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.invite-text {
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.game-code-button {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 15px;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  gap: 0.5rem;
+}
+
+.game-code-button:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.code-text {
+  letter-spacing: 0.1em;
+}
+
+.copy-icon {
+  font-size: 0.9rem;
+}
+
+/* Settings Component Container */
+.settings-container {
+  background: rgba(30, 25, 80, 0.9);
+  border-radius: 20px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 600px;
+  margin: 2rem 0;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-sizing: border-box;
+}
+
+/* Create Room Button Section */
+.create-room-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 0 3rem 0;
+  width: 100%;
+}
+
+.create-room-button {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  padding: 1rem 3rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
+  backdrop-filter: blur(10px);
+  text-transform: uppercase;
+  min-width: 200px;
+}
+
+.create-room-button:hover {
+  background: linear-gradient(135deg, #45a049, #3d8b40);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(76, 175, 80, 0.4);
+}
+
+.create-room-button:active {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .settings-header {
+    padding: 3rem 2rem 1.5rem 2rem;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .logo-text {
+    font-size: 2.2rem;
+  }
+
+  .back-button {
+    padding: 0.6rem 1.2rem;
+    font-size: 1rem;
+  }
+
+  .invite-text {
+    font-size: 0.9rem;
+  }
+
+  .game-code-button {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .settings-container {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+
+  .create-room-button {
+    font-size: 1.1rem;
+    padding: 0.9rem 2.5rem;
+    min-width: 180px;
+  }
+}
+
+@media (max-width: 480px) {
+  .settings-header {
+    padding: 2rem 1.5rem 1rem 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .logo {
+    position: static;
+    transform: none;
+    order: -1;
+    width: 100%;
+    text-align: center;
+  }
+
+  .logo-text {
+    font-size: 2rem;
+  }
+
+  .back-button {
+    flex: 1;
+    justify-content: center;
+    min-width: 80px;
+  }
+
+  .game-code-section {
+    flex: 1;
+    justify-content: flex-end;
+  }
+
+  .invite-text {
+    display: none;
+  }
+
+  .settings-container {
+    margin: 1rem;
+    padding: 1rem;
+    border-radius: 15px;
+  }
+
+  .create-room-button {
+    font-size: 1rem;
+    padding: 0.8rem 2rem;
+    min-width: 160px;
+    width: 100%;
+    max-width: 250px;
+  }
+}
