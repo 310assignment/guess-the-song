@@ -13,15 +13,17 @@ body, html {
   height: 100%;
 }
 
-.guessify-container {
+.in-game-container {
   width: 100vw;
   min-height: 100vh;
-  /* background: linear-gradient(135deg, #7c3aed 0%, #6b46c1 50%, #4338ca 100%); */
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 1rem;
-  position: absolute;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 0;
+  /* Remove or change this line /
+  / position: absolute; */
+  position: relative;
   top: 0;
   left: 0;
   background-image: url(../assets/Background.png);
