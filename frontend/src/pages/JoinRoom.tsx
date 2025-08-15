@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
 import '../css/JoinRoom.css';
-interface GuessifyProps {}
-import { useNavigate } from 'react-router-dom';
+
+import { useNavigate, useLocation } from 'react-router-dom';
+
+interface GuessifyProps { }
 
 const JoinRoom: React.FC<GuessifyProps> = () => {
   const [code, setCode] = useState<string>('');
+
   const navigate = useNavigate();
-  
+  const location = useLocation();
+  const playerName = location.state?.playerName;
+
+
   const handleJoin = (e: React.MouseEvent<HTMLButtonElement> | React.KeyboardEvent<HTMLInputElement>): void => {
     e.preventDefault();
     if (code.trim()) {
@@ -18,8 +24,16 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
 
   const handleCreateRoom = (e: React.MouseEvent<HTMLButtonElement>): void => {
     e.preventDefault();
+
+    //Passes player name to SettingsPage
+    navigate('/create_room');
+
     console.log('Creating new room');
     // Add your create room logic here
+  };
+
+  const handleBackClick = (): void => {
+    navigate('/');
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -34,12 +48,21 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
 
   return (
     <div className="guessify-container">
+      {/* Back Button */}
+      <button
+        onClick={handleBackClick}
+        className="joinroom-back-button"
+      >
+        <span className="joinroom-back-arrow">&lt;&lt;</span>
+        <span className="joinroom-back-text">Back</span>
+      </button>
+
       <div className="guessify-content">
         {/* Logo/Title */}
         <h1 className="guessify-title">
           Guessify
         </h1>
-        
+
         {/* Input Section */}
         <div className="guessify-input-section">
           <input
@@ -63,7 +86,7 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
         <div className="guessify-divider">
           <span className="guessify-or">OR</span>
         </div>
-        
+
         {/* Create Room Button */}
         <button
           onClick={handleCreateRoom}

@@ -10,10 +10,9 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<EnterName />} />
-        <Route path="/join" element={<JoinRoom />} />
         <Route path="/game" element={<InGamePage />} />
-        <Route path="/" element={<SettingsPage />} />
-
+        <Route path="/lobby" element={<JoinRoom />} />
+        <Route path="/create_room" element={<SettingsPage />} />
       </Routes>
     </Router>
   )
