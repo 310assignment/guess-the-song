@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import '../css/InGamePage.css';
 import Scoreboard from "../components/Scoreboard";
-interface GuessifyProps {}
+import GameHeader from '../components/GameHeader';
 
+interface GuessifyProps {}
 
 const InGamePage: React.FC<GuessifyProps> = () => {
 
@@ -16,10 +17,23 @@ const InGamePage: React.FC<GuessifyProps> = () => {
     { name: "Player Name 7", points: 0 },
   ];
 
+  // Example state for timer and round
+  const [roundNumber] = useState('1/10');
+  const [timer] = useState('30');
+  const [inviteCode] = useState('ABC123');
+
   return (
     <div className="in-game-container">
       <Scoreboard players={players} />
-    </div>
+      <GameHeader
+          roundNumber={roundNumber}
+          timer={timer}
+          inviteCode={inviteCode}
+        />
+        {/* Placeholder for game content */}
+        <div className="game-body">
+        </div>
+      </div>
   );
 };
 
