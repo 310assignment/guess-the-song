@@ -13,7 +13,7 @@ const EnterName: React.FC<GuessifyProps> = () => {
       console.log('Starting game with name:', name);
       // Add your game logic here
 
-      navigate('/join', { state: { playerName: name } });
+      navigate('/lobby', { state: { playerName: name } });
     }
   };
 

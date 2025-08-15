@@ -1,25 +1,9 @@
 /* Settings.css */
-
 body, html {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
-}
-
-.settings-container {
-  background: rgba(30, 25, 80, 0.9);
-  border-radius: 20px;
-  padding: 2rem;
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
 }
 
 .setting-row {
@@ -95,7 +79,7 @@ body, html {
 @media (max-width: 768px) {
   .settings-container {
     padding: 1.5rem;
-    margin: 1rem;
+    margin: 1rem 0;
   }
   
   .setting-row {
