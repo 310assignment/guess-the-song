@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
 import '../css/EnterName.css';
 interface GuessifyProps {}
+import { useNavigate } from 'react-router-dom';
 
-const Guessify: React.FC<GuessifyProps> = () => {
+const EnterName: React.FC<GuessifyProps> = () => {
   const [name, setName] = useState<string>('');
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.MouseEvent<HTMLButtonElement> | React.KeyboardEvent<HTMLInputElement>): void => {
     e.preventDefault();
     if (name.trim()) {
       console.log('Starting game with name:', name);
       // Add your game logic here
+
+      navigate('/join', { state: { playerName: name } });
     }
   };
 
@@ -53,4 +57,4 @@ const Guessify: React.FC<GuessifyProps> = () => {
   );
 };
 
-export default Guessify;
+export default EnterName;

@@ -3,9 +3,9 @@ import '../css/JoinRoom.css';
 
 interface GuessifyProps {}
 
-const Guessify: React.FC<GuessifyProps> = () => {
+const JoinRoom: React.FC<GuessifyProps> = () => {
   const [code, setCode] = useState<string>('');
-
+  
   const handleJoin = (e: React.MouseEvent<HTMLButtonElement> | React.KeyboardEvent<HTMLInputElement>): void => {
     e.preventDefault();
     if (code.trim()) {
@@ -74,4 +74,4 @@ const Guessify: React.FC<GuessifyProps> = () => {
   );
 };
 
-export default Guessify;
+export default JoinRoom;
