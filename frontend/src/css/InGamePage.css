@@ -21,8 +21,8 @@ body, html {
   align-items: stretch;
   justify-content: flex-start;
   padding: 0;
-  /* Remove or change this line /
-  / position: absolute; */
+  /* Remove or change this line */
+  /* position: absolute; */
   position: relative;
   top: 0;
   left: 0;
