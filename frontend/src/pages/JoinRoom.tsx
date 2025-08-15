@@ -8,7 +8,6 @@ interface GuessifyProps { }
 const JoinRoom: React.FC<GuessifyProps> = () => {
   const [code, setCode] = useState<string>('');
 
-
   const navigate = useNavigate();
   const location = useLocation();
   const playerName = location.state?.playerName;
