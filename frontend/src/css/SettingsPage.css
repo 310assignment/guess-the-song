@@ -1,0 +1,18 @@
+/* SettingsPage.css */
+
+.settings-page {
+  width: 100vw;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.settings-page-background {
+  width: 100%;
+  height: 100vh;
+  background-image: url(../assets/Background.png);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+}
