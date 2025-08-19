@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import '../css/Settings.css';
 
 import PlayersIcon from '../assets/setting-icons/Players.png';
@@ -8,19 +7,26 @@ import RoundIcon from '../assets/setting-icons/Round.png';
 import TimerIcon from '../assets/setting-icons/Timer.png';
 import HintIcon from '../assets/setting-icons/Hints.png';
 
-interface SettingsProps {}
+interface SettingsProps {
+  settings: {
+    players: string;
+    guessType: string;
+    gameMode: string;
+    rounds: string;
+    guessTime: string;
+    hints: string;
+  };
+  setSettings: React.Dispatch<React.SetStateAction<{
+    players: string;
+    guessType: string;
+    gameMode: string;
+    rounds: string;
+    guessTime: string;
+    hints: string;
+  }>>;
+}
 
-const Settings: React.FC<SettingsProps> = () => {
-  
-  const [settings, setSettings] = useState({
-    players: 'Single Player',
-    guessType: 'Guess Song',
-    gameMode: 'Listening (1 sec)',
-    rounds: '10 Rounds',
-    guessTime: '15 sec',
-    hints: '3'
-  });
-
+const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
   const handleSettingChange = (setting: string, value: string): void => {
     setSettings(prev => ({
       ...prev,
