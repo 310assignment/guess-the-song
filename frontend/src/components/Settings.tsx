@@ -13,7 +13,7 @@ interface SettingsProps {}
 const Settings: React.FC<SettingsProps> = () => {
   
   const [settings, setSettings] = useState({
-    players: '7 Players',
+    players: 'Single Player',
     guessType: 'Guess Song',
     gameMode: 'Listening (1 sec)',
     rounds: '10 Rounds',
@@ -29,7 +29,7 @@ const Settings: React.FC<SettingsProps> = () => {
     console.log(`${setting} changed to:`, value);
   };
 
-  const playerOptions = ['2 Players', '3 Players', '4 Players', '5 Players', '6 Players', '7 Players', '8 Players'];
+  const playerOptions = ['Single PLayer','2 Players', '3 Players', '4 Players', '5 Players', '6 Players', '7 Players', '8 Players'];
   const guessTypeOptions = ['Guess Song', 'Guess Artist'];
   const gameModeOptions = ['Listening (1 sec)','Listening (3 sec)', 'Listening (5 sec)', 'Listening (10 sec)', 'Song Lyrics', 'Mixed Songs', 'Random'];
   const roundOptions = ['5 Rounds', '10 Rounds', '15 Rounds', '20 Rounds'];
