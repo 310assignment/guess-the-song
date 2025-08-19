@@ -1,0 +1,67 @@
+.leaderboard-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: rgba(30, 0, 60, 0.9);
+  padding: 40px;
+  border-radius: 16px;
+  width: 60%;
+  max-width: 900px;  
+  margin: auto;
+  color: black;
+}
+
+.leaderboard-title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.leaderboard-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px; 
+}
+
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 1fr 120px; 
+  align-items: center;
+  background-color: rgba(255,255,255,0.7);
+  padding: 16px 20px;
+  border-radius: 12px;
+  gap: 20px;
+}
+
+leaderboard-rank-icon {
+  display: flex;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.leaderboard-rank-icon img {
+  width: 28px;
+  height: 28px;
+}
+
+.leaderboard-player-name {
+  font-size: 1.4rem;
+  font-weight: bold;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.score-detail {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: black;
+}
+
+.leaderboard-player-points {
+  font-size: 1.4rem;
+  font-weight: bold;
+  text-align: right;
+}
