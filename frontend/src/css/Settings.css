@@ -64,6 +64,7 @@ body, html {
   background-position: right 0.75rem center;
   background-size: 1rem;
   padding-right: 2.5rem;
+  min-width: 12rem;
 }
 
 .setting-dropdown:hover {
