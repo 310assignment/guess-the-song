@@ -1,23 +1,28 @@
-import React, { useState } from 'react';
-import '../css/JoinRoom.css';
+import React, { useState } from "react";
+import "../css/JoinRoom.css";
+import SongService from "../services/songServices";
 
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from "react-router-dom";
 
-interface GuessifyProps { }
+interface GuessifyProps {}
 
 const JoinRoom: React.FC<GuessifyProps> = () => {
-  const [code, setCode] = useState<string>('');
+  const [code, setCode] = useState<string>("");
 
   const navigate = useNavigate();
   const location = useLocation();
   const playerName = location.state?.playerName;
+  const songService = new SongService();
 
-
-  const handleJoin = (e: React.MouseEvent<HTMLButtonElement> | React.KeyboardEvent<HTMLInputElement>): void => {
+  const handleJoin = (
+    e:
+      | React.MouseEvent<HTMLButtonElement>
+      | React.KeyboardEvent<HTMLInputElement>
+  ): void => {
     e.preventDefault();
     if (code.trim()) {
-      console.log('Joining room with code:', code);
-      navigate('/game');
+      console.log("Joining room with code:", code);
+      navigate("/game");
       // Add your join room logic here
     }
   };
@@ -25,15 +30,19 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
   const handleCreateRoom = (e: React.MouseEvent<HTMLButtonElement>): void => {
     e.preventDefault();
 
-    //Passes player name to SettingsPage
-    navigate('/create_room');
+    const cachedSongs = songService.fetchRandomKpop().then((songs) => {
+      console.log("Fetched songs", songs);
+    });
 
-    console.log('Creating new room');
+    //Passes player name to SettingsPage
+    navigate("/create_room");
+
+    console.log("Creating new room");
     // Add your create room logic here
   };
 
   const handleBackClick = (): void => {
-    navigate('/');
+    navigate("/");
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -41,7 +50,7 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>): void => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleJoin(e);
     }
   };
@@ -49,19 +58,14 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
   return (
     <div className="guessify-container">
       {/* Back Button */}
-      <button
-        onClick={handleBackClick}
-        className="joinroom-back-button"
-      >
+      <button onClick={handleBackClick} className="joinroom-back-button">
         <span className="joinroom-back-arrow">&lt;&lt;</span>
         <span className="joinroom-back-text">Back</span>
       </button>
 
       <div className="guessify-content">
         {/* Logo/Title */}
-        <h1 className="guessify-title">
-          Guessify
-        </h1>
+        <h1 className="guessify-title">Guessify</h1>
 
         {/* Input Section */}
         <div className="guessify-input-section">
@@ -74,10 +78,7 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
             className="guessify-input"
             maxLength={8}
           />
-          <button
-            onClick={handleJoin}
-            className="guessify-join-button"
-          >
+          <button onClick={handleJoin} className="guessify-join-button">
             JOIN
           </button>
         </div>
@@ -88,10 +89,7 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
         </div>
 
         {/* Create Room Button */}
-        <button
-          onClick={handleCreateRoom}
-          className="guessify-create-button"
-        >
+        <button onClick={handleCreateRoom} className="guessify-create-button">
           CREATE ROOM
         </button>
       </div>
