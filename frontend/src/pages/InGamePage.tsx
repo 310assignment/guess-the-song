@@ -31,6 +31,7 @@ const InGamePage: React.FC<GuessifyProps> = () => {
   const [currentRound, setCurrentRound] = useState(1);
   const [timeLeft, setTimeLeft] = useState(roundTime);
   const [isRoundActive, setIsRoundActive] = useState(true);
+  const [isIntermission, setIsIntermission] = useState(false);
   const [inviteCode] = useState('ABC123');
 
 
@@ -41,7 +42,7 @@ const InGamePage: React.FC<GuessifyProps> = () => {
     }, []);
 
   useEffect(() => {
-    if (!isRoundActive) return;
+    if (!isRoundActive || isIntermission) return;
 
     if (timeLeft <= 0) {
       handleRoundEnd();
@@ -50,13 +51,21 @@ const InGamePage: React.FC<GuessifyProps> = () => {
 
     const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
     return () => clearTimeout(timer);
-  }, [timeLeft, isRoundActive]);
+  }, [timeLeft, isRoundActive, isIntermission]);
 
   // Handle end of round
   function handleRoundEnd() {
     if (currentRound < totalRounds) {
-      setCurrentRound(currentRound + 1);
-      setTimeLeft(roundTime);
+      setIsRoundActive(false);
+      setIsIntermission(true);
+
+      // Wait 5 seconds before starting next round
+      setTimeout(() => {
+        setCurrentRound(r => r + 1);
+        setTimeLeft(roundTime); // reset full round timer
+        setIsRoundActive(true);
+        setIsIntermission(false);
+      }, 5000);
     } else {
       alert("Game over!"); //Change this part to score
       setIsRoundActive(false);
