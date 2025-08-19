@@ -15,7 +15,7 @@ const Settings: React.FC<SettingsProps> = () => {
   const [settings, setSettings] = useState({
     players: '7 Players',
     guessType: 'Guess Song',
-    gameMode: 'Listening (3 sec)',
+    gameMode: 'Listening (1 sec)',
     rounds: '10 Rounds',
     guessTime: '15 sec',
     hints: '3'
@@ -31,7 +31,7 @@ const Settings: React.FC<SettingsProps> = () => {
 
   const playerOptions = ['2 Players', '3 Players', '4 Players', '5 Players', '6 Players', '7 Players', '8 Players'];
   const guessTypeOptions = ['Guess Song', 'Guess Artist'];
-  const gameModeOptions = ['Listening (3 sec)', 'Listening (5 sec)', 'Listening (10 sec)', 'Multiple Choice'];
+  const gameModeOptions = ['Listening (1 sec)','Listening (3 sec)', 'Listening (5 sec)', 'Listening (10 sec)', 'Song Lyrics', 'Mixed Songs', 'Random'];
   const roundOptions = ['5 Rounds', '10 Rounds', '15 Rounds', '20 Rounds'];
   const timeOptions = ['10 sec', '15 sec', '20 sec', '30 sec'];
   const hintOptions = ['0', '1', '2', '3', '4', '5'];
