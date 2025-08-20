@@ -40,10 +40,18 @@
    git clone <repository-url>
    cd <repository-folder>
 
-2. **Install Dependencies** 
+2. **Redirect to backend folder**
+    cd backend
+    follow steps 4 - 5
+
+3. **Redirect to frontend folder**
+    cd frontend
+    follow steps 4 - 5
+
+4. **Install Dependencies** 
     npm install
 
-3. **Run the application** 
+5. **Run the application** 
     npm run dev
 
 
