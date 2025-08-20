@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { songService } from '../services/songServices';
+import '../css/AudioControls.css';
 
 interface AudioControlsProps {
   className?: string;
