@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
-import '../css/MultipleChoiceMode.css';
+import React, { useState } from "react";
+import "../css/MultipleChoiceMode.css";
 import Scoreboard from "../components/Scoreboard";
-import GameHeader from '../components/GameHeader';
-import ChooseSong from '../components/MultipleChoice';
+import GameHeader from "../components/GameHeader";
+import ChooseSong from "../components/MultipleChoice";
 
 const MultipleChoiceMode: React.FC = () => {
-
   const players = [
     { name: "Player Name 1", points: 0 },
     { name: "Player Name 2", points: 0 },
@@ -16,9 +15,9 @@ const MultipleChoiceMode: React.FC = () => {
     { name: "Player Name 7", points: 0 },
   ];
 
-  const [roundNumber] = useState('1/10');
-  const [timer] = useState('30');
-  const [inviteCode] = useState('ABC123');
+  const [roundNumber] = useState("1/10");
+  const [timer] = useState("30");
+  const [inviteCode] = useState("ABC123");
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 

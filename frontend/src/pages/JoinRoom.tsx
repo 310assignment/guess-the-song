@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "../css/JoinRoom.css";
-import SongService from "../services/songServices";
+import { songService } from "../services/songServices";
 
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -12,7 +12,6 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const playerName = location.state?.playerName;
-  const songService = new SongService();
 
   const handleJoin = (
     e:

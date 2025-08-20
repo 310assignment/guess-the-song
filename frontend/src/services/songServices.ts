@@ -14,20 +14,23 @@ type SongDTO = {
 
 export default class SongService {
   public baseUrl: string;
-  public cachedSongs: Song[] = []; // optional in-frontend cache
+  public cachedSongs: Song[] = [];
+
+  private currentIndex = 0;
+  private currentAudio: HTMLAudioElement | null = null;
+  private multiAudios: HTMLAudioElement[] = []; // NEW: for multiple songs
+  private onTrackChange?: (song: Song, index: number) => void;
 
   constructor() {
     this.baseUrl = `${API_BASE}/api/kpop`;
-    this.cachedSongs = []; // optional in-frontend cache
+    this.cachedSongs = [];
   }
 
-  // 1. Fetch random Kpop songs
+  // --- API calls ---
   async fetchRandomKpop(): Promise<Song[]> {
     const res = await axios.get(this.baseUrl);
-
     const data = res.data;
 
-    // Transform backend tracks into Song objects
     this.cachedSongs = ((data.tracks ?? []) as SongDTO[]).map(
       (track: SongDTO) => ({
         id: String(track.id),
@@ -44,12 +47,10 @@ export default class SongService {
     return this.cachedSongs;
   }
 
-  // 2. Refresh cache (forces backend to re-shuffle songs)
   async refreshKpop() {
     const res = await axios.post(`${this.baseUrl}/refresh`);
     const data = res.data;
 
-    // Transform backend tracks into Song objects
     this.cachedSongs = ((data.tracks ?? []) as SongDTO[]).map(
       (track: SongDTO) => ({
         id: String(track.id),
@@ -66,8 +67,80 @@ export default class SongService {
     return this.cachedSongs;
   }
 
-  // 3. Getter for already cached songs in frontend
   getCachedSongs() {
     return this.cachedSongs;
   }
+
+  // --- Single-song controls ---
+  playSong(index: number = this.currentIndex) {
+    if (!this.cachedSongs.length) return;
+    this.stopSong();
+
+    this.currentIndex = index;
+    const song = this.cachedSongs[this.currentIndex];
+    if (!song.previewUrl) {
+      console.warn("No preview available for:", song.title);
+      return;
+    }
+
+    this.currentAudio = new Audio(song.previewUrl);
+    this.currentAudio.volume = 0.6;
+    this.currentAudio
+      .play()
+      .then(() => {
+        if (this.onTrackChange) this.onTrackChange(song, this.currentIndex);
+      })
+      .catch((err) => console.error("Playback failed:", err));
+  }
+
+  playNextSong() {
+    if (!this.cachedSongs.length) return;
+    this.currentIndex = (this.currentIndex + 1) % this.cachedSongs.length;
+    this.playSong(this.currentIndex);
+  }
+
+  pauseSong() {
+    this.currentAudio?.pause();
+  }
+
+  stopSong() {
+    if (this.currentAudio) {
+      this.currentAudio.pause();
+      this.currentAudio.currentTime = 0;
+      this.currentAudio = null;
+    }
+    // stop any multi-song playback too
+    this.stopMultiSong();
+  }
+
+  // --- Multi-song controls (for MultipleChoice mode) ---
+  playMultiSong(songs: Song[]) {
+    this.stopMultiSong(); // clear old playback
+
+    this.multiAudios = songs
+      .filter((s) => s.previewUrl)
+      .map((s) => {
+        const audio = new Audio(s.previewUrl!);
+        audio.volume = 0.6;
+        audio
+          .play()
+          .catch((err) => console.error("Multi-song play failed:", err));
+        return audio;
+      });
+  }
+
+  stopMultiSong() {
+    this.multiAudios.forEach((audio) => {
+      audio.pause();
+      audio.currentTime = 0;
+    });
+    this.multiAudios = [];
+  }
+
+  // --- Track change subscription ---
+  setOnTrackChange(cb: (song: Song, index: number) => void) {
+    this.onTrackChange = cb;
+  }
 }
+
+export const songService = new SongService();

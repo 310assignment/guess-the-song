@@ -1,7 +1,7 @@
 // components/ChooseSong.tsx
-import React from 'react';
-import '../css/MultipleChoice.css';
-import songIcon from '../assets/song-icon.png';
+import React from "react";
+import "../css/MultipleChoice.css";
+import songIcon from "../assets/song-icon.png";
 
 interface MultipleChoiceProps {
   options: string[];
@@ -9,7 +9,11 @@ interface MultipleChoiceProps {
   selectedIndex: number | null;
 }
 
-const MultipleChoice: React.FC<MultipleChoiceProps> = ({ options, onSelect, selectedIndex }) => {
+const MultipleChoice: React.FC<MultipleChoiceProps> = ({
+  options,
+  onSelect,
+  selectedIndex,
+}) => {
   return (
     <div className="choose-song-container">
       <h2>SONG:</h2>
@@ -20,7 +24,9 @@ const MultipleChoice: React.FC<MultipleChoiceProps> = ({ options, onSelect, sele
         {options.map((option, index) => (
           <button
             key={index}
-            className={`answer-btn ${selectedIndex === index ? 'selected' : ''}`}
+            className={`answer-btn ${
+              selectedIndex === index ? "selected" : ""
+            }`}
             onClick={() => onSelect(index)}
           >
             {`${index + 1}. ${option}`}
