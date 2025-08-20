@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "../css/InGamePage.css";
 import Scoreboard from "../components/Scoreboard";
 import GameHeader from "../components/GameHeader";
@@ -8,7 +8,7 @@ import { useLocation } from "react-router-dom";
 import { songService } from "../services/songServices";
 import type { Song } from "../types/song";
 
-interface GuessifyProps {}
+interface GuessifyProps { }
 
 const InGamePage: React.FC<GuessifyProps> = () => {
   const players = [
@@ -31,7 +31,7 @@ const InGamePage: React.FC<GuessifyProps> = () => {
   // Round Logic
   const totalRounds = parseInt(settings?.rounds) || 10;
   const roundTime = parseInt(settings?.guessTime) || 30;
-  const isSingleSong = settings?.gameMode?.startsWith("Listening (");
+  const isSingleSong = settings?.gameMode === "Single Song";
 
   const [currentRound, setCurrentRound] = useState(1);
   const [timeLeft, setTimeLeft] = useState(roundTime);
@@ -43,6 +43,9 @@ const InGamePage: React.FC<GuessifyProps> = () => {
   // For multiple-choice mode
   const [options, setOptions] = useState<string[]>([]);
   const [correctAnswer, setCorrectAnswer] = useState<string>("");
+
+  // Ref to prevent multiple simultaneous round starts
+  const isRoundStarting = useRef(false);
 
   // --- helpers ---
   const getRandomSongs = (num: number): Song[] => {
@@ -87,28 +90,64 @@ const InGamePage: React.FC<GuessifyProps> = () => {
     }
   };
 
+  // --- clean-up ---
+  useEffect(() => {
+    console.log("🚀 InGamePage mounted");
+    return () => {
+      console.log("🔥 InGamePage unmounting - cleaning up audio");
+      songService.stopSong();
+      isRoundStarting.current = false;
+    };
+  }, []); // Empty dependency array means this runs once on mount and cleanup on unmount
+
   // --- round lifecycle ---
   useEffect(() => {
+    // Prevent multiple simultaneous round starts
+    if (isRoundStarting.current) {
+      console.log("⚠️ Round start already in progress, skipping...");
+      return;
+    }
+
+    console.log(`🎯 Starting Round ${currentRound}/${totalRounds}`);
+    isRoundStarting.current = true;
+
+    // Stop any existing audio before starting new round
+    songService.stopSong();
+
     setIsRoundActive(true);
     setTimeLeft(roundTime);
 
     if (isSingleSong) {
-      // For round 1, start current track; from round 2+, advance to next track
+      console.log("🎵 Single song mode - Round", currentRound);
       if (currentRound === 1) {
         songService.playSong();
       } else {
         songService.playNextSong();
       }
     } else {
-      // play 3 at once
+      console.log("🎶 Multi-song mode - Round", currentRound);
       const chosen = getRandomSongs(3);
+
+      console.log("=== ROUND", currentRound, "MULTI-SONG DEBUG ===");
+      console.log("Selected songs:", chosen.map(s => s.title));
+
+      // Start playing the songs
       songService.playMultiSong(chosen);
 
       const opts = generateOptions(chosen);
       setOptions(opts);
       setCorrectAnswer(chosen.map((s) => s.title).join(", "));
+
+      console.log("Correct answer:", chosen.map((s) => s.title).join(", "));
+      console.log("=====================================");
     }
-  }, [currentRound]); // runs at start and every new round
+
+    // Reset the flag after a short delay
+    setTimeout(() => {
+      isRoundStarting.current = false;
+    }, 1000);
+
+  }, [currentRound, isSingleSong, roundTime]); // Include all dependencies
 
   useEffect(() => {
     if (!isRoundActive || isIntermission) return;
@@ -123,12 +162,19 @@ const InGamePage: React.FC<GuessifyProps> = () => {
   }, [timeLeft, isRoundActive, isIntermission]);
 
   function handleRoundEnd() {
+    console.log("⏰ Round ended - stopping all audio");
+
+    // ALWAYS stop all audio first (both single and multi)
+    songService.stopSong();
+
     if (currentRound < totalRounds) {
       setIsRoundActive(false);
       setIsIntermission(true);
-      songService.stopSong(); // stops both single + multi
+
+      console.log("🔄 Starting intermission...");
 
       setTimeout(() => {
+        console.log("🎯 Moving to next round");
         setCurrentRound((r) => r + 1); // ⬅️ triggers next song via effect above
         setTimeLeft(roundTime);
         setIsRoundActive(true);
@@ -136,7 +182,7 @@ const InGamePage: React.FC<GuessifyProps> = () => {
         setSelectedIndex(null); // Reset selected answer for new round
       }, 5000);
     } else {
-      songService.stopSong();
+      console.log("🎉 Game over - final cleanup");
       alert("Game over!");
       setIsRoundActive(false);
       setSelectedIndex(null); // Also reset at game end

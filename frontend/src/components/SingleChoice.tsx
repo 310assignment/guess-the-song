@@ -9,12 +9,35 @@ const GuessSong: React.FC = () => {
   const [guess, setGuess] = useState<string>("");
 
   // Show blanks for the title
+  // Enhanced blanks function that handles punctuation and featuring
   const createBlanks = (text: string): string => {
-    return text
-      .split(" ")
-      .map((word) => "_".repeat(word.length))
-      .join("   ");
+    // Remove ALL content in brackets/parentheses (including nested ones)
+    let mainTitle = text;
+
+    // Remove parentheses and their content:
+    mainTitle = mainTitle.replace(/\s*\([^)]*\)/g, '');
+
+    // Handle standalone featuring without brackets
+    mainTitle = mainTitle
+      .replace(/\s*feat\.?\s+.*/gi, '')       // Remove feat. Artist (rest of string)
+      .replace(/\s*ft\.?\s+.*/gi, '')         // Remove ft. Artist (rest of string)
+      .replace(/\s*featuring\s+.*/gi, '')     // Remove featuring Artist (rest of string)
+      .trim();
+
+    // Strip all punctuation except spaces and convert to blanks
+    const cleanTitle = mainTitle
+      .replace(/[^\w\s]/g, '') // Remove all punctuation except word chars and spaces
+      .replace(/\s+/g, ' ')    // Normalize multiple spaces to single space
+      .trim();
+
+    // Create blanks for each word
+    return cleanTitle
+      .split(' ')
+      .filter(word => word.length > 0) // Remove empty strings
+      .map(word => '_'.repeat(word.length))
+      .join('   '); // 3 spaces between word blanks
   };
+
 
   useEffect(() => {
     // Set initial song if one is already playing

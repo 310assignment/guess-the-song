@@ -2,29 +2,14 @@ import React, { useState } from "react";
 import "../css/JoinRoom.css";
 import { songService } from "../services/songServices";
 
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-interface GuessifyProps {}
+interface GuessifyProps { }
 
 const JoinRoom: React.FC<GuessifyProps> = () => {
   const [code, setCode] = useState<string>("");
 
   const navigate = useNavigate();
-  const location = useLocation();
-  const playerName = location.state?.playerName;
-
-  const handleJoin = (
-    e:
-      | React.MouseEvent<HTMLButtonElement>
-      | React.KeyboardEvent<HTMLInputElement>
-  ): void => {
-    e.preventDefault();
-    if (code.trim()) {
-      console.log("Joining room with code:", code);
-      navigate("/game");
-      // Add your join room logic here
-    }
-  };
 
   const handleCreateRoom = (e: React.MouseEvent<HTMLButtonElement>): void => {
     e.preventDefault();
@@ -48,11 +33,6 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
     setCode(e.target.value.toUpperCase());
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>): void => {
-    if (e.key === "Enter") {
-      handleJoin(e);
-    }
-  };
 
   return (
     <div className="guessify-container">
@@ -73,11 +53,10 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
             placeholder="ENTER CODE"
             value={code}
             onChange={handleInputChange}
-            onKeyDown={handleKeyPress}
             className="guessify-input"
             maxLength={8}
           />
-          <button onClick={handleJoin} className="guessify-join-button">
+          <button className="guessify-join-button">
             JOIN
           </button>
         </div>
