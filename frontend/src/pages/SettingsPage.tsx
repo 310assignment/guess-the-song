@@ -1,10 +1,20 @@
 import Settings from '../components/Settings';
 import '../css/SettingsPage.css';
-import { useNavigate , useLocation } from 'react-router-dom';
+import { useNavigate} from 'react-router-dom';
+import { useState } from 'react';
 
 const SettingsPage = () => {
 
   const navigate = useNavigate();
+
+  const [settings, setSettings] = useState({
+    players: 'Single Player',
+    guessType: 'Guess Song',
+    gameMode: 'Listening (1 sec)',
+    rounds: '10 Rounds',
+    guessTime: '15 sec',
+    hints: '3'
+  });
 
   const handleBackClick = () => {
     
@@ -15,6 +25,11 @@ const SettingsPage = () => {
   const handleGameCodeClick = () => {
     // Add your game code logic here (copy to clipboard, etc.)
     console.log('Game code clicked');
+  };
+
+  const handleCreateRoom = () => {
+    // Navigate to InGamePage and pass the settings state
+    navigate('/game', { state: settings });
   };
 
   return (
@@ -41,11 +56,11 @@ const SettingsPage = () => {
         </div>
 
         {/* Settings Component */}
-        <Settings />
+        <Settings settings={settings} setSettings={setSettings} />
         
         {/* Create Room Button */}
         <div className="create-room-section">
-          <button className="create-room-button" onClick={() => console.log('Create room clicked')}>
+          <button className="create-room-button" onClick={handleCreateRoom}>
             Create Room
           </button>
         </div>

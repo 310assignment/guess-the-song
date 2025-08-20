@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../css/InGamePage.css';
 import Scoreboard from "../components/Scoreboard";
 import GameHeader from '../components/GameHeader';
@@ -20,9 +20,6 @@ const InGamePage: React.FC<GuessifyProps> = () => {
     { name: "Player Name 7", points: 0 },
   ];
 
-  // Example state for timer and round
-  const [roundNumber] = useState('1/10');
-  const [timer] = useState('30');
   const location = useLocation();
   const settings = location.state as {
     rounds: string;
@@ -54,24 +51,11 @@ const InGamePage: React.FC<GuessifyProps> = () => {
     // Add logic here to check answer / update score
   };
 
-  return (
-    <div className="in-game-container">
-        <GameHeader
-          roundNumber={roundNumber}
-          timer={timer}
-          inviteCode={inviteCode}
-        />
-      <Scoreboard players={players} />
-        {/* Placeholder for game content */}
-        <div className="game-body">
-        </div>
-
   useEffect(() => {
     // Start the first round automatically
     setIsRoundActive(true);
     setTimeLeft(roundTime);
   }, []);
-
 
   useEffect(() => {
     if (!isRoundActive || isIntermission) return;
@@ -103,7 +87,6 @@ const InGamePage: React.FC<GuessifyProps> = () => {
       setIsRoundActive(false);
     }
   }
-
 
   return (
     <div className="game-2-container">
