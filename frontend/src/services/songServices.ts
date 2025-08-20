@@ -21,6 +21,17 @@ export default class SongService {
   private multiAudios: HTMLAudioElement[] = []; // NEW: for multiple songs
   private onTrackChange?: (song: Song, index: number) => void;
 
+  private currentVolume: number = 0.6;
+  private isMuted: boolean = false;
+
+  get currentAudioElement() {
+    return this.currentAudio;
+  }
+
+  get multiAudioElements() {
+    return this.multiAudios;
+  }
+
   constructor() {
     this.baseUrl = `${API_BASE}/api/kpop`;
     this.cachedSongs = [];
