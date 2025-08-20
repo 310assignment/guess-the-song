@@ -1,35 +1,35 @@
-import Settings from '../components/Settings';
-import '../css/SettingsPage.css';
-import { useNavigate} from 'react-router-dom';
-import { useState } from 'react';
+import Settings from "../components/Settings";
+import "../css/SettingsPage.css";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { songService } from "../services/songServices";
 
 const SettingsPage = () => {
-
   const navigate = useNavigate();
 
   const [settings, setSettings] = useState({
-    players: 'Single Player',
-    guessType: 'Guess Song',
-    gameMode: 'Listening (1 sec)',
-    rounds: '10 Rounds',
-    guessTime: '15 sec',
-    hints: '3'
+    players: "Single Player",
+    guessType: "Guess Song",
+    gameMode: "Listening (1 sec)",
+    rounds: "10 Rounds",
+    guessTime: "15 sec",
+    hints: "3",
   });
 
   const handleBackClick = () => {
-    
-    navigate('/lobby');
-    console.log('Back button clicked');
+    navigate("/lobby");
+    console.log("Back button clicked");
   };
 
   const handleGameCodeClick = () => {
     // Add your game code logic here (copy to clipboard, etc.)
-    console.log('Game code clicked');
+    console.log("Game code clicked");
   };
 
   const handleCreateRoom = () => {
-    // Navigate to InGamePage and pass the settings state
-    navigate('/game', { state: settings });
+    // Navigate to InGamePage and passthe settings state
+
+    navigate("/game", { state: settings });
   };
 
   return (
@@ -41,11 +41,11 @@ const SettingsPage = () => {
             <span className="back-arrow">&lt;&lt;</span>
             <span className="back-text">Back</span>
           </button>
-          
+
           <div className="logo">
             <span className="logo-text">Guessify</span>
           </div>
-          
+
           <div className="game-code-section">
             <span className="invite-text">INVITE CODE:</span>
             <button className="game-code-button" onClick={handleGameCodeClick}>
@@ -57,7 +57,7 @@ const SettingsPage = () => {
 
         {/* Settings Component */}
         <Settings settings={settings} setSettings={setSettings} />
-        
+
         {/* Create Room Button */}
         <div className="create-room-section">
           <button className="create-room-button" onClick={handleCreateRoom}>

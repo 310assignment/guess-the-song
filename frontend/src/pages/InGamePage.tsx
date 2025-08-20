@@ -140,6 +140,8 @@ const InGamePage: React.FC<GuessifyProps> = () => {
       alert("Game over!");
       setIsRoundActive(false);
       setSelectedIndex(null); // Also reset at game end
+      songService.refreshKpop();
+      console.log("Song cache refreshed");
     }
   }
 
