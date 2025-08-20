@@ -7,9 +7,10 @@ import type { Song } from "../types/song";
 interface SingleChoiceProps {
   onCorrectGuess: () => void;
   currentSong: Song | null;
+  hasGuessedCorrectly: boolean;
 }
 
-const SingleChoice: React.FC<SingleChoiceProps> = ({ onCorrectGuess, currentSong }) => {
+const SingleChoice: React.FC<SingleChoiceProps> = ({ onCorrectGuess, currentSong, hasGuessedCorrectly }) => {
   const [guess, setGuess] = useState<string>("");
 
   // Show blanks for the title
@@ -74,7 +75,7 @@ const SingleChoice: React.FC<SingleChoiceProps> = ({ onCorrectGuess, currentSong
   };
 
   const handleSubmitGuess = () => {
-    if (!currentSong) return;
+    if (!currentSong || hasGuessedCorrectly) return;
 
     const normalizedGuess = normalizeForComparison(guess);
     const normalizedTitle = normalizeForComparison(currentSong.title);
@@ -88,7 +89,7 @@ const SingleChoice: React.FC<SingleChoiceProps> = ({ onCorrectGuess, currentSong
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !hasGuessedCorrectly) {
       handleSubmitGuess();
     }
   };
@@ -128,8 +129,13 @@ const SingleChoice: React.FC<SingleChoiceProps> = ({ onCorrectGuess, currentSong
           value={guess}
           onChange={handleInputChange}
           onKeyDown={handleKeyPress}
-          placeholder="TYPE YOUR GUESS HERE..."
+          placeholder={hasGuessedCorrectly ? "CORRECT! WAIT FOR NEXT ROUND..." : "TYPE YOUR GUESS HERE..."}
           className="guess-input"
+          disabled={hasGuessedCorrectly}
+          style={{
+            opacity: hasGuessedCorrectly ? 0.6 : 1,
+            cursor: hasGuessedCorrectly ? 'not-allowed' : 'text'
+          }}
         />
       </div>
 
@@ -137,17 +143,19 @@ const SingleChoice: React.FC<SingleChoiceProps> = ({ onCorrectGuess, currentSong
       <div className="controls" style={{ marginTop: "1rem" }}>
         <button
           onClick={handleSubmitGuess}
+          disabled={hasGuessedCorrectly}
           style={{
             padding: "0.5rem 1rem",
-            backgroundColor: "#4ade80",
+            backgroundColor: hasGuessedCorrectly ? "#666" : "#4ade80",
             color: "white",
             border: "none",
             borderRadius: "0.5rem",
-            cursor: "pointer",
+            cursor: hasGuessedCorrectly ? "not-allowed" : "pointer",
             fontWeight: "bold",
+            opacity: hasGuessedCorrectly ? 0.6 : 1,
           }}
         >
-          Submit Guess
+          {hasGuessedCorrectly ? "Correct! ✅" : "Submit Guess"}
         </button>
       </div>
     </div>

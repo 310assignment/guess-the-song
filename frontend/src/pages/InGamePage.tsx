@@ -244,7 +244,11 @@ const InGamePage: React.FC<GuessifyProps> = () => {
         <Scoreboard players={players} />
 
         {isSingleSong ? (
-          <SingleChoice onCorrectGuess={handleCorrectGuess} currentSong={currentSong} />
+          <SingleChoice
+            onCorrectGuess={handleCorrectGuess}
+            currentSong={currentSong}
+            hasGuessedCorrectly={hasGuessedCorrectly}
+          />
         ) : (
           <MultipleChoice
             options={options}
