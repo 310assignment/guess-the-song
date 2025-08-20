@@ -95,7 +95,7 @@ export default class SongService {
     }
 
     this.currentAudio = new Audio(song.previewUrl);
-    this.currentAudio.volume = 0.6;
+    this.currentAudio.volume = this.currentVolume;
     this.currentAudio
       .play()
       .then(() => {
@@ -132,7 +132,7 @@ export default class SongService {
       .filter((s) => s.previewUrl)
       .map((s) => {
         const audio = new Audio(s.previewUrl!);
-        audio.volume = 0.6;
+        audio.volume = this.currentVolume;
         audio
           .play()
           .catch((err) => console.error("Multi-song play failed:", err));
@@ -151,6 +151,27 @@ export default class SongService {
   // --- Track change subscription ---
   setOnTrackChange(cb: (song: Song, index: number) => void) {
     this.onTrackChange = cb;
+  }
+
+  // --- Audio control methods ---
+  setVolume(volume: number) {
+    this.currentVolume = volume;
+    if (this.currentAudio) {
+      this.currentAudio.volume = volume;
+    }
+    this.multiAudios.forEach(audio => {
+      audio.volume = volume;
+    });
+  }
+
+  setMuted(muted: boolean) {
+    this.isMuted = muted;
+    if (this.currentAudio) {
+      this.currentAudio.muted = muted;
+    }
+    this.multiAudios.forEach(audio => {
+      audio.muted = muted;
+    });
   }
 }
 
