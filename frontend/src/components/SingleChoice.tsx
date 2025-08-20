@@ -4,8 +4,12 @@ import PlayIcon from "../assets/Play.png";
 import { songService } from "../services/songServices";
 import type { Song } from "../types/song";
 
-const GuessSong: React.FC = () => {
-  const [currentSong, setCurrentSong] = useState<Song | null>(null);
+interface SingleChoiceProps {
+  onCorrectGuess: () => void;
+  currentSong: Song | null;
+}
+
+const SingleChoice: React.FC<SingleChoiceProps> = ({ onCorrectGuess, currentSong }) => {
   const [guess, setGuess] = useState<string>("");
 
   // Show blanks for the title
@@ -38,28 +42,46 @@ const GuessSong: React.FC = () => {
       .join('   '); // 3 spaces between word blanks
   };
 
+  // Function to normalize text for comparison (same logic as createBlanks)
+  const normalizeForComparison = (text: string): string => {
+    let mainTitle = text;
+
+    // Remove parentheses and their content
+    mainTitle = mainTitle.replace(/\s*\([^)]*\)/g, '');
+
+    // Handle standalone featuring without brackets
+    mainTitle = mainTitle
+      .replace(/\s*feat\.?\s+.*/gi, '')
+      .replace(/\s*ft\.?\s+.*/gi, '')
+      .replace(/\s*featuring\s+.*/gi, '')
+      .trim();
+
+    // Strip all punctuation except spaces and normalize
+    return mainTitle
+      .replace(/[^\w\s]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+  };
 
   useEffect(() => {
-    // Set initial song if one is already playing
-    const cached = songService.getCachedSongs();
-    if (cached.length > 0) {
-      setCurrentSong(cached[0]);
-    }
-
-    // Subscribe to track changes
-    songService.setOnTrackChange((song) => {
-      setCurrentSong(song);
-      setGuess(""); // reset guess when new song starts
-    });
-  }, []);
+    // Reset guess when song changes
+    setGuess("");
+  }, [currentSong]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setGuess(e.target.value);
   };
 
   const handleSubmitGuess = () => {
-    if (guess.toLowerCase().trim() === currentSong?.title.toLowerCase()) {
+    if (!currentSong) return;
+
+    const normalizedGuess = normalizeForComparison(guess);
+    const normalizedTitle = normalizeForComparison(currentSong.title);
+
+    if (normalizedGuess === normalizedTitle) {
       alert("Correct! 🎉");
+      onCorrectGuess(); // Notify parent component
     } else {
       alert("Try again! 🤔");
     }
@@ -132,4 +154,4 @@ const GuessSong: React.FC = () => {
   );
 };
 
-export default GuessSong;
+export default SingleChoice;

@@ -40,6 +40,10 @@ const InGamePage: React.FC<GuessifyProps> = () => {
   const [inviteCode] = useState("ABC123");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
+  // Track if user guessed correctly in SingleChoice mode
+  const [hasGuessedCorrectly, setHasGuessedCorrectly] = useState(false);
+  const [currentSong, setCurrentSong] = useState<Song | null>(null);
+
   // For multiple-choice mode
   const [options, setOptions] = useState<string[]>([]);
   const [correctAnswer, setCorrectAnswer] = useState<string>("");
@@ -90,9 +94,21 @@ const InGamePage: React.FC<GuessifyProps> = () => {
     }
   };
 
-  // --- clean-up ---
+  // Handle correct guess in SingleChoice mode
+  const handleCorrectGuess = () => {
+    setHasGuessedCorrectly(true);
+  };
+
+  // --- clean-up and song tracking ---
   useEffect(() => {
     console.log("🚀 InGamePage mounted");
+
+    // Subscribe to track changes to keep currentSong updated
+    songService.setOnTrackChange((song) => {
+      console.log("🎵 Track changed to:", song?.title);
+      setCurrentSong(song);
+    });
+
     return () => {
       console.log("🔥 InGamePage unmounting - cleaning up audio");
       songService.stopSong();
@@ -116,6 +132,7 @@ const InGamePage: React.FC<GuessifyProps> = () => {
 
     setIsRoundActive(true);
     setTimeLeft(roundTime);
+    setHasGuessedCorrectly(false); // Reset for new round
 
     if (isSingleSong) {
       console.log("🎵 Single song mode - Round", currentRound);
@@ -124,6 +141,7 @@ const InGamePage: React.FC<GuessifyProps> = () => {
       } else {
         songService.playNextSong();
       }
+      // currentSong will be updated via the setOnTrackChange callback
     } else {
       console.log("🎶 Multi-song mode - Round", currentRound);
       const chosen = getRandomSongs(3);
@@ -167,6 +185,11 @@ const InGamePage: React.FC<GuessifyProps> = () => {
     // ALWAYS stop all audio first (both single and multi)
     songService.stopSong();
 
+    // Show alert for SingleChoice mode if user didn't guess correctly
+    if (isSingleSong && !hasGuessedCorrectly && currentSong) {
+      alert(`❌ Time's up! The correct answer was: ${currentSong.title}`);
+    }
+
     if (currentRound < totalRounds) {
       setIsRoundActive(false);
       setIsIntermission(true);
@@ -202,7 +225,7 @@ const InGamePage: React.FC<GuessifyProps> = () => {
         <Scoreboard players={players} />
 
         {isSingleSong ? (
-          <SingleChoice />
+          <SingleChoice onCorrectGuess={handleCorrectGuess} currentSong={currentSong} />
         ) : (
           <MultipleChoice
             options={options}
