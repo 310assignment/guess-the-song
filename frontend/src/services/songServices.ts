@@ -192,6 +192,14 @@ export default class SongService {
       this.onMuteStateChange(muted);
     }
   }
+
+  getCurrentVolume(): number {
+    return this.currentVolume;
+  }
+
+  getCurrentMutedState(): boolean {
+    return this.isMuted;
+  }
 }
 
 export const songService = new SongService();
