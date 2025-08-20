@@ -44,6 +44,10 @@ const InGamePage: React.FC<GuessifyProps> = () => {
   const [hasGuessedCorrectly, setHasGuessedCorrectly] = useState(false);
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
 
+  // Track if user has selected correctly in MultipleChoice mode
+  const [hasSelectedCorrectly, setHasSelectedCorrectly] = useState(false);
+  const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
+
   // For multiple-choice mode
   const [options, setOptions] = useState<string[]>([]);
   const [correctAnswer, setCorrectAnswer] = useState<string>("");
@@ -83,13 +87,21 @@ const InGamePage: React.FC<GuessifyProps> = () => {
 
   // --- selection ---
   const handleSelect = (index: number) => {
+    // Prevent selecting if already selected an option
+    if (selectedIndex !== null) {
+      return;
+    }
+
     setSelectedIndex(index);
     const chosen = options[index];
 
     if (chosen === correctAnswer) {
+      setHasSelectedCorrectly(true);
+      setShowCorrectAnswer(true); // Show green for correct
       alert("✅ Correct!");
-      // mark correct, but DO NOT advance; next song will play at round end
     } else {
+      setHasSelectedCorrectly(false);
+      setShowCorrectAnswer(true); // Show red for wrong, green for correct
       alert(`❌ Wrong! Correct mix was: ${correctAnswer}`);
     }
   };
@@ -133,6 +145,8 @@ const InGamePage: React.FC<GuessifyProps> = () => {
     setIsRoundActive(true);
     setTimeLeft(roundTime);
     setHasGuessedCorrectly(false); // Reset for new round
+    setHasSelectedCorrectly(false); // Reset for new round
+    setShowCorrectAnswer(false); // Reset for new round
 
     if (isSingleSong) {
       console.log("🎵 Single song mode - Round", currentRound);
@@ -190,6 +204,11 @@ const InGamePage: React.FC<GuessifyProps> = () => {
       alert(`❌ Time's up! The correct answer was: ${currentSong.title}`);
     }
 
+    // Show alert for MultipleChoice mode if user didn't select correctly or didn't select at all
+    if (!isSingleSong && (!hasSelectedCorrectly || selectedIndex === null)) {
+      alert(`❌ Time's up! The correct answer was: ${correctAnswer}`);
+    }
+
     if (currentRound < totalRounds) {
       setIsRoundActive(false);
       setIsIntermission(true);
@@ -231,6 +250,8 @@ const InGamePage: React.FC<GuessifyProps> = () => {
             options={options}
             onSelect={handleSelect}
             selectedIndex={selectedIndex}
+            correctAnswer={correctAnswer}
+            showCorrectAnswer={showCorrectAnswer}
           />
         )}
       </div>
