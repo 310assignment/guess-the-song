@@ -20,6 +20,7 @@ export default class SongService {
   private currentAudio: HTMLAudioElement | null = null;
   private multiAudios: HTMLAudioElement[] = []; // NEW: for multiple songs
   private onTrackChange?: (song: Song, index: number) => void;
+  private onMuteStateChange?: (muted: boolean) => void;
 
   private currentVolume: number = 0.6;
   private isMuted: boolean = false;
@@ -96,6 +97,11 @@ export default class SongService {
 
     this.currentAudio = new Audio(song.previewUrl);
     this.currentAudio.volume = this.currentVolume;
+    this.currentAudio.muted = false;
+    this.isMuted = false;
+    if (this.onMuteStateChange) {
+      this.onMuteStateChange(false);
+    }
     this.currentAudio
       .play()
       .then(() => {
@@ -133,11 +139,16 @@ export default class SongService {
       .map((s) => {
         const audio = new Audio(s.previewUrl!);
         audio.volume = this.currentVolume;
+        audio.muted = false;
         audio
           .play()
           .catch((err) => console.error("Multi-song play failed:", err));
         return audio;
       });
+    this.isMuted = false;
+    if (this.onMuteStateChange) {
+      this.onMuteStateChange(false);
+    }
   }
 
   stopMultiSong() {
@@ -151,6 +162,11 @@ export default class SongService {
   // --- Track change subscription ---
   setOnTrackChange(cb: (song: Song, index: number) => void) {
     this.onTrackChange = cb;
+  }
+
+  // --- Mute state change subscription ---
+  setOnMuteStateChange(cb?: (muted: boolean) => void) {
+    this.onMuteStateChange = cb;
   }
 
   // --- Audio control methods ---
@@ -172,6 +188,9 @@ export default class SongService {
     this.multiAudios.forEach(audio => {
       audio.muted = muted;
     });
+    if (this.onMuteStateChange) {
+      this.onMuteStateChange(muted);
+    }
   }
 }
 
