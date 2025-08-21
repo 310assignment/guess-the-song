@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "../css/JoinRoom.css";
 import { songService } from "../services/songServices";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface GuessifyProps { }
 
@@ -10,19 +10,22 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
   const [code, setCode] = useState<string>("");
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const playerName = location.state?.playerName; // get name from EnterName
 
-  const handleCreateRoom = (e: React.MouseEvent<HTMLButtonElement>): void => {
+  const handleCreateRoom = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-
-    const cachedSongs = songService.fetchRandomKpop().then((songs) => {
+    songService.fetchRandomKpop().then((songs) => {
       console.log("Fetched songs", songs);
     });
 
-    //Passes player name to SettingsPage
-    navigate("/create_room");
+    // Pass playerName along to SettingsPage
+    navigate("/create_room", { state: { playerName } });
+  };
 
-    console.log("Creating new room");
-    // Add your create room logic here
+  const handleJoinRoom = () => {
+    // If you also want JOIN button to go somewhere and preserve the name
+    navigate("/create_room", { state: { playerName } });
   };
 
   const handleBackClick = (): void => {

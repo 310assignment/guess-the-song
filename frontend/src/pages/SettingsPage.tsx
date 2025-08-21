@@ -1,10 +1,14 @@
 import Settings from "../components/Settings";
 import "../css/SettingsPage.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Extract playerName from previous page (EnterName → JoinRoom → SettingsPage)
+  const playerName = location.state?.playerName || "You";
 
   const [settings, setSettings] = useState({
     players: "Single Player",
@@ -26,9 +30,8 @@ const SettingsPage = () => {
   };
 
   const handleCreateRoom = () => {
-    // Navigate to InGamePage and passthe settings state
-
-    navigate("/game", { state: settings });
+    // Pass playerName along with settings to InGamePage
+    navigate("/game", { state: { ...settings, playerName } });
   };
 
   return (
