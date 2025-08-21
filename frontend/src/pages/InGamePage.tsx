@@ -4,6 +4,7 @@ import Scoreboard from "../components/Scoreboard";
 import GameHeader from "../components/GameHeader";
 import MultipleChoice from "../components/MultipleChoice";
 import SingleChoice from "../components/SingleChoice";
+import AudioControls from "../components/AudioControls";
 import { useLocation } from "react-router-dom";
 import { songService } from "../services/songServices";
 import type { Song } from "../types/song";
@@ -235,6 +236,7 @@ const InGamePage: React.FC<GuessifyProps> = () => {
 
   return (
     <div className="game-2-container">
+      <AudioControls />
       <GameHeader
         roundNumber={`${currentRound}/${totalRounds}`}
         timer={`${timeLeft}`}
