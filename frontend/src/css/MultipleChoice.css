@@ -8,7 +8,8 @@
 
 .song-icon {
   position: relative;
-  width: 250px;       /* same size as the circle */
+  width: 250px;
+  /* same size as the circle */
   height: 250px;
   margin: 20px auto;
   display: flex;
@@ -45,9 +46,12 @@
 }
 
 .answer-btn {
-  padding: 20px 25px;       /* More space inside the button */
-  font-size: 18px;          /* Larger text */
-  min-height: 60px;         /* Taller buttons */
+  padding: 20px 25px;
+  /* More space inside the button */
+  font-size: 18px;
+  /* Larger text */
+  min-height: 60px;
+  /* Taller buttons */
   border: none;
   border-radius: 8px;
   background-color: white;
@@ -64,4 +68,24 @@
 .answer-btn.selected {
   background-color: #4CAF50;
   color: white;
+}
+
+.answer-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.answer-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.answer-btn.correct {
+  background-color: #4CAF50 !important;
+  color: white !important;
+}
+
+.answer-btn.wrong {
+  background-color: #D32F2F !important;
+  color: white !important;
 }

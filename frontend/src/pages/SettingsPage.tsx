@@ -2,7 +2,6 @@ import Settings from "../components/Settings";
 import "../css/SettingsPage.css";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { songService } from "../services/songServices";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
@@ -10,7 +9,7 @@ const SettingsPage = () => {
   const [settings, setSettings] = useState({
     players: "Single Player",
     guessType: "Guess Song",
-    gameMode: "Listening (1 sec)",
+    gameMode: "Single Song",
     rounds: "10 Rounds",
     guessTime: "15 sec",
     hints: "3",
