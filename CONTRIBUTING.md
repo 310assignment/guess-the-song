@@ -3,15 +3,19 @@
 1. **Check Existing Issues** – Make sure the bug hasn’t been reported already.
 2. **Title** – Give a short, descriptive title.
 3. **Description** – Explain what happened vs. what you expected, and steps to reproduce.
-4. **Attachments** – Add error messages, logs, or screenshots if available.
-5. **Optional Fix** – Suggest a solution if you have one.
+4. **Environment** - Add information about OS, browser and version
+5. **Attachments** – Add error messages, logs, or screenshots if available.
 
 ## How to Suggest a New Feature
 
 1. **Check Existing Issues labelled feature** – See if the feature has already been suggested.
-2. **Title** – Use a clear, descriptive title.
-3. **Description** – Explain what the feature does, why it’s useful, and any example use cases.
+2. **Title** – Use a clear, descriptive title with the appropriate label [FEATURE].
+3. **Description** – Explain what the feature does, why it’s useful, and any alteratives that were considered.
 4. **Optional Details** – Include mockups, links, or references if helpful.
+
+# Issue Approval Process
+
+For all new issues, a team discussion must occur in which each issue is discussed to check if they are appropriate before it is assigned to someone.
 
 ## How to Submit a Pull Request
 
