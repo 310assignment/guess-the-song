@@ -8,10 +8,12 @@ interface SingleChoiceProps {
   onCorrectGuess: () => void;
   currentSong: Song | null;
   hasGuessedCorrectly: boolean;
+  onWrongGuess?: () => void;
 }
 
-const SingleChoice: React.FC<SingleChoiceProps> = ({ onCorrectGuess, currentSong, hasGuessedCorrectly }) => {
+const SingleChoice: React.FC<SingleChoiceProps> = ({ onCorrectGuess, currentSong, hasGuessedCorrectly, onWrongGuess }) => {
   const [guess, setGuess] = useState<string>("");
+  const [showWrongMessage, setShowWrongMessage] = useState<boolean>(false);
 
   // Show blanks for the title
   // Enhanced blanks function that handles punctuation and featuring
@@ -68,6 +70,7 @@ const SingleChoice: React.FC<SingleChoiceProps> = ({ onCorrectGuess, currentSong
   useEffect(() => {
     // Reset guess when song changes
     setGuess("");
+    setShowWrongMessage(false);
   }, [currentSong]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,10 +84,12 @@ const SingleChoice: React.FC<SingleChoiceProps> = ({ onCorrectGuess, currentSong
     const normalizedTitle = normalizeForComparison(currentSong.title);
 
     if (normalizedGuess === normalizedTitle) {
-      alert("Correct! 🎉");
-      onCorrectGuess(); // Notify parent component
+      onCorrectGuess(); // Notify parent component - no popup
     } else {
-      alert("Try again! 🤔");
+      setShowWrongMessage(true);
+      if (onWrongGuess) {
+        onWrongGuess();
+      }
     }
   };
 
@@ -157,6 +162,19 @@ const SingleChoice: React.FC<SingleChoiceProps> = ({ onCorrectGuess, currentSong
         >
           {hasGuessedCorrectly ? "Correct! ✅" : "Submit Guess"}
         </button>
+        
+        {/* Wrong answer message */}
+        {showWrongMessage && !hasGuessedCorrectly && (
+          <div style={{
+            marginTop: "0.5rem",
+            color: "#ef4444",
+            fontSize: "0.9rem",
+            textAlign: "center",
+            animation: "fadeIn 0.3s ease-in"
+          }}>
+            Try again! 🤔
+          </div>
+        )}
       </div>
     </div>
   );
