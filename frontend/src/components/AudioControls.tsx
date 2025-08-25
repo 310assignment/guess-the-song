@@ -55,7 +55,7 @@ const AudioControls: React.FC<AudioControlsProps> = ({ className = '' }) => {
   };
 
   // Unmute when clicking on the slider track (if currently muted)
-  const handleSliderClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleSliderClick = () => {
     if (isMuted) {
       setIsMuted(false);
       songService.setMuted(false);
