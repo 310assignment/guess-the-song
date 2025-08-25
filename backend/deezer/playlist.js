@@ -19,6 +19,8 @@ function normalizeTrack(t) {
   };
 }
 
+// Playlist utilities for Deezer integration
+// Suggestions: Use descriptive variable names and add error handling for API calls.
 async function fetchPlaylist(index = 0, limit = 50) {
   const data = await deezerGet(`/playlist/${PLAYLIST_ID}/tracks`, {
     params: { index, limit },

@@ -1,6 +1,6 @@
 // Very small in-memory cache with TTL per key
 const store = new Map();
-// default 30 minutes
+// default 30 minutes (specified in minutes in .env)
 const defaultTtlMs = Number(process.env.CACHE_TTL_MINUTES || 30) * 60 * 1000;
 
 export function setCache(key, items, resetTimestamp = false) {

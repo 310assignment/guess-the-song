@@ -1,5 +1,5 @@
 //entry point for the Express server
-// This file sets up the server, handles routes, and integrates with the Spotify API client
+// This file sets up the server, handles routes, and integrates with the Deezer API client
 
 import express from "express";
 import cors from "cors";

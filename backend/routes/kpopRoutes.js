@@ -4,6 +4,7 @@ import {
   refreshKpop,
 } from "../controllers/kpopController.js";
 
+// Express routes for K-pop API endpoints
 const router = Router();
 
 /**
@@ -14,7 +15,7 @@ router.get("/", getRandomFromKpop);
 
 /**
  * POST /api/kpop/refresh
- * Clears the cache and refetches the chart pages (useful for demos).
+ * Clears the cache and refetches the chart pages - randomises order of cached songs.
  */
 router.post("/refresh", refreshKpop);
 
