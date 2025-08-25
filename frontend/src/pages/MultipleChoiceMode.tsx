@@ -52,11 +52,6 @@ const MultipleChoiceMode: React.FC = () => {
    */
   const handleSelect = (index: number) => {
     setSelectedIndex(index);
-    // TODO: Add logic here to check answer / update score
-    // This would typically involve:
-    // - Comparing the selected answer with the correct answer
-    // - Updating player scores
-    // - Moving to the next round or ending the game
   };
 
   return (

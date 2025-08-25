@@ -4,7 +4,7 @@ import { songService } from "../services/songServices";
 
 import { useNavigate, useLocation } from "react-router-dom";
 
-interface GuessifyProps { }
+interface GuessifyProps {}
 
 const JoinRoom: React.FC<GuessifyProps> = () => {
   const [code, setCode] = useState<string>("");
@@ -23,10 +23,12 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
     navigate("/create_room", { state: { playerName } });
   };
 
+  /* Commented out handleJoinRoom as it is only required for A2
   const handleJoinRoom = () => {
     // If you also want JOIN button to go somewhere and preserve the name
     navigate("/create_room", { state: { playerName } });
   };
+  */
 
   const handleBackClick = (): void => {
     navigate("/");
@@ -35,7 +37,6 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setCode(e.target.value.toUpperCase());
   };
-
 
   return (
     <div className="guessify-container">
@@ -61,6 +62,7 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
           />
           <button className="guessify-join-button">
             JOIN
+            {/* Note: handleJoinRoom is currently disabled */}
           </button>
         </div>
 

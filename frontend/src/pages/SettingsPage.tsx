@@ -26,7 +26,6 @@ const SettingsPage = () => {
 
   // Placeholder for invite code logic (copy/share)
   const handleGameCodeClick = () => {
-    // TODO: Implement copy-to-clipboard or sharing feature
   };
 
   // Create room and move to game page, passing player info and settings
