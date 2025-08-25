@@ -1,27 +1,21 @@
-// tests/kpopController.real.test.js
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 
-// Mock the playlist module BEFORE importing the controller
 const mockGetKpopRandom = jest.fn();
 const mockRefreshKpopCache = jest.fn();
 
-// Mock the entire playlist module
 jest.unstable_mockModule('../deezer/playlist.js', () => ({
   getKpopRandom: mockGetKpopRandom,
   refreshKpopCache: mockRefreshKpopCache
 }));
 
-// Import controller functions AFTER mocking
 const { getRandomFromKpop, refreshKpop } = await import('../controllers/kpopController.js');
 
 describe('K-Pop Controller Function Tests', () => {
   let mockReq, mockRes, mockNext;
 
   beforeEach(() => {
-    // Reset all mocks before each test
     jest.clearAllMocks();
-    
-    // Setup mock request, response, next
+
     mockReq = {};
     mockRes = {
       json: jest.fn(),
@@ -30,25 +24,37 @@ describe('K-Pop Controller Function Tests', () => {
     mockNext = jest.fn();
   });
 
+  // Verify that both controller functions exist and are properly defined as async
+  describe('Function Properties', () => {
+    it('should verify both functions are async and callable', () => {
+      expect(getRandomFromKpop).toBeDefined();
+      expect(typeof getRandomFromKpop).toBe('function');
+      expect(getRandomFromKpop.constructor.name).toBe('AsyncFunction');
+
+      expect(refreshKpop).toBeDefined();
+      expect(typeof refreshKpop).toBe('function');
+      expect(refreshKpop.constructor.name).toBe('AsyncFunction');
+    });
+  });
+
+  // Test for getRandomFromKpop
   describe('getRandomFromKpop', () => {
+    // Test that the function always requests exactly 79 tracks regardless of input
     it('should always request exactly 79 tracks (hardcoded count)', async () => {
-      // Arrange
       const mockTracks = [
         { id: '1', name: 'Song 1', artists: ['Artist 1'] },
         { id: '2', name: 'Song 2', artists: ['Artist 2'] }
       ];
       mockGetKpopRandom.mockResolvedValue(mockTracks);
 
-      // Act - call the function
       await getRandomFromKpop(mockReq, mockRes, mockNext);
 
-      // Assert - should always call with 79, regardless of any parameters
       expect(mockGetKpopRandom).toHaveBeenCalledWith(79);
       expect(mockGetKpopRandom).toHaveBeenCalledTimes(1);
     });
 
+    // Test that the response format matches expected structure with correct count
     it('should return response with actual track count and tracks array', async () => {
-      // Arrange - mock 3 tracks returned
       const mockTracks = [
         { id: '1', name: 'Dynamite', artists: ['BTS'] },
         { id: '2', name: 'How You Like That', artists: ['BLACKPINK'] },
@@ -56,10 +62,8 @@ describe('K-Pop Controller Function Tests', () => {
       ];
       mockGetKpopRandom.mockResolvedValue(mockTracks);
 
-      // Act
       await getRandomFromKpop(mockReq, mockRes, mockNext);
 
-      // Assert - count should be actual length (3), not requested (79)
       expect(mockRes.json).toHaveBeenCalledWith({
         count: 3,
         tracks: mockTracks
@@ -67,8 +71,8 @@ describe('K-Pop Controller Function Tests', () => {
       expect(mockNext).not.toHaveBeenCalled();
     });
 
+    // Test behavior when fewer tracks are available than requested
     it('should handle when less than 79 tracks are available', async () => {
-      // Arrange - only 45 tracks available
       const mockTracks = Array.from({ length: 45 }, (_, i) => ({
         id: `track${i}`,
         name: `Song ${i}`,
@@ -76,41 +80,35 @@ describe('K-Pop Controller Function Tests', () => {
       }));
       mockGetKpopRandom.mockResolvedValue(mockTracks);
 
-      // Act
       await getRandomFromKpop(mockReq, mockRes, mockNext);
 
-      // Assert
-      expect(mockGetKpopRandom).toHaveBeenCalledWith(79); // Still requests 79
+      expect(mockGetKpopRandom).toHaveBeenCalledWith(79);
       expect(mockRes.json).toHaveBeenCalledWith({
-        count: 45, // But returns actual count
+        count: 45,
         tracks: mockTracks
       });
     });
 
+    // Test edge case when no tracks are available
     it('should handle empty tracks array', async () => {
-      // Arrange
       mockGetKpopRandom.mockResolvedValue([]);
 
-      // Act
       await getRandomFromKpop(mockReq, mockRes, mockNext);
 
-      // Assert
       expect(mockRes.json).toHaveBeenCalledWith({
         count: 0,
         tracks: []
       });
     });
 
+    // Test that query parameters don't affect the hardcoded request count
     it('should ignore request parameters (req is unused)', async () => {
-      // Arrange - add query parameters to request
       mockReq.query = { count: 25, limit: 100, foo: 'bar' };
       const mockTracks = [{ id: '1', name: 'Test Song' }];
       mockGetKpopRandom.mockResolvedValue(mockTracks);
 
-      // Act
       await getRandomFromKpop(mockReq, mockRes, mockNext);
 
-      // Assert - should still call with hardcoded 79, ignoring query params
       expect(mockGetKpopRandom).toHaveBeenCalledWith(79);
       expect(mockRes.json).toHaveBeenCalledWith({
         count: 1,
@@ -118,43 +116,38 @@ describe('K-Pop Controller Function Tests', () => {
       });
     });
 
+    // Test that errors are properly forwarded to Express error handling
     it('should pass errors to next() middleware', async () => {
-      // Arrange
       const mockError = new Error('Deezer API failed');
       mockGetKpopRandom.mockRejectedValue(mockError);
 
-      // Act
       await getRandomFromKpop(mockReq, mockRes, mockNext);
 
-      // Assert
       expect(mockNext).toHaveBeenCalledWith(mockError);
       expect(mockRes.json).not.toHaveBeenCalled();
     });
   });
 
+  // Test for refreshKpop
   describe('refreshKpop', () => {
+    // Test that the refresh function is called correctly without parameters
     it('should call refreshKpopCache function', async () => {
-      // Arrange
       const mockCacheSize = 142;
       mockRefreshKpopCache.mockResolvedValue(mockCacheSize);
 
-      // Act
       await refreshKpop(mockReq, mockRes, mockNext);
 
-      // Assert
       expect(mockRefreshKpopCache).toHaveBeenCalledWith();
       expect(mockRefreshKpopCache).toHaveBeenCalledTimes(1);
     });
 
+    // Test that successful refresh returns proper response format
     it('should return success response with cache size', async () => {
-      // Arrange
       const mockCacheSize = 87;
       mockRefreshKpopCache.mockResolvedValue(mockCacheSize);
 
-      // Act
       await refreshKpop(mockReq, mockRes, mockNext);
 
-      // Assert
       expect(mockRes.json).toHaveBeenCalledWith({
         ok: true,
         cacheSize: 87
@@ -162,31 +155,27 @@ describe('K-Pop Controller Function Tests', () => {
       expect(mockNext).not.toHaveBeenCalled();
     });
 
+    // Test edge case when cache refresh results in empty cache
     it('should handle zero cache size after refresh', async () => {
-      // Arrange
       mockRefreshKpopCache.mockResolvedValue(0);
 
-      // Act
       await refreshKpop(mockReq, mockRes, mockNext);
 
-      // Assert
       expect(mockRes.json).toHaveBeenCalledWith({
         ok: true,
         cacheSize: 0
       });
     });
 
+    // Test that request data doesn't affect the refresh operation
     it('should ignore request parameters (req is unused)', async () => {
-      // Arrange - add request body/params
       mockReq.body = { force: true, timeout: 5000 };
       mockReq.params = { id: 123 };
       const mockCacheSize = 99;
       mockRefreshKpopCache.mockResolvedValue(mockCacheSize);
 
-      // Act
       await refreshKpop(mockReq, mockRes, mockNext);
 
-      // Assert - should call refreshKpopCache with no parameters
       expect(mockRefreshKpopCache).toHaveBeenCalledWith();
       expect(mockRes.json).toHaveBeenCalledWith({
         ok: true,
@@ -194,46 +183,30 @@ describe('K-Pop Controller Function Tests', () => {
       });
     });
 
+    // Test basic error handling during cache refresh
     it('should pass errors to next() middleware', async () => {
-      // Arrange
       const mockError = new Error('Cache refresh failed');
       mockRefreshKpopCache.mockRejectedValue(mockError);
 
-      // Act
       await refreshKpop(mockReq, mockRes, mockNext);
 
-      // Assert
       expect(mockNext).toHaveBeenCalledWith(mockError);
       expect(mockRes.json).not.toHaveBeenCalled();
     });
 
+    // Test handling of API-specific errors with detailed response data
     it('should handle API errors with response details', async () => {
-      // Arrange
       const apiError = new Error('Rate limit exceeded');
-      apiError.response = { 
-        status: 429, 
+      apiError.response = {
+        status: 429,
         data: { error: { message: 'Too many requests' } }
       };
       mockRefreshKpopCache.mockRejectedValue(apiError);
 
-      // Act
       await refreshKpop(mockReq, mockRes, mockNext);
 
-      // Assert
       expect(mockNext).toHaveBeenCalledWith(apiError);
       expect(mockRes.json).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('Function Properties', () => {
-    it('should verify both functions are async and callable', () => {
-      expect(getRandomFromKpop).toBeDefined();
-      expect(typeof getRandomFromKpop).toBe('function');
-      expect(getRandomFromKpop.constructor.name).toBe('AsyncFunction');
-      
-      expect(refreshKpop).toBeDefined();
-      expect(typeof refreshKpop).toBe('function');
-      expect(refreshKpop.constructor.name).toBe('AsyncFunction');
     });
   });
 });
