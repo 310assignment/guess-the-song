@@ -3,6 +3,9 @@ import Leaderboard from "../components/Leaderboard";
 import { useLocation, useNavigate } from 'react-router-dom';
 import React from "react";
 
+/**
+ * Represents the result of a player at the end of the game.
+ */
 interface PlayerResult {
   name: string;
   points: number;
@@ -10,29 +13,36 @@ interface PlayerResult {
   totalRounds: number;
 }
 
-interface GuessifyProps {}
-
-const EndGamePage: React.FC<GuessifyProps> = () => {
+/**
+ * EndGamePage - displays the final leaderboard and a button to return to the lobby.
+ */
+const EndGamePage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Extract players data from state passed by InGamePage
-  const players: PlayerResult[] = location.state?.players || [];
+  // Extract players from navigation state safely
+  const players: PlayerResult[] = Array.isArray(location.state?.players)
+    ? location.state.players
+    : [];
 
-  // Format scoreDetail dynamically: "correctAnswers / totalRounds"
-  const formattedPlayers = players.map(p => ({
+  // Format player data for Leaderboard: "correctAnswers / totalRounds"
+  const formattedPlayers = players.map((p) => ({
     name: p.name,
     points: p.points,
-    scoreDetail: `${p.correctAnswers ?? 0}/${p.totalRounds ?? 0}`, 
-}));
-  // Navigate back to lobby
-  const handleBackToLobby = () => {
+    scoreDetail: `${p.correctAnswers}/${p.totalRounds}`,
+  }));
+
+  // Navigate back to the lobby screen
+  const handleBackToLobby = (): void => {
     navigate("/lobby");
   };
 
   return (
     <div className="end-game-container">
+      {/* Leaderboard with final scores */}
       <Leaderboard players={formattedPlayers} />
+
+      {/* Navigation button */}
       <div className="end-game-button">
         <button className="back-button" onClick={handleBackToLobby}>
           Back to Lobby
