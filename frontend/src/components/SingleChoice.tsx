@@ -5,70 +5,57 @@ import { songService } from "../services/songServices";
 import type { Song } from "../types/song";
 
 interface SingleChoiceProps {
-  onCorrectGuess: () => void;
-  currentSong: Song | null;
-  hasGuessedCorrectly: boolean;
-  onWrongGuess?: () => void;
+  onCorrectGuess: () => void;          // Called when user guesses correctly
+  currentSong: Song | null;            // Current song data
+  hasGuessedCorrectly: boolean;        // Whether the user already guessed right
+  onWrongGuess?: () => void;           // Optional callback for wrong guess
 }
 
-const SingleChoice: React.FC<SingleChoiceProps> = ({ onCorrectGuess, currentSong, hasGuessedCorrectly, onWrongGuess }) => {
-  const [guess, setGuess] = useState<string>("");
-  const [showWrongMessage, setShowWrongMessage] = useState<boolean>(false);
+const SingleChoice: React.FC<SingleChoiceProps> = ({
+  onCorrectGuess,
+  currentSong,
+  hasGuessedCorrectly,
+  onWrongGuess,
+}) => {
+  const [guess, setGuess] = useState("");              // User input guess
+  const [showWrongMessage, setShowWrongMessage] = useState(false); // Flag to show "wrong" feedback
 
-  // Show blanks for the title
-  // Enhanced blanks function that handles punctuation and featuring
+  /** Create a masked version of the title (blanks only, no punctuation/featuring info) */
   const createBlanks = (text: string): string => {
-    // Remove ALL content in brackets/parentheses (including nested ones)
-    let mainTitle = text;
-
-    // Remove parentheses and their content:
-    mainTitle = mainTitle.replace(/\s*\([^)]*\)/g, '');
-
-    // Handle standalone featuring without brackets
-    mainTitle = mainTitle
-      .replace(/\s*feat\.?\s+.*/gi, '')       // Remove feat. Artist (rest of string)
-      .replace(/\s*ft\.?\s+.*/gi, '')         // Remove ft. Artist (rest of string)
-      .replace(/\s*featuring\s+.*/gi, '')     // Remove featuring Artist (rest of string)
+    let mainTitle = text
+      .replace(/\s*\([^)]*\)/g, "")   // Remove parentheses content
+      .replace(/\s*feat\.?\s+.*/gi, "") // Remove "feat."
+      .replace(/\s*ft\.?\s+.*/gi, "")   // Remove "ft."
+      .replace(/\s*featuring\s+.*/gi, "") // Remove "featuring"
       .trim();
 
-    // Strip all punctuation except spaces and convert to blanks
     const cleanTitle = mainTitle
-      .replace(/[^\w\s]/g, '') // Remove all punctuation except word chars and spaces
-      .replace(/\s+/g, ' ')    // Normalize multiple spaces to single space
+      .replace(/[^\w\s]/g, "")        // Remove punctuation
+      .replace(/\s+/g, " ")           // Normalize spaces
       .trim();
 
-    // Create blanks for each word
     return cleanTitle
-      .split(' ')
-      .filter(word => word.length > 0) // Remove empty strings
-      .map(word => '_'.repeat(word.length))
-      .join('   '); // 3 spaces between word blanks
+      .split(" ")
+      .filter(Boolean)
+      .map(word => "_".repeat(word.length)) // Replace words with underscores
+      .join("   ");
   };
 
-  // Function to normalize text for comparison (same logic as createBlanks)
+  /** Normalize a title or guess for comparison */
   const normalizeForComparison = (text: string): string => {
-    let mainTitle = text;
-
-    // Remove parentheses and their content
-    mainTitle = mainTitle.replace(/\s*\([^)]*\)/g, '');
-
-    // Handle standalone featuring without brackets
-    mainTitle = mainTitle
-      .replace(/\s*feat\.?\s+.*/gi, '')
-      .replace(/\s*ft\.?\s+.*/gi, '')
-      .replace(/\s*featuring\s+.*/gi, '')
-      .trim();
-
-    // Strip all punctuation except spaces and normalize
-    return mainTitle
-      .replace(/[^\w\s]/g, '')
-      .replace(/\s+/g, ' ')
+    return text
+      .replace(/\s*\([^)]*\)/g, "")
+      .replace(/\s*feat\.?\s+.*/gi, "")
+      .replace(/\s*ft\.?\s+.*/gi, "")
+      .replace(/\s*featuring\s+.*/gi, "")
+      .replace(/[^\w\s]/g, "")
+      .replace(/\s+/g, " ")
       .trim()
       .toLowerCase();
   };
 
+  /** Reset input state when song changes when current song changes */
   useEffect(() => {
-    // Reset guess when song changes
     setGuess("");
     setShowWrongMessage(false);
   }, [currentSong]);
@@ -77,6 +64,7 @@ const SingleChoice: React.FC<SingleChoiceProps> = ({ onCorrectGuess, currentSong
     setGuess(e.target.value);
   };
 
+  /** Check guess against the song title */
   const handleSubmitGuess = () => {
     if (!currentSong || hasGuessedCorrectly) return;
 
@@ -84,15 +72,14 @@ const SingleChoice: React.FC<SingleChoiceProps> = ({ onCorrectGuess, currentSong
     const normalizedTitle = normalizeForComparison(currentSong.title);
 
     if (normalizedGuess === normalizedTitle) {
-      onCorrectGuess(); // Notify parent component - no popup
+      onCorrectGuess(); // Correct guess → notify parent
     } else {
-      setShowWrongMessage(true);
-      if (onWrongGuess) {
-        onWrongGuess();
-      }
+      setShowWrongMessage(true); // Wrong guess → show message
+      onWrongGuess?.();
     }
   };
 
+  /** Allow submitting with Enter key */
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !hasGuessedCorrectly) {
       handleSubmitGuess();
@@ -101,79 +88,60 @@ const SingleChoice: React.FC<SingleChoiceProps> = ({ onCorrectGuess, currentSong
 
   return (
     <div className="music-guess-game">
-      {/* Title Label (hidden with blanks) */}
+      {/* Song Title blanks */}
       <div className="artist-label">
         <h1>
-          {currentSong
-            ? `TITLE: ${createBlanks(currentSong.title)}`
-            : "Loading..."}
+          {currentSong ? `TITLE: ${createBlanks(currentSong.title)}` : "Loading..."}
         </h1>
       </div>
 
-      {/* Artist Label */}
-      <div
-        className="artist-label"
-        style={{ marginBottom: "2rem", marginTop: "1rem" }}
-      >
-        <h2 style={{ fontSize: "1.5rem", color: "#e5e7eb" }}>
+      {/* Artist name */}
+      <div className="artist-label artist-label--spacing">
+        <h2 className="artist-text">
           {currentSong ? `ARTIST: ${currentSong.artist}` : ""}
         </h2>
       </div>
 
-      {/* Central Circle (play button) */}
+      {/* Play song button */}
       <div className="central-circle-container">
-        <div className="central-circle" onClick={() => songService.playSong()}>
+        <button
+          className="central-circle"
+          onClick={() => songService.playSong()}
+        >
           <img src={PlayIcon} className="circle-image" alt="Play button" />
-        </div>
+        </button>
       </div>
 
-      {/* Input Field */}
+      {/* Guess input */}
       <div className="input-container">
         <input
           type="text"
           value={guess}
           onChange={handleInputChange}
           onKeyDown={handleKeyPress}
-          placeholder={hasGuessedCorrectly ? "CORRECT! WAIT FOR NEXT ROUND..." : "TYPE YOUR GUESS HERE..."}
+          placeholder={
+            hasGuessedCorrectly
+              ? "CORRECT! WAIT FOR NEXT ROUND..."
+              : "TYPE YOUR GUESS HERE..."
+          }
           className="guess-input"
           disabled={hasGuessedCorrectly}
-          style={{
-            opacity: hasGuessedCorrectly ? 0.6 : 1,
-            cursor: hasGuessedCorrectly ? 'not-allowed' : 'text'
-          }}
         />
       </div>
 
-      {/* Controls */}
-      <div className="controls" style={{ marginTop: "1rem" }}>
+      {/* Submit + feedback */}
+      <div className="controls">
         <button
           onClick={handleSubmitGuess}
           disabled={hasGuessedCorrectly}
-          style={{
-            padding: "0.5rem 1rem",
-            backgroundColor: hasGuessedCorrectly ? "#666" : "#4ade80",
-            color: "white",
-            border: "none",
-            borderRadius: "0.5rem",
-            cursor: hasGuessedCorrectly ? "not-allowed" : "pointer",
-            fontWeight: "bold",
-            opacity: hasGuessedCorrectly ? 0.6 : 1,
-          }}
+          className={`submit-btn ${hasGuessedCorrectly ? "submit-btn--disabled" : ""}`}
         >
           {hasGuessedCorrectly ? "Correct! ✅" : "Submit Guess"}
         </button>
-        
-        {/* Wrong answer message */}
+
+        {/* Show wrong guess feedback */}
         {showWrongMessage && !hasGuessedCorrectly && (
-          <div style={{
-            marginTop: "0.5rem",
-            color: "#ef4444",
-            fontSize: "0.9rem",
-            textAlign: "center",
-            animation: "fadeIn 0.3s ease-in"
-          }}>
-            Try again! 🤔
-          </div>
+          <div className="wrong-message">Try again! 🤔</div>
         )}
       </div>
     </div>

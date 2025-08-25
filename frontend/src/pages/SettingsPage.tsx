@@ -7,37 +7,37 @@ const SettingsPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Extract playerName from previous page (EnterName → JoinRoom → SettingsPage)
+  // Retrieve player name from previous page (fallback: "You")
   const playerName = location.state?.playerName || "You";
 
+  // Game settings state (default values)
   const [settings, setSettings] = useState({
     players: "Single Player",
     guessType: "Guess Song",
     gameMode: "Single Song",
     rounds: "10 Rounds",
     guessTime: "15 sec",
-    hints: "3",
   });
 
+  // Navigate back to lobby
   const handleBackClick = () => {
     navigate("/lobby");
-    console.log("Back button clicked");
   };
 
+  // Placeholder for invite code logic (copy/share)
   const handleGameCodeClick = () => {
-    // Add your game code logic here (copy to clipboard, etc.)
-    console.log("Game code clicked");
+    // TODO: Implement copy-to-clipboard or sharing feature
   };
 
+  // Create room and move to game page, passing player info and settings
   const handleCreateRoom = () => {
-    // Pass playerName along with settings to InGamePage
     navigate("/game", { state: { ...settings, playerName } });
   };
 
   return (
     <div className="settings-page">
       <div className="settings-page-background">
-        {/* Header */}
+        {/* Header with back button, logo, and invite code */}
         <div className="settings-header">
           <button className="back-button" onClick={handleBackClick}>
             <span className="back-arrow">&lt;&lt;</span>
@@ -57,10 +57,10 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        {/* Settings Component */}
+        {/* Game settings form */}
         <Settings settings={settings} setSettings={setSettings} />
 
-        {/* Create Room Button */}
+        {/* Button to confirm settings and start game */}
         <div className="create-room-section">
           <button className="create-room-button" onClick={handleCreateRoom}>
             Create Room

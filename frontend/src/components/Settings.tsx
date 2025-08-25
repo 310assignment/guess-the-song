@@ -1,117 +1,76 @@
 import '../css/Settings.css';
 
+// Import setting icons
 import PlayersIcon from '../assets/setting-icons/Players.png';
 import ModeIcon from '../assets/setting-icons/Vector.png';
 import RoundIcon from '../assets/setting-icons/Round.png';
 import TimerIcon from '../assets/setting-icons/Timer.png';
 
-interface SettingsProps {
-  settings: {
-    players: string;
-    guessType: string;
-    gameMode: string;
-    rounds: string;
-    guessTime: string;
-    hints: string;
-  };
-  setSettings: React.Dispatch<React.SetStateAction<{
-    players: string;
-    guessType: string;
-    gameMode: string;
-    rounds: string;
-    guessTime: string;
-    hints: string;
-  }>>;
+// Define shape of settings state
+interface GameSettings {
+  players: string;
+  guessType: string;
+  gameMode: string;
+  rounds: string;
+  guessTime: string;
 }
 
+// Props expected by Settings component
+interface SettingsProps {
+  settings: GameSettings;
+  setSettings: React.Dispatch<React.SetStateAction<GameSettings>>;
+}
+
+// Dropdown options for each setting
+const options = {
+  players: ['Single Player', '2 Players', '3 Players', '4 Players', '5 Players', '6 Players', '7 Players', '8 Players'],
+  gameMode: ['Single Song', 'Mixed Songs'],
+  rounds: ['5 Rounds', '10 Rounds', '15 Rounds', '20 Rounds'],
+  guessTime: ['10 sec', '15 sec', '20 sec', '30 sec'],
+};
+
+// Icon & Label mapping for each setting
+const icons = {
+  players: { src: PlayersIcon, label: 'PLAYERS' },
+  gameMode: { src: ModeIcon, label: 'GAME MODE' },
+  rounds: { src: RoundIcon, label: 'ROUNDS' },
+  guessTime: { src: TimerIcon, label: 'GUESS TIME' },
+};
+
 const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
-  const handleSettingChange = (setting: string, value: string): void => {
-    setSettings(prev => ({
-      ...prev,
-      [setting]: value
-    }));
-    console.log(`${setting} changed to:`, value);
+  // Update settings when a dropdown changes
+  const handleChange = (key: keyof GameSettings, value: string) => {
+    setSettings(prev => ({ ...prev, [key]: value }));
+    console.log(`${key} changed to:`, value);
   };
 
-  const playerOptions = ['Single Player', '2 Players', '3 Players', '4 Players', '5 Players', '6 Players', '7 Players', '8 Players'];
-  const gameModeOptions = ['Single Song', 'Mixed Songs'];
-  const roundOptions = ['5 Rounds', '10 Rounds', '15 Rounds', '20 Rounds'];
-  const timeOptions = ['10 sec', '15 sec', '20 sec', '30 sec'];
+  // Reusable dropdown renderer method
+  const renderDropdown = (key: keyof typeof options) => (
+    <div className="setting-row" key={key}>
+      <div className="setting-info">
+        <div className="setting-icon">
+          <img src={icons[key].src} alt={icons[key].label} />
+        </div>
+        <span className="setting-label">{icons[key].label}</span>
+      </div>
+      <select
+        className="setting-dropdown"
+        value={settings[key]}
+        onChange={(e) => handleChange(key, e.target.value)}
+      >
+        {options[key].map(option => (
+          <option key={option} value={option}>{option}</option>
+        ))}
+      </select>
+    </div>
+  );
 
   return (
     <div className="settings-container">
-      <div className="setting-row">
-        <div className="setting-info">
-          <div className="setting-icon">
-            <img src={PlayersIcon} alt="Players" />
-          </div>
-          <span className="setting-label">PLAYERS</span>
-        </div>
-        <select
-          className="setting-dropdown"
-          value={settings.players}
-          onChange={(e) => handleSettingChange('players', e.target.value)}
-        >
-          {playerOptions.map(option => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-      </div>
-
-
-      <div className="setting-row">
-        <div className="setting-info">
-          <div className="setting-icon">
-            <img src={ModeIcon} alt="GameMode" />
-          </div>
-          <span className="setting-label">GAME MODE</span>
-        </div>
-        <select
-          className="setting-dropdown"
-          value={settings.gameMode}
-          onChange={(e) => handleSettingChange('gameMode', e.target.value)}
-        >
-          {gameModeOptions.map(option => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-      </div>
-
-      <div className="setting-row">
-        <div className="setting-info">
-          <div className="setting-icon">
-            <img src={RoundIcon} alt="Rounds" />
-          </div>
-          <span className="setting-label">ROUNDS</span>
-        </div>
-        <select
-          className="setting-dropdown"
-          value={settings.rounds}
-          onChange={(e) => handleSettingChange('rounds', e.target.value)}
-        >
-          {roundOptions.map(option => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-      </div>
-
-      <div className="setting-row">
-        <div className="setting-info">
-          <div className="setting-icon">
-            <img src={TimerIcon} alt="Time" />
-          </div>
-          <span className="setting-label">GUESS TIME</span>
-        </div>
-        <select
-          className="setting-dropdown"
-          value={settings.guessTime}
-          onChange={(e) => handleSettingChange('guessTime', e.target.value)}
-        >
-          {timeOptions.map(option => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-      </div>
+      {renderDropdown('players')}
+      {renderDropdown('gameMode')}
+      {renderDropdown('rounds')}
+      {renderDropdown('guessTime')}
     </div>
   );
 };
