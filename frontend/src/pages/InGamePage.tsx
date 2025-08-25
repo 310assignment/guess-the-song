@@ -24,19 +24,22 @@ const InGamePage: React.FC<GuessifyProps> = () => {
     gameMode?: string;
   };
 
+  // --- Player State ---
   // Single player data (added correctAnswers and previousPoints)
   const [player, setPlayer] = useState({
     name: state?.playerName || "You",
     points: 0,
     previousPoints: 0, // Track previous score for score change display
-    correctAnswers: 0, // ✅ track correct answers
+    correctAnswers: 0, // Track correct answers
   });
 
-  // Round Logic
+
+  // --- Game Settings ---
   const totalRounds = parseInt(state?.rounds || "10");
   const roundTime = parseInt(state?.guessTime || "30");
   const isSingleSong = state?.gameMode === "Single Song";
 
+  // --- Round State ---
   const [currentRound, setCurrentRound] = useState(1);
   const [timeLeft, setTimeLeft] = useState(roundTime);
   const [isRoundActive, setIsRoundActive] = useState(true);
@@ -44,31 +47,36 @@ const InGamePage: React.FC<GuessifyProps> = () => {
   const [inviteCode] = useState("ABC123");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
-  // SingleChoice tracking
+  // --- Single Song Mode ---
   const [hasGuessedCorrectly, setHasGuessedCorrectly] = useState(false);
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
 
-  // MultipleChoice tracking
+  // --- Multiple Choice Mode ---
   const [hasSelectedCorrectly, setHasSelectedCorrectly] = useState(false);
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
   const [options, setOptions] = useState<string[]>([]);
   const [correctAnswer, setCorrectAnswer] = useState<string>("");
   const [isTimeUp, setIsTimeUp] = useState(false);
 
+  // --- Round Control Helpers ---
   const [roundStartTime, setRoundStartTime] = useState<number>(0);
   const isRoundStarting = useRef(false);
 
-  // --- helpers ---
+  /* ----------------- HELPER FUNCTIONS ----------------- */
+
+  // Get a random set of songs for multiple choice rounds
   const getRandomSongs = (num: number): Song[] => {
     const all = songService.getCachedSongs();
     const shuffled = [...all].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, num);
   };
 
+  // Generate multiple choice options including correct answer + distractors
   const generateOptions = (correctSongs: Song[]): string[] => {
     const all = songService.getCachedSongs();
     const correctTitles = correctSongs.map((s) => s.title);
 
+    // Generate a random incorrect option as a "mix"
     function randomMix(): string {
       const shuffled = [...all].sort(() => 0.5 - Math.random());
       return shuffled
@@ -88,6 +96,7 @@ const InGamePage: React.FC<GuessifyProps> = () => {
     return opts.sort(() => 0.5 - Math.random());
   };
 
+  // Calculate points based on remaining time (min 100, max 1000)
   const calculatePoints = (timeRemaining: number): number => {
     const maxPoints = 1000;
     const minPoints = 100;
@@ -105,7 +114,9 @@ const InGamePage: React.FC<GuessifyProps> = () => {
     }));
   };
 
-  // --- selection ---
+  /* ----------------- HANDLERS ----------------- */
+
+  // Handle multiple choice selection
   const handleSelect = (index: number) => {
     if (selectedIndex !== null) return;
 
@@ -114,7 +125,7 @@ const InGamePage: React.FC<GuessifyProps> = () => {
 
     if (chosen === correctAnswer) {
       const points = calculatePoints(timeLeft);
-      addPointsToPlayer(points, true); // ✅ correct answer count
+      addPointsToPlayer(points, true); // Correct answer count
       setHasSelectedCorrectly(true);
       setShowCorrectAnswer(true);
       // Stop the song and go immediately to round score display
@@ -132,10 +143,11 @@ const InGamePage: React.FC<GuessifyProps> = () => {
     }
   };
 
+  // Handle correct guess in single song mode
   const handleCorrectGuess = () => {
     if (!hasGuessedCorrectly) {
       const points = calculatePoints(timeLeft);
-      addPointsToPlayer(points, true); // ✅ correct answer count
+      addPointsToPlayer(points, true); // correct answer count
       setHasGuessedCorrectly(true);
       // Stop the song and go immediately to round score display
       songService.stopSong();
@@ -144,68 +156,7 @@ const InGamePage: React.FC<GuessifyProps> = () => {
     }
   };
 
-  // --- song tracking ---
-  useEffect(() => {
-    songService.setOnTrackChange((song) => {
-      setCurrentSong(song);
-    });
-
-    return () => {
-      songService.stopSong();
-      isRoundStarting.current = false;
-    };
-  }, []);
-
-  // --- round lifecycle ---
-  useEffect(() => {
-    if (isRoundStarting.current) return;
-
-    isRoundStarting.current = true;
-    songService.stopSong();
-
-    // Update previous points before starting new round (except for first round)
-    if (currentRound > 1) {
-      setPlayer(prev => ({
-        ...prev,
-        previousPoints: prev.points,
-      }));
-    }
-
-    setIsRoundActive(true);
-    setTimeLeft(roundTime);
-    setRoundStartTime(Date.now());
-    setHasGuessedCorrectly(false);
-    setHasSelectedCorrectly(false);
-    setShowCorrectAnswer(false);
-    setIsTimeUp(false);
-
-    if (isSingleSong) {
-      if (currentRound === 1) songService.playSong();
-      else songService.playNextSong();
-    } else {
-      const chosen = getRandomSongs(3);
-      songService.playMultiSong(chosen);
-
-      const opts = generateOptions(chosen);
-      setOptions(opts);
-      setCorrectAnswer(chosen.map(s => s.title).join(", "));
-    }
-
-    setTimeout(() => { isRoundStarting.current = false; }, 1000);
-  }, [currentRound, isSingleSong, roundTime]);
-
-  useEffect(() => {
-    if (!isRoundActive || isIntermission) return;
-
-    if (timeLeft <= 0) {
-      handleRoundEnd();
-      return;
-    }
-
-    const timer = setTimeout(() => setTimeLeft(t => t - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [timeLeft, isRoundActive, isIntermission]);
-
+  // End round when time runs out
   function handleRoundEnd() {
     songService.stopSong();
 
@@ -215,6 +166,7 @@ const InGamePage: React.FC<GuessifyProps> = () => {
     setIsIntermission(true);
   }
 
+  // Continue to next round or navigate to end game screen
   const handleContinueToNextRound = () => {
     if (currentRound < totalRounds) {
       setCurrentRound(r => r + 1);
@@ -238,6 +190,77 @@ const InGamePage: React.FC<GuessifyProps> = () => {
       });
     }
   };
+
+
+  /* ----------------- EFFECTS ----------------- */ 
+
+  // Subscribe to song changes
+  useEffect(() => {
+    songService.setOnTrackChange((song) => {
+      setCurrentSong(song);
+    });
+
+    return () => {
+      songService.stopSong();
+      isRoundStarting.current = false;
+    };
+  }, []);
+
+  // Start a new round whenever `currentRound` changes
+  useEffect(() => {
+    if (isRoundStarting.current) return;
+
+    isRoundStarting.current = true;
+    songService.stopSong();
+
+    // Update previous points before starting new round (except for first round)
+    if (currentRound > 1) {
+      setPlayer(prev => ({
+        ...prev,
+        previousPoints: prev.points,
+      }));
+    }
+
+    // Reset round state
+    setIsRoundActive(true);
+    setTimeLeft(roundTime);
+    setRoundStartTime(Date.now());
+    setHasGuessedCorrectly(false);
+    setHasSelectedCorrectly(false);
+    setShowCorrectAnswer(false);
+    setIsTimeUp(false);
+
+    // Start playback depending on game mode
+    if (isSingleSong) {
+      if (currentRound === 1) songService.playSong();
+      else songService.playNextSong();
+    } else {
+      const chosen = getRandomSongs(3);
+      songService.playMultiSong(chosen);
+
+      const opts = generateOptions(chosen);
+      setOptions(opts);
+      setCorrectAnswer(chosen.map(s => s.title).join(", "));
+    }
+    // Release "starting lock" after 1s
+    setTimeout(() => { isRoundStarting.current = false; }, 1000);
+  }, [currentRound, isSingleSong, roundTime]);
+
+  // Countdown timer logic
+  useEffect(() => {
+    if (!isRoundActive || isIntermission) return;
+
+    if (timeLeft <= 0) {
+      handleRoundEnd();
+      return;
+    }
+
+    const timer = setTimeout(() => setTimeLeft(t => t - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [timeLeft, isRoundActive, isIntermission]);
+
+
+  /* ----------------- RENDER ----------------- */
 
   return (
     <div className="game-2-container">
