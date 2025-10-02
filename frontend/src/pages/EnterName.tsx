@@ -2,9 +2,12 @@ import React, { useState } from 'react';
 import '../css/EnterName.css';
 interface GuessifyProps {}
 import { useNavigate } from 'react-router-dom';
+import CharacterCustomizer from '../components/CharacterCustomiser';
 
 const EnterName: React.FC<GuessifyProps> = () => {
   const [name, setName] = useState<string>('');
+  const [avatar, setAvatar] = useState<string>('a1');
+  const [color, setColor] = useState<string>('#FFD166');
   const navigate = useNavigate();
 
   const handleSubmit = (e: React.MouseEvent<HTMLButtonElement> | React.KeyboardEvent<HTMLInputElement>): void => {
@@ -52,6 +55,8 @@ const EnterName: React.FC<GuessifyProps> = () => {
             GO
           </button>
         </div>
+
+        <CharacterCustomizer avatar={avatar} setAvatar={setAvatar} color={color} setColor={setColor} />
       </div>
     </div>
   );
