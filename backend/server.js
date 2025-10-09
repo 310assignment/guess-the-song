@@ -159,6 +159,12 @@ io.on("connection", (socket) => {
 
     const room = rooms.get(code);
 
+    if (!room) {
+      console.log(`Room ${code} doesn't exist when getting player scores`);
+      socket.emit("room-players-scores", []);
+      return;
+    }
+
     io.to(code).emit("room-players-scores", Array.from(room.playerScores.values()) || []);
   });
 
@@ -166,6 +172,12 @@ io.on("connection", (socket) => {
     socket.join(code);
 
     const room = rooms.get(code);
+
+    if (!room) {
+      console.log(`Room ${code} doesn't exist when getting total rounds`);
+      socket.emit("total-rounds", 5); // default fallback
+      return;
+    }
 
     socket.emit("total-rounds", room.settings.rounds);
   });
@@ -231,6 +243,12 @@ io.on("connection", (socket) => {
   socket.on("start-game", ({ code }) => {
     socket.join(code);
     const room = rooms.get(code);
+
+    if (!room) {
+      console.log(`Room ${code} doesn't exist when starting game`);
+      socket.emit("game-start-error", { message: "Room not found" });
+      return;
+    }
 
     console.log(`Game started in room ${code}`);
     io.to(code).emit("game-started", room.settings);

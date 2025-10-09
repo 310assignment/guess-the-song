@@ -430,6 +430,16 @@ const InGamePage: React.FC = () => {
     }
   };
 
+  // Handle skip in single song mode
+  const handleSkip = () => {
+    if (!hasGuessedCorrectly) {
+      // Stop the song and go to round score display without points
+      songService.stopSong();
+      setIsRoundActive(false);
+      setIsIntermission(true);
+    }
+  };
+
   // Handle correct guess in single song mode
   const handleCorrectGuess = () => {
     let alreadyGuessed = false;

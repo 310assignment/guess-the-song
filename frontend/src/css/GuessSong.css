@@ -88,6 +88,107 @@
 /* Controls */
 .controls {
     margin-top: 20px;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Base Button Styles (shared between submit and skip) */
+.submit-btn,
+.skip-btn {
+    padding: 16px 32px;
+    font-size: 16px;
+    font-weight: 600;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 140px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Submit Button - Primary Action */
+.submit-btn {
+    background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+    color: white;
+    border-color: #22c55e;
+}
+
+.submit-btn:hover {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(34, 197, 94, 0.3);
+}
+
+.submit-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
+}
+
+.submit-btn--disabled {
+    background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+    border-color: #6b7280;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.submit-btn--disabled:hover {
+    background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+    transform: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Skip Button - Secondary Action */
+.skip-btn {
+    background: transparent;
+    color: #ef4444;
+    border-color: #ef4444;
+}
+
+.skip-btn:hover {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(239, 68, 68, 0.3);
+}
+
+.skip-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+.skip-btn--disabled {
+    background: transparent;
+    border-color: #9ca3af;
+    color: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.skip-btn--disabled:hover {
+    background: transparent;
+    border-color: #9ca3af;
+    color: #9ca3af;
+    transform: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Wrong message */
+.wrong-message {
+    color: #ef4444;
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 10px;
 }
 
 /* Responsive Design */
@@ -121,6 +222,15 @@
         padding: 15px 20px;
         min-height: 50px;
     }
+
+    .submit-btn,
+    .skip-btn {
+        padding: 14px 24px;
+        font-size: 14px;
+        min-width: 120px;
+        height: 50px;
+        letter-spacing: 0.3px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -141,5 +251,19 @@
 
     .correct-label h2 {
         font-size: 1.25rem;
+    }
+
+    .submit-btn,
+    .skip-btn {
+        padding: 12px 20px;
+        font-size: 12px;
+        min-width: 100px;
+        height: 44px;
+        letter-spacing: 0.2px;
+    }
+
+    .controls {
+        flex-direction: column;
+        gap: 12px;
     }
 }
