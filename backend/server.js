@@ -237,6 +237,25 @@ io.on("connection", (socket) => {
     io.to(code).emit("game-started", room.settings);
   });
 
+  // host distributes round data to all players
+  socket.on("host-start-round", ({ code, song, choices, answer, startTime }) => {
+    const room = rooms.get(code);
+    if (!room) {
+      console.log(`Host tried to start round in non-existent room ${code}`);
+      return;
+    }
+
+    console.log(`Host starting round in room ${code} with song:`, song?.title);
+    
+    // Send round data to all players in the room
+    io.to(code).emit("round-start", { 
+      song, 
+      choices, 
+      answer, 
+      startTime: startTime || Date.now() 
+    });
+  });
+
   socket.on("disconnect", () => {
     console.log("Client disconnected:", socket.id);
     

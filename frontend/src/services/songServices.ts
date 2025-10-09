@@ -88,6 +88,17 @@ export default class SongService {
     return this.cachedSongs;
   }
 
+  getCurrentSong(): Song | null {
+    if (!this.cachedSongs.length) return null;
+    return this.cachedSongs[this.currentIndex];
+  }
+
+  getNextSong(): Song | null {
+    if (!this.cachedSongs.length) return null;
+    const nextIndex = (this.currentIndex + 1) % this.cachedSongs.length;
+    return this.cachedSongs[nextIndex];
+  }
+
   // --- Single-song controls ---
   playSong(index: number = this.currentIndex) {
 

@@ -106,6 +106,8 @@ const InGamePage: React.FC = () => {
 
     // Host starts round → everyone gets the same song
     socket.on("round-start", ({ song, choices, answer, startTime }) => {
+      console.log("Received round-start from host:", { song: song?.title, choices, answer });
+      
       setCurrentSong(song);
       setOptions(choices);
       setCorrectAnswer(answer);
@@ -113,6 +115,39 @@ const InGamePage: React.FC = () => {
       setRoundStartTime(roundStart);
       setIsRoundActive(true);
       setTimeLeft(getTimeAsNumber(roundTime));
+      
+      // For non-host players, handle audio playback and state updates
+      const isSinglePlayer = state?.amountOfPlayers === 1;
+      if (!isSinglePlayer && !isHost) {
+        if (song) {
+          // Find the song in cached songs and play it for non-host players
+          const allSongs = songService.getCachedSongs();
+          const songIndex = allSongs.findIndex(s => s.title === song.title && s.artist === song.artist);
+          
+          if (songIndex >= 0) {
+            if (isSingleSong || isGuessArtist) {
+              songService.playSong(songIndex);
+            } else if (isQuickGuess) {
+              // For quick guess, play the snippet with same delay as host
+              const duration = getSnippetDuration();
+              setTimeout(async () => {
+                await songService.playQuickSnippet(songIndex, duration);
+                setHasPlayedSnippet(true);
+              }, 1000);
+            }
+          }
+        } else if (choices && choices.length > 0) {
+          // Mixed songs mode - no specific song to play
+          // The host handles the audio for mixed mode
+        }
+        
+        // Reset round state for non-host players
+        setHasGuessedCorrectly(false);
+        setHasSelectedCorrectly(false);
+        setShowCorrectAnswer(false);
+        setIsTimeUp(false);
+        setHasGuessedArtistCorrectly(false);
+      }
     });
 
     // Score update - this will override the initial scores when available
@@ -183,31 +218,6 @@ const InGamePage: React.FC = () => {
   };
 
   // Setup Quick Guess mode with single song and multiple choice options
-  const setupQuickGuessRound = () => {
-    const allSongs = songService.getCachedSongs();
-
-    // Get a random index and the corresponding song
-    const randomIndex = Math.floor(Math.random() * allSongs.length);
-    const chosen = allSongs[randomIndex];
-
-    // Generate 3 wrong options
-    const wrongOptions = allSongs.filter(song => song.title != chosen.title)
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 3)
-      .map(s => s.title);
-
-    // Mix correct answer with wrong options and shuffle
-    const opts = [chosen.title, ...wrongOptions].sort(() => 0.5 - Math.random());
-    setOptions(opts);
-    setCorrectAnswer(chosen.title);
-
-    // Play the snippet
-    const snippetDuration = getSnippetDuration();
-    setTimeout(async () => {
-      await songService.playQuickSnippet(randomIndex, snippetDuration);
-      setHasPlayedSnippet(true);
-    }, 1000);
-  }
 
 
   // Generate multiple choice options including correct answer + distractors
@@ -233,6 +243,128 @@ const InGamePage: React.FC = () => {
     }
 
     return opts.sort(() => 0.5 - Math.random());
+  };
+
+  // Single player round logic (local generation)
+  const startSinglePlayerRound = () => {
+    if (isSingleSong || isGuessArtist) {
+      if (currentRound === 1) songService.playSong();
+      else songService.playNextSong();
+    } else if (isQuickGuess) {
+      // Use same logic as multiplayer host for consistency
+      const allSongs = songService.getCachedSongs();
+      const randomIndex = Math.floor(Math.random() * allSongs.length);
+      const selectedSong = allSongs[randomIndex];
+      
+      if (selectedSong) {
+        // Generate consistent multiple choice options
+        const wrongOptions = allSongs
+          .filter(s => s.title !== selectedSong.title)
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 3)
+          .map(s => s.title);
+        
+        const choices = [selectedSong.title, ...wrongOptions].sort(() => Math.random() - 0.5);
+        
+        setCurrentSong(selectedSong);
+        setOptions(choices);
+        setCorrectAnswer(selectedSong.title);
+
+        // Play the snippet with a delay
+        const snippetDuration = getSnippetDuration();
+        setTimeout(async () => {
+          await songService.playQuickSnippet(randomIndex, snippetDuration);
+          setHasPlayedSnippet(true);
+        }, 1000);
+      }
+    } else {
+      // Mixed songs mode
+      const chosen = getRandomSongs(3);
+      songService.playMultiSong(chosen);
+
+      const opts = generateOptions(chosen);
+      setOptions(opts);
+      setCorrectAnswer(chosen.map(s => s.title).join(", "));
+    }
+  };
+
+  // Multiplayer host round logic (generate and distribute)
+  const startMultiplayerHostRound = () => {
+    let roundData: any = {};
+
+    if (isSingleSong || isGuessArtist) {
+      const currentSongData = currentRound === 1 ? 
+        songService.getCurrentSong() : 
+        songService.getNextSong();
+      
+      if (currentSongData) {
+        roundData = {
+          song: currentSongData,
+          choices: [],
+          answer: isGuessArtist ? currentSongData.artist : currentSongData.title
+        };
+      }
+      
+      if (currentRound === 1) songService.playSong();
+      else songService.playNextSong();
+    } else if (isQuickGuess) {
+      // For quick guess, get the song data BEFORE setup to ensure consistency
+      const allSongs = songService.getCachedSongs();
+      const randomIndex = Math.floor(Math.random() * allSongs.length);
+      const selectedSong = allSongs[randomIndex];
+      
+      if (selectedSong) {
+        // Generate consistent multiple choice options
+        const wrongOptions = allSongs
+          .filter(s => s.title !== selectedSong.title)
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 3)
+          .map(s => s.title);
+        
+        const choices = [selectedSong.title, ...wrongOptions].sort(() => Math.random() - 0.5);
+        
+        roundData = {
+          song: selectedSong,
+          choices,
+          answer: selectedSong.title
+        };
+
+        // Now setup the round with the selected song
+        setCurrentSong(selectedSong);
+        setOptions(choices);
+        setCorrectAnswer(selectedSong.title);
+        
+        // Play the snippet with a delay (same as single player)
+        const snippetDuration = getSnippetDuration();
+        setTimeout(async () => {
+          await songService.playQuickSnippet(randomIndex, snippetDuration);
+          setHasPlayedSnippet(true);
+        }, 1000);
+      }
+    } else {
+      // Mixed songs mode
+      const chosen = getRandomSongs(3);
+      songService.playMultiSong(chosen);
+
+      const opts = generateOptions(chosen);
+      setOptions(opts);
+      setCorrectAnswer(chosen.map(s => s.title).join(", "));
+      
+      roundData = {
+        song: null, // Mixed mode doesn't have a single song
+        choices: opts,
+        answer: chosen.map(s => s.title).join(", ")
+      };
+    }
+
+    // Send round data to all players via socket
+    if (socket && code) {
+      socket.emit("host-start-round", {
+        code,
+        ...roundData,
+        startTime: Date.now()
+      });
+    }
   };
   
 
@@ -428,21 +560,18 @@ const handleContinueToNextRound = () => {
     setHasPlayedSnippet(false);
     setHasGuessedArtistCorrectly(false);
 
-    // Start playback depending on game mode
-    if (isSingleSong || isGuessArtist) {
-      if (currentRound === 1) songService.playSong();
-      else songService.playNextSong();
-    } else if (isQuickGuess) {
-      setupQuickGuessRound();
-    } else {
-      // Mixed songs mode
-      const chosen = getRandomSongs(3);
-      songService.playMultiSong(chosen);
-
-      const opts = generateOptions(chosen);
-      setOptions(opts);
-      setCorrectAnswer(chosen.map(s => s.title).join(", "));
+    // Check if this is single player or multiplayer
+    const isSinglePlayer = state?.amountOfPlayers === 1;
+    
+    if (isSinglePlayer) {
+      // Single player: generate songs locally as before
+      startSinglePlayerRound();
+    } else if (isHost) {
+      // Multiplayer host: generate and distribute round data
+      startMultiplayerHostRound();
     }
+    // Multiplayer non-host players will receive round data via socket event
+
     // Release "starting lock" after 1s
     setTimeout(() => { isRoundStarting.current = false; }, 1000);
   }, [currentRound, isSingleSong, isGuessArtist, isQuickGuess, roundTime]);
