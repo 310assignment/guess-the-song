@@ -104,13 +104,11 @@ const renderDropdown = (key: keyof typeof options) => (
     </div>
     <select
       className="setting-dropdown"
-      value={
-        key === 'amountOfPlayers' 
-          ? getPlayerCountString(settings[key]) 
-          : key === 'rounds' 
-          ? getRoundsCountString(settings[key]) 
-          : settings[key]
-      }
+      value={(() => {
+        if (key === 'amountOfPlayers') return getPlayerCountString(settings[key]);
+        if (key === 'rounds') return getRoundsCountString(settings[key]);
+        return settings[key];
+      })()}
       onChange={(e) => handleChange(key, e.target.value)}
     >
       {options[key].map(option => (

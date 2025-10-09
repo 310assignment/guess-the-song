@@ -24,7 +24,7 @@ const WaitingRoom: React.FC = () => {
 
   useEffect(() => {
 
-    if (!socket || !socket.connected) return;
+    if (!socket?.connected) return;
 
     socket.emit("join", { code, playerName });
 
@@ -35,8 +35,7 @@ const WaitingRoom: React.FC = () => {
     });
 
     // Handle successful join
-    socket.on("join-success", ({ roomCode, playerName: joinedPlayer, players: roomPlayers, amountOfPlayersInRoom, playerScores }) => {
-
+    socket.on("join-success", ({ players: roomPlayers, amountOfPlayersInRoom }) => {
       setPlayers(roomPlayers);
       setAmountOfPlayersInRoom(amountOfPlayersInRoom);
     });
@@ -62,8 +61,8 @@ const WaitingRoom: React.FC = () => {
   }, [code, playerName, navigate]);
 
   const handleStartGame = () => {
-    //TODO: Validate enough players, settings, etc.
-    if (socket && isHost) {
+    // Basic validation: check if we have at least one player and socket connection
+    if (socket && isHost && players.length > 0) {
       socket.emit("start-game", { code });
     }
   };
@@ -100,8 +99,8 @@ const WaitingRoom: React.FC = () => {
         }}>
           <h3>Players in Room ({players.length}/{amountOfPlayersInRoom}):</h3>
           <ul style={{ listStyle: 'none', padding: 0 }}>
-            {players.map((player, index) => (
-              <li key={index} style={{ 
+            {players.map((player) => (
+              <li key={player} style={{ 
                 padding: '8px', 
                 backgroundColor: '#7e7eb7ff', 
                 margin: '5px 0', 

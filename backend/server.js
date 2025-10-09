@@ -175,7 +175,6 @@ io.on("connection", (socket) => {
     socket.join(code);
 
     io.to(code).emit("rooms", Object.fromEntries(rooms.entries()));
-    // socket.emit("rooms", Object.fromEntries(rooms.entries()));
   });
 
   // Handle score updates from players

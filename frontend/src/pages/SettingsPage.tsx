@@ -3,9 +3,7 @@ import "../css/SettingsPage.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { generateRoomCode } from "../utils/roomCode.tsx";
-import type { GameSettings } from "../components/Settings";
-import { PlayerCount } from "../components/Settings";
-import { RoundsCount } from "../components/Settings";
+import { type GameSettings, PlayerCount, RoundsCount } from "../components/Settings";
 import { socket } from '../socket';
 
 const SettingsPage = () => {

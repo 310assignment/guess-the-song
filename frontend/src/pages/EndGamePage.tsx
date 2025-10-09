@@ -42,7 +42,7 @@ const EndGamePage: React.FC = () => {
 
     /* ----------------- SOCKET CONNECTION ----------------- */
   useEffect(() => {
-    if (!socket || !socket.connected) return;
+    if (!socket?.connected) return;
 
 
     socket.emit("get-room-players-scores", code );
