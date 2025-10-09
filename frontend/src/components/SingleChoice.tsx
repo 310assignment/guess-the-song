@@ -9,6 +9,7 @@ interface SingleChoiceProps {
   currentSong: Song | null;            // Current song data
   hasGuessedCorrectly: boolean;        // Whether the user already guessed right
   onWrongGuess?: () => void;           // Optional callback for wrong guess
+  onSkip?: () => void;                 // Optional callback for skipping the round
 }
 
 const SingleChoice: React.FC<SingleChoiceProps> = ({
@@ -16,6 +17,7 @@ const SingleChoice: React.FC<SingleChoiceProps> = ({
   currentSong,
   hasGuessedCorrectly,
   onWrongGuess,
+  onSkip,
 }) => {
   const [guess, setGuess] = useState("");              // User input guess
   const [showWrongMessage, setShowWrongMessage] = useState(false); // Flag to show "wrong" feedback
@@ -62,6 +64,13 @@ const SingleChoice: React.FC<SingleChoiceProps> = ({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setGuess(e.target.value);
+  };
+
+  /** Handle skip button click */
+  const handleSkip = () => {
+    if (!hasGuessedCorrectly && onSkip) {
+      onSkip();
+    }
   };
 
   /** Check guess against the song title */
@@ -129,7 +138,7 @@ const SingleChoice: React.FC<SingleChoiceProps> = ({
         />
       </div>
 
-      {/* Submit + feedback */}
+      {/* Submit + Skip + feedback */}
       <div className="controls">
         <button
           onClick={() => handleSubmitGuess()}
@@ -137,6 +146,14 @@ const SingleChoice: React.FC<SingleChoiceProps> = ({
           className={`submit-btn ${hasGuessedCorrectly ? "submit-btn--disabled" : ""}`}
         >
           {hasGuessedCorrectly ? "Correct! ✅" : "Submit Guess"}
+        </button>
+
+        <button
+          onClick={handleSkip}
+          disabled={hasGuessedCorrectly}
+          className={`skip-btn ${hasGuessedCorrectly ? "skip-btn--disabled" : ""}`}
+        >
+          Skip
         </button>
 
         {/* Show wrong guess feedback */}
