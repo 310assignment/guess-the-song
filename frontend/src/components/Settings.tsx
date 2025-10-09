@@ -1,11 +1,16 @@
-import '../css/Settings.css';
+import "../css/Settings.css";
+import React from "react";
 
-// Import setting icons
-import PlayersIcon from '../assets/setting-icons/Players.png';
-import ModeIcon from '../assets/setting-icons/Vector.png';
-import RoundIcon from '../assets/setting-icons/Round.png';
-import TimerIcon from '../assets/setting-icons/Timer.png';
+import PlayersIcon from "../assets/setting-icons/Players.png";
+import ModeIcon from "../assets/setting-icons/Vector.png";
+import RoundIcon from "../assets/setting-icons/Round.png";
+import TimerIcon from "../assets/setting-icons/Timer.png";
 
+
+const GENRES = ["kpop", "pop", "hiphop", "edm"] as const;
+export type Genre = (typeof GENRES)[number];
+
+  
 // Player count mapping object
 export const PlayerCount = {
   'Single Player': 1,
@@ -55,6 +60,7 @@ export interface GameSettings {
   gameMode: string;
   rounds: number;
   guessTime: string;
+  genre: Genre;
 }
 
 // Props expected by Settings component
@@ -69,6 +75,7 @@ const options = {
   gameMode: ['Single Song', 'Mixed Songs', 'Guess the Artist', 'Quick Guess - 1 Sec', 'Quick Guess - 3 Sec', 'Quick Guess - 5 Sec'],
   rounds: ['5 Rounds', '10 Rounds', '15 Rounds', '20 Rounds'],
   guessTime: ['10 sec', '15 sec', '20 sec', '30 sec'],
+  genre: GENRES,
 };
 
 // Icon & Label mapping for each setting
@@ -77,6 +84,7 @@ const icons = {
   gameMode: { src: ModeIcon, label: 'GAME MODE' },
   rounds: { src: RoundIcon, label: 'ROUNDS' },
   guessTime: { src: TimerIcon, label: 'GUESS TIME' },
+  genre: { src: ModeIcon, label: "GENRE" },
 };
 
 const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
@@ -124,6 +132,8 @@ const renderDropdown = (key: keyof typeof options) => (
       {renderDropdown('gameMode')}
       {renderDropdown('rounds')}
       {renderDropdown('guessTime')}
+      {renderDropdown("genre")}
+
     </div>
   );
 };
