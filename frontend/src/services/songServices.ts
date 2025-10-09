@@ -1,5 +1,7 @@
 import { type Song } from "../types/song";
 import axios from "axios";
+import { secureRandomInt } from "../utils/secureRandom";
+import { safeSetTimeoutAsync } from '../utils/safeTimers';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
@@ -168,14 +170,14 @@ export default class SongService {
         this.currentAudio!.removeEventListener('canplay', handleCanPlay);
         
         // Start from a random position (ensure we have enough time for the snippet)
-        const randomStart = Math.floor(Math.random() * Math.max(0, this.currentAudio!.duration - duration));
+        const randomStart = secureRandomInt(Math.max(0, this.currentAudio!.duration - duration));
         this.currentAudio!.currentTime = randomStart;
         
         this.currentAudio!.play().then(() => {
           if (this.onTrackChange) this.onTrackChange(song, this.currentIndex);
           
           // Stop after specified duration and properly clear the audio
-          setTimeout(() => {
+          safeSetTimeoutAsync(async () => {
             this.stopSong(); // Use the existing stopSong method for complete cleanup
             resolve();
           }, duration * 1000);

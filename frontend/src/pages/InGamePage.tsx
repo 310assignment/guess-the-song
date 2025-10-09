@@ -11,6 +11,13 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { songService } from "../services/songServices";
 import type { Song } from "../types/song";
 import {socket} from '../socket';
+import { 
+  generateMultipleChoiceOptions, 
+  selectRandomSong, 
+  getRandomSongs,
+  generateMixedSongsOptions 
+} from "../utils/gameLogic";
+import { safeSetTimeoutAsync } from "../utils/safeTimers";
 
 interface Player {
   name: string;
@@ -127,7 +134,7 @@ const InGamePage: React.FC = () => {
             } else if (isQuickGuess) {
               // For quick guess, play the snippet with same delay as host
               const duration = getSnippetDuration();
-              setTimeout(async () => {
+              safeSetTimeoutAsync(async () => {
                 await songService.playQuickSnippet(songIndex, duration);
                 setHasPlayedSnippet(true);
               }, 1000);
@@ -207,40 +214,17 @@ const InGamePage: React.FC = () => {
 
   /* ----------------- HELPER FUNCTIONS ----------------- */
 
-  // Get a random set of songs for multiple choice rounds
-  const getRandomSongs = (num: number): Song[] => {
+  // Get a random set of songs for multiple choice rounds (now using secure utility)
+  const getRandomSongsForGame = (num: number): Song[] => {
     const all = songService.getCachedSongs();
-    const shuffled = [...all].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, num);
+    return getRandomSongs(all, num);
   };
 
   // Setup Quick Guess mode with single song and multiple choice options
 
 
-  // Generate multiple choice options including correct answer + distractors
-  const generateOptions = (correctSongs: Song[]): string[] => {
-    const all = songService.getCachedSongs();
-    const correctTitles = correctSongs.map((s) => s.title);
+  // Generate multiple choice options including correct answer + distractors (using secure utility)
 
-    // Generate a random incorrect option as a "mix"
-    function randomMix(): string {
-      const shuffled = [...all].sort(() => 0.5 - Math.random());
-      return shuffled
-        .slice(0, 3)
-        .map((s) => s.title)
-        .join(", ");
-    }
-
-    const opts: string[] = [];
-    opts.push(correctTitles.join(", "));
-
-    while (opts.length < 4) {
-      const mix = randomMix();
-      if (!opts.includes(mix)) opts.push(mix);
-    }
-
-    return opts.sort(() => 0.5 - Math.random());
-  };
 
   // Single player round logic (local generation)
   const startSinglePlayerRound = () => {
@@ -248,20 +232,13 @@ const InGamePage: React.FC = () => {
       if (currentRound === 1) songService.playSong();
       else songService.playNextSong();
     } else if (isQuickGuess) {
-      // Use same logic as multiplayer host for consistency
+      // Use secure random utilities for consistency
       const allSongs = songService.getCachedSongs();
-      const randomIndex = Math.floor(Math.random() * allSongs.length);
-      const selectedSong = allSongs[randomIndex];
+      const { song: selectedSong, index: randomIndex } = selectRandomSong(allSongs);
       
       if (selectedSong) {
-        // Generate consistent multiple choice options
-        const wrongOptions = allSongs
-          .filter(s => s.title !== selectedSong.title)
-          .sort(() => Math.random() - 0.5)
-          .slice(0, 3)
-          .map(s => s.title);
-        
-        const choices = [selectedSong.title, ...wrongOptions].sort(() => Math.random() - 0.5);
+        // Generate consistent multiple choice options using secure utility
+        const choices = generateMultipleChoiceOptions(selectedSong, allSongs);
         
         setCurrentSong(selectedSong);
         setOptions(choices);
@@ -269,17 +246,17 @@ const InGamePage: React.FC = () => {
 
         // Play the snippet with a delay
         const snippetDuration = getSnippetDuration();
-        setTimeout(async () => {
+        safeSetTimeoutAsync(async () => {
           await songService.playQuickSnippet(randomIndex, snippetDuration);
           setHasPlayedSnippet(true);
         }, 1000);
       }
     } else {
       // Mixed songs mode
-      const chosen = getRandomSongs(3);
+      const chosen = getRandomSongsForGame(3);
       songService.playMultiSong(chosen);
 
-      const opts = generateOptions(chosen);
+      const opts = generateMixedSongsOptions(chosen, songService.getCachedSongs());
       setOptions(opts);
       setCorrectAnswer(chosen.map(s => s.title).join(", "));
     }
@@ -309,18 +286,11 @@ const InGamePage: React.FC = () => {
   // Helper function for quick guess mode
   const setupQuickGuessMode = () => {
     const allSongs = songService.getCachedSongs();
-    const randomIndex = Math.floor(Math.random() * allSongs.length);
-    const selectedSong = allSongs[randomIndex];
+    const { song: selectedSong, index: randomIndex } = selectRandomSong(allSongs);
     
     if (selectedSong) {
-      // Generate consistent multiple choice options
-      const wrongOptions = allSongs
-        .filter(s => s.title !== selectedSong.title)
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 3)
-        .map(s => s.title);
-      
-      const choices = [selectedSong.title, ...wrongOptions].sort(() => Math.random() - 0.5);
+      // Generate consistent multiple choice options using secure utility
+      const choices = generateMultipleChoiceOptions(selectedSong, allSongs);
       
       // Setup local state
       setCurrentSong(selectedSong);
@@ -329,7 +299,7 @@ const InGamePage: React.FC = () => {
       
       // Play the snippet with a delay
       const snippetDuration = getSnippetDuration();
-      setTimeout(async () => {
+      safeSetTimeoutAsync(async () => {
         await songService.playQuickSnippet(randomIndex, snippetDuration);
         setHasPlayedSnippet(true);
       }, 1000);
@@ -345,10 +315,10 @@ const InGamePage: React.FC = () => {
 
   // Helper function for mixed songs mode
   const setupMixedSongsMode = () => {
-    const chosen = getRandomSongs(3);
+    const chosen = getRandomSongsForGame(3);
     songService.playMultiSong(chosen);
 
-    const opts = generateOptions(chosen);
+    const opts = generateMixedSongsOptions(chosen, songService.getCachedSongs());
     setOptions(opts);
     setCorrectAnswer(chosen.map(s => s.title).join(", "));
     
@@ -587,7 +557,7 @@ const handleContinueToNextRound = () => {
     // Multiplayer non-host players will receive round data via socket event
 
     // Release "starting lock" after 1s
-    setTimeout(() => { isRoundStarting.current = false; }, 1000);
+    safeSetTimeoutAsync(async () => { isRoundStarting.current = false; }, 1000);
   }, [currentRound, isSingleSong, isGuessArtist, isQuickGuess, roundTime]);
 
   // Countdown timer logic
@@ -604,7 +574,7 @@ const handleContinueToNextRound = () => {
   }
 
   // Single timer that decrements every second
-  const timer = setTimeout(() => setTimeLeft((t: number) => t - 1), 1000);
+  const timer = safeSetTimeoutAsync(async () => setTimeLeft((t: number) => t - 1), 1000);
   
   return () => clearTimeout(timer);
 }, [timeLeft, isRoundActive, isIntermission, socket, code]);

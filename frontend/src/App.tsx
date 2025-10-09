@@ -7,7 +7,7 @@ import MultipleChoiceMode from './pages/MultipleChoiceMode'
 import EndGamePage from './pages/EndGamePage'
 import WaitingRoom from './pages/WaitingRoom';
 import { socket } from './socket';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 
 function App() {
