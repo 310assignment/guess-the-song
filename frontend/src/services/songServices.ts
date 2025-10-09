@@ -134,6 +134,54 @@ export default class SongService {
     this.stopMultiSong();
   }
 
+  // --- Quick snippet playback with flexible duration ---
+  async playQuickSnippet(index: number = this.currentIndex, duration: number = 3): Promise<void> {
+    if (!this.cachedSongs.length) return;
+    this.stopSong();
+
+    this.currentIndex = index;
+    const song = this.cachedSongs[this.currentIndex];
+    if (!song.previewUrl) return;
+
+    return new Promise((resolve) => {
+      this.currentAudio = new Audio(song.previewUrl);
+      this.currentAudio.volume = this.currentVolume;
+      this.currentAudio.muted = false;
+      this.isMuted = false;
+      
+      if (this.onMuteStateChange) {
+        this.onMuteStateChange(false);
+      }
+
+      const handleCanPlay = () => {
+        this.currentAudio!.removeEventListener('canplay', handleCanPlay);
+        
+        // Start from a random position (ensure we have enough time for the snippet)
+        const randomStart = Math.floor(Math.random() * Math.max(0, this.currentAudio!.duration - duration));
+        this.currentAudio!.currentTime = randomStart;
+        
+        this.currentAudio!.play().then(() => {
+          if (this.onTrackChange) this.onTrackChange(song, this.currentIndex);
+          
+          // Stop after specified duration and properly clear the audio
+          setTimeout(() => {
+            this.stopSong(); // Use the existing stopSong method for complete cleanup
+            resolve();
+          }, duration * 1000);
+        }).catch((err) => {
+          console.error("Quick snippet playback failed:", err);
+          resolve();
+        });
+      };
+
+      this.currentAudio.addEventListener('canplay', handleCanPlay);
+      this.currentAudio.addEventListener('error', () => {
+        console.error("Audio loading failed");
+        resolve();
+      });
+    });
+  }
+
   // --- Multi-song controls (Play exactly 3 songs simultaneously) ---
   async playMultiSong(songs: Song[]) {
     this.stopMultiSong();

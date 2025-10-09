@@ -60,7 +60,7 @@ io.on("connection", (socket) => {
 
     // Initialize room if it doesn't exist (with default settings)
     if (!rooms.has(code)) {
-      console.log(`Creating new room ${code} with default settings`);
+      console.log(`Creating new room ${code} with settings:`, settings);
       const room = {
         players: [], 
         playerScores: new Map(), // Store player scores: playerName -> score object
@@ -69,6 +69,13 @@ io.on("connection", (socket) => {
         host
       }
       rooms.set(code, room);
+
+      // For single player mode, automatically add the host to the room
+      if (settings.amountOfPlayers === 1) {
+        room.players.push(host);
+        room.playerScores.set(host, initializePlayerScore(host));
+        console.log(`Single player mode: ${host} automatically joined room ${code}`);
+      }
 
       socket.emit("room-created", { code, rooms: Object.fromEntries(rooms.entries()) });
     }
