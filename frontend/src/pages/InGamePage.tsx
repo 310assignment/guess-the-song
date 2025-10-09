@@ -41,9 +41,7 @@ const InGamePage: React.FC = () => {
 
   // --- Extract settings safely ---
   const state = location.state 
-  const { playerName, isHost, rounds: totalRounds, guessTime: roundTime, gameMode, genre: Genre} = state;
-
-  const { playerName, isHost, rounds: totalRounds, guessTime: roundTime } = state;
+  const { playerName, isHost, rounds: totalRounds, guessTime: roundTime, gameMode, genre: Genre } = state;
 
   // --- Player State ---
   const [players, setPlayers] = useState<Player[]>([]);
@@ -226,7 +224,7 @@ const InGamePage: React.FC = () => {
   }, [genre]);
 
   // Get a random set of songs for multiple choice rounds
-  const getRandomSongs = (num: number): Song[] => {
+  const getRandomSongsForGame = (num: number): Song[] => {
     const all = songService.getCachedSongs();
     return getRandomSongs(all, num);
   };
@@ -269,7 +267,7 @@ const InGamePage: React.FC = () => {
 
       const opts = generateMixedSongsOptions(chosen, songService.getCachedSongs());
       setOptions(opts);
-      setCorrectAnswer(chosen.map(s => s.title).join(", "));
+      setCorrectAnswer(chosen.map((s: Song) => s.title).join(", "));
     }
   };
 
@@ -331,12 +329,12 @@ const InGamePage: React.FC = () => {
 
     const opts = generateMixedSongsOptions(chosen, songService.getCachedSongs());
     setOptions(opts);
-    setCorrectAnswer(chosen.map(s => s.title).join(", "));
+    setCorrectAnswer(chosen.map((s: Song) => s.title).join(", "));
     
     return {
       song: null, // Mixed mode doesn't have a single song
       choices: opts,
-      answer: chosen.map(s => s.title).join(", ")
+      answer: chosen.map((s: Song) => s.title).join(", ")
     };
   };
 
@@ -611,6 +609,7 @@ const handleContinueToNextRound = () => {
           onCorrectGuess={handleCorrectGuess}
           currentSong={currentSong}
           hasGuessedCorrectly={hasGuessedCorrectly}
+          onSkip={handleSkip}
           onWrongGuess={() => {
             // Optional: Add any logic for wrong guesses
           }}
@@ -626,6 +625,7 @@ const handleContinueToNextRound = () => {
           selectedIndex={selectedIndex}
           correctAnswer={correctAnswer}
           showCorrectAnswer={showCorrectAnswer}
+          onSkip={handleSkip}
         />
       );
     }
@@ -637,6 +637,7 @@ const handleContinueToNextRound = () => {
           onCorrectGuess={handleCorrectGuess}
           currentSong={currentSong}
           hasGuessedCorrectly={hasGuessedArtistCorrectly}
+          onSkip={handleSkip}
           onWrongGuess={() => {
             // Optional: Add any logic for wrong guesses
           }}
@@ -654,6 +655,7 @@ const handleContinueToNextRound = () => {
           showCorrectAnswer={showCorrectAnswer}
           hasPlayedSnippet={hasPlayedSnippet}
           snippetDuration={getSnippetDuration()}
+          onSkip={handleSkip}
         />
       );
     }

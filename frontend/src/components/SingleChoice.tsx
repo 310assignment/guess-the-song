@@ -18,7 +18,7 @@ const SingleChoice: React.FC<SingleChoiceProps> = ({
   currentSong,
   hasGuessedCorrectly,
   onWrongGuess,
-  mode
+  mode,
   onSkip,
 }) => {
   const [guess, setGuess] = useState("");              // User input guess

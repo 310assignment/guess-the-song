@@ -55,7 +55,7 @@ export default class SongService {
   }
 
   async refresh(genre: Genre = "kpop") {
-    const res = await axios.post(`${this.baseUrl}/refresh`, null, { params: { genre } });
+    await axios.post(`${this.baseUrl}/refresh`, null, { params: { genre } });
     return this.fetchRandom(genre);
   }
   getCachedSongs() {
