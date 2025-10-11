@@ -1,27 +1,33 @@
-import React, { useCallback } from "react";
+import React from "react";
 import "../css/MultipleChoice.css";
 import songIcon from "../assets/song-icon.png";
 
-interface MultipleChoiceProps {
+interface QuickGuessMultipleChoiceProps {
   options: string[];
   onSelect: (index: number) => void;
   selectedIndex: number | null;
   correctAnswer: string;
   showCorrectAnswer: boolean;
+  hasPlayedSnippet: boolean;
+  snippetDuration?: number;
   onSkip?: () => void;                 // Optional callback for skipping the round
 }
 
-const MultipleChoice: React.FC<MultipleChoiceProps> = ({
+// Multiple choice component for quick guess mode
+const QuickGuessMultipleChoice: React.FC<QuickGuessMultipleChoiceProps> = ({
   options,
   onSelect,
   selectedIndex,
   correctAnswer,
   showCorrectAnswer,
+  hasPlayedSnippet,
+  snippetDuration = 3,
   onSkip,
 }) => {
   const getButtonClass = (index: number) => {
     let className = "answer-btn";
 
+    // Highlight selected answer and show correct/wrong feedback
     if (selectedIndex === index) {
       if (showCorrectAnswer) {
         className += options[index] === correctAnswer ? " correct" : " wrong";
@@ -30,6 +36,7 @@ const MultipleChoice: React.FC<MultipleChoiceProps> = ({
       }
     }
 
+    // Disable other buttons once one is selected, show correct answer if needed
     if (selectedIndex !== null && selectedIndex !== index) {
       className += " disabled";
       if (showCorrectAnswer && options[index] === correctAnswer) {
@@ -40,37 +47,42 @@ const MultipleChoice: React.FC<MultipleChoiceProps> = ({
     return className;
   };
 
-  const handleButtonClick = useCallback(
-    (index: number) => {
-      if (selectedIndex === null) {
-        onSelect(index);
-      }
-    },
-    [selectedIndex, onSelect]
-  );
+  // Handle button click only if snippet has played and no answer selected yet
+  const handleButtonClick = (index: number) => {
+    if (selectedIndex === null && hasPlayedSnippet) {
+      onSelect(index);
+    }
+  };
 
   const handleSkip = () => {
-    if (selectedIndex === null && onSkip) {
+    if (selectedIndex === null && hasPlayedSnippet && onSkip) {
       onSkip();
     }
   };
 
   return (
     <div className="choose-song-container">
-      <h2>SONG:</h2>
+      {!hasPlayedSnippet ? (
+        <div className="status-message waiting">
+          🎵 Get ready! A {snippetDuration}-second snippet will play automatically...
+        </div>
+      ) : (
+        <h2>SONG:</h2>
+      )}
 
       <div className="song-icon">
         <img src={songIcon} alt="Song Icon" />
       </div>
 
+
       <div className="answer-buttons">
         {options.map((option, index) => (
           <button
-            key={option} // <-- Use the option text as key instead of index
+            key={option}
             type="button"
             className={getButtonClass(index)}
             onClick={() => handleButtonClick(index)}
-            disabled={selectedIndex !== null && selectedIndex !== index}
+            disabled={!hasPlayedSnippet || (selectedIndex !== null && selectedIndex !== index)}
             aria-pressed={selectedIndex === index}
           >
             {`${index + 1}. ${option}`}
@@ -84,8 +96,8 @@ const MultipleChoice: React.FC<MultipleChoiceProps> = ({
           <button
             type="button"
             onClick={handleSkip}
-            className={`skip-btn ${selectedIndex !== null ? "skip-btn--disabled" : ""}`}
-            disabled={selectedIndex !== null}
+            className={`skip-btn ${!hasPlayedSnippet || selectedIndex !== null ? "skip-btn--disabled" : ""}`}
+            disabled={!hasPlayedSnippet || selectedIndex !== null}
           >
             Skip
           </button>
@@ -95,4 +107,4 @@ const MultipleChoice: React.FC<MultipleChoiceProps> = ({
   );
 };
 
-export default MultipleChoice;
+export default QuickGuessMultipleChoice;

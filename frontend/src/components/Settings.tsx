@@ -72,7 +72,7 @@ interface SettingsProps {
 // Dropdown options for each setting
 const options = {
   amountOfPlayers: ['Single Player', '2 Players', '3 Players', '4 Players', '5 Players', '6 Players', '7 Players', '8 Players'],
-  gameMode: ['Single Song', 'Mixed Songs'],
+  gameMode: ['Single Song', 'Mixed Songs', 'Guess the Artist', 'Quick Guess - 1 Sec', 'Quick Guess - 3 Sec', 'Quick Guess - 5 Sec'],
   rounds: ['5 Rounds', '10 Rounds', '15 Rounds', '20 Rounds'],
   guessTime: ['10 sec', '15 sec', '20 sec', '30 sec'],
   genre: GENRES,
@@ -112,13 +112,11 @@ const renderDropdown = (key: keyof typeof options) => (
     </div>
     <select
       className="setting-dropdown"
-      value={
-        key === 'amountOfPlayers' 
-          ? getPlayerCountString(settings[key]) 
-          : key === 'rounds' 
-          ? getRoundsCountString(settings[key]) 
-          : settings[key]
-      }
+      value={(() => {
+        if (key === 'amountOfPlayers') return getPlayerCountString(settings[key]);
+        if (key === 'rounds') return getRoundsCountString(settings[key]);
+        return settings[key];
+      })()}
       onChange={(e) => handleChange(key, e.target.value)}
     >
       {options[key].map(option => (

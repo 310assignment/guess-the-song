@@ -62,7 +62,7 @@ io.on("connection", (socket) => {
 
     // Initialize room if it doesn't exist (with default settings)
     if (!rooms.has(code)) {
-      console.log(`Creating new room ${code} with default settings`);
+      console.log(`Creating new room ${code} with settings:`, settings);
       const room = {
         players: [], 
         playerScores: new Map(), // Store player scores: playerName -> score object
@@ -71,6 +71,13 @@ io.on("connection", (socket) => {
         host
       }
       rooms.set(code, room);
+
+      // For single player mode, automatically add the host to the room
+      if (settings.amountOfPlayers === 1) {
+        room.players.push(host);
+        room.playerScores.set(host, initializePlayerScore(host));
+        console.log(`Single player mode: ${host} automatically joined room ${code}`);
+      }
 
       socket.emit("room-created", { code, rooms: Object.fromEntries(rooms.entries()) });
     }
@@ -247,6 +254,25 @@ io.on("connection", (socket) => {
 
     console.log(`Game started in room ${code}`);
     io.to(code).emit("game-started", room.settings);
+  });
+
+  // host distributes round data to all players
+  socket.on("host-start-round", ({ code, song, choices, answer, startTime }) => {
+    const room = rooms.get(code);
+    if (!room) {
+      console.log(`Host tried to start round in non-existent room ${code}`);
+      return;
+    }
+
+    console.log(`Host starting round in room ${code} with song:`, song?.title);
+    
+    // Send round data to all players in the room
+    io.to(code).emit("round-start", { 
+      song, 
+      choices, 
+      answer, 
+      startTime: startTime || Date.now() 
+    });
   });
 
   socket.on("disconnect", () => {

@@ -26,7 +26,7 @@ const WaitingRoom: React.FC = () => {
 
   useEffect(() => {
 
-    if (!socket || !socket.connected) return;
+    if (!socket?.connected) return;
 
     socket.emit("join", { code, playerName });
 
@@ -37,8 +37,7 @@ const WaitingRoom: React.FC = () => {
     });
 
     // Handle successful join
-    socket.on("join-success", ({ roomCode, playerName: joinedPlayer, players: roomPlayers, amountOfPlayersInRoom, playerScores }) => {
-
+    socket.on("join-success", ({ players: roomPlayers, amountOfPlayersInRoom }) => {
       setPlayers(roomPlayers);
       setAmountOfPlayersInRoom(amountOfPlayersInRoom);
     });
@@ -64,8 +63,8 @@ const WaitingRoom: React.FC = () => {
   }, [code, playerName, navigate]);
 
   const handleStartGame = () => {
-    //TODO: Validate enough players, settings, etc.
-    if (socket && isHost) {
+    // Basic validation: check if we have at least one player and socket connection
+    if (socket && isHost && players.length > 0) {
       socket.emit("start-game", { code });
     }
   };

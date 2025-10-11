@@ -26,7 +26,6 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
 
   const handleJoinRoom = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    // console.log("JOIN button clicked!", { code, playerName, codeLength: code.length });
     if (!code.trim()) {
           alert("Please enter a room code!");
           return;
