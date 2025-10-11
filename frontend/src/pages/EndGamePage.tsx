@@ -67,19 +67,16 @@ const EndGamePage: React.FC = () => {
   return (
     <div className="end-game-container">
       {/* Game Title */}
-      <div className="title-section">
-        <div className="guessify-title">Guessify</div>
-      </div>
-      
+      <div className="header-section">
+        <div className="back-button">
+          <button className="back-button" onClick={handleBackToLobby}>
+            Back to Lobby
+          </button>
+        </div>
+        <div className="game-title">Guessify</div>
+      </div>      
       {/* Podium Rankings */}
       <FinalRankings rankings={players} totalNumberOfQuestions={totalRounds} />
-      
-      {/* Navigation button */}
-      <div className="end-game-button">
-        <button className="back-button" onClick={handleBackToLobby}>
-          Back to Lobby
-        </button>
-      </div>
     </div>
   );
 };
@@ -98,7 +95,7 @@ const FinalRankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQu
   const firstDiv = (
     <div className="column">
       <div className="first-bar">
-        <div>{first?.points || 0}</div>
+        <div>{first?.points || 0} pts</div>
         <div>{first?.correctAnswers || 0} out of {totalNumberOfQuestions}</div>
       </div>
       <div className="nickname">{first?.name || "No Player"}</div>
