@@ -1,5 +1,6 @@
 import '../css/EndGamePage.css';
-import Leaderboard from "../components/Leaderboard";
+//import Leaderboard from "../components/Leaderboard";
+import Scoreboard from "../components/Scoreboard";
 import { useLocation, useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from "react";
 import { socket } from '../socket';
@@ -88,7 +89,7 @@ const EndGamePage: React.FC = () => {
         <div className="game-title">Guessify</div>
       </div>      
       {/* Podium Rankings */}
-      <FinalRankings rankings={players} totalNumberOfQuestions={totalRounds} />
+      <Rankings rankings={players} totalNumberOfQuestions={totalRounds} />
     </div>
   );
 };
@@ -101,8 +102,12 @@ interface FinalRankingsProps {
   totalNumberOfQuestions: number;
 }
 
-const FinalRankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestions }) => {
+const Rankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestions }) => {
   const [first, second, third] = rankings;
+  
+  // Apply slide left animation only if there are more than 3 players
+  //const shouldSlideLeft = rankings.length > 3;
+  const shouldSlideLeft = true;
 
   const firstDiv = (
     <div className="column">
@@ -117,7 +122,7 @@ const FinalRankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQu
   const secondDiv = second ? (
     <div className="column">
       <div className="second-bar">
-        <div>{second.points}</div>
+        <div>{second.points} pts</div>
         <div>{second.correctAnswers} out of {totalNumberOfQuestions}</div>
       </div>
       <div className="nickname">{second.name}</div>
@@ -131,7 +136,7 @@ const FinalRankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQu
   const thirdDiv = third ? (
     <div className="column">
       <div className="third-bar">
-        <div>{third.points}</div>
+        <div>{third.points} pts</div>
         <div>{third.correctAnswers} out of {totalNumberOfQuestions}</div>
       </div>
       <div className="nickname">{third.name}</div>
@@ -143,14 +148,28 @@ const FinalRankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQu
   );
 
   return (
-    <div className="main-rankings">
+    <div className={`main-rankings ${shouldSlideLeft ? 'slide-left' : ''}`}>
       <div className="podiums">
         {secondDiv}
         {firstDiv}
         {thirdDiv}
       </div>
+      <div className="scoreboard-container">
+      <h2 className="final-rankings-title">Final Rankings</h2>
+      <Scoreboard players={rankings} />
+      </div>
     </div>
   );
 };
+
+// const FinalRankingsList: React.FC<FinalRankingsProps> = ({ rankings }) => {
+//   return (
+//     <div className="final-rankings-container">
+//       <h2 className="final-rankings-title">Final Rankings</h2>
+//       <Scoreboard players={rankings} />
+//       </div>
+//   )
+// }
+
 
 export default EndGamePage;
