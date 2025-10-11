@@ -66,14 +66,79 @@ const EndGamePage: React.FC = () => {
 
   return (
     <div className="end-game-container">
-      {/* Leaderboard with final scores */}
-      <Leaderboard players={formattedPlayers} />
-
+      {/* Game Title */}
+      <div className="title-section">
+        <div className="guessify-title">Guessify</div>
+      </div>
+      
+      {/* Podium Rankings */}
+      <FinalRankings rankings={players} totalNumberOfQuestions={totalRounds} />
+      
       {/* Navigation button */}
       <div className="end-game-button">
         <button className="back-button" onClick={handleBackToLobby}>
           Back to Lobby
         </button>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * FinalRankings - displays the top 3 players in podium style
+ */
+interface FinalRankingsProps {
+  rankings: PlayerResult[];
+  totalNumberOfQuestions: number;
+}
+
+const FinalRankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestions }) => {
+  const [first, second, third] = rankings;
+
+  const firstDiv = (
+    <div className="column">
+      <div className="first-bar">
+        <div>{first?.points || 0}</div>
+        <div>{first?.correctAnswers || 0} out of {totalNumberOfQuestions}</div>
+      </div>
+      <div className="nickname">{first?.name || "No Player"}</div>
+    </div>
+  );
+
+  const secondDiv = second ? (
+    <div className="column">
+      <div className="second-bar">
+        <div>{second.points}</div>
+        <div>{second.correctAnswers} out of {totalNumberOfQuestions}</div>
+      </div>
+      <div className="nickname">{second.name}</div>
+    </div>
+  ) : (
+    <div className="column">
+      <div className="second-bar"></div>
+    </div>
+  );
+
+  const thirdDiv = third ? (
+    <div className="column">
+      <div className="third-bar">
+        <div>{third.points}</div>
+        <div>{third.correctAnswers} out of {totalNumberOfQuestions}</div>
+      </div>
+      <div className="nickname">{third.name}</div>
+    </div>
+  ) : (
+    <div className="column">
+      <div className="third-bar"></div>
+    </div>
+  );
+
+  return (
+    <div className="main-rankings">
+      <div className="podiums">
+        {secondDiv}
+        {firstDiv}
+        {thirdDiv}
       </div>
     </div>
   );
