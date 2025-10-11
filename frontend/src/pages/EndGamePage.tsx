@@ -3,6 +3,8 @@ import Leaderboard from "../components/Leaderboard";
 import { useLocation, useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from "react";
 import { socket } from '../socket';
+import { useWindowSize } from 'react-use'
+import Confetti from 'react-confetti'
 
 
 /**
@@ -21,6 +23,7 @@ interface PlayerResult {
 const EndGamePage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { width, height } = useWindowSize();
 
   const [ totalRounds, setTotalRounds ] = useState(0);
   const code: string = location.state?.code || '';
@@ -66,6 +69,15 @@ const EndGamePage: React.FC = () => {
 
   return (
     <div className="end-game-container">
+      {/* Confetti Effect */}
+      <Confetti
+        width={width}
+        height={height}
+        recycle={false}
+        numberOfPieces={300}
+        gravity={0.8}
+      />
+      
       {/* Game Title */}
       <div className="header-section">
         <div className="back-button">
