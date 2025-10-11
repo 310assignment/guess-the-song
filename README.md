@@ -54,6 +54,8 @@ _A real-time multiplayer music guessing game built with Deezer_
    # Install frontend dependencies
    cd frontend
    npm install
+   npm install react-use
+   npm install react-confetti
    ```
 
 3. **Set up environment variables**
