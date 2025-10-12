@@ -173,8 +173,8 @@ const Rankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestio
   );
 
   return (
-    <div className={`main-rankings ${shouldSlideLeft ? 'slide-left' : ''}`}>
-      <div className="podiums">
+    <div className={`main-rankings`}>
+      <div className={`podiums ${shouldSlideLeft ? 'slide-left' : ''}`}>
         <div className="podium-labels">
         {secondDiv}
         {firstDiv}
@@ -182,7 +182,7 @@ const Rankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestio
         </div>
         <div className="Podiums-Base"></div>
       </div>
-      <div className="scoreboard-container">
+      <div className={`scoreboard-container ${shouldSlideLeft ? 'slide-left' : ''}`}>
         <h2 className="final-rankings-title">Final Rankings</h2>
         <div className="player-rankings-list">
           {testPlayers

@@ -51,10 +51,7 @@ body, html {
   align-items: flex-end;
   justify-content: center;
   width: 100%;
-}
-
-.main-rankings.slide-left {
-  animation: PodiumSlideLeft 4s ease-out forwards;
+  overflow-x: hidden;
 }
 
 .scoreboard-container {
@@ -64,6 +61,13 @@ body, html {
   border-radius: 1rem;
   box-shadow: 0 2rem -1rem #5b44ef4d;
   margin: 0 0 4rem 0;
+  position: absolute;
+  transform: translate(300%, 0);
+}
+
+.scoreboard-container.slide-left {
+  animation: ScoreboardSlideLeft 2s ease-out forwards;
+  animation-delay: 2s;
 }
 
 .final-rankings-title{
@@ -175,6 +179,10 @@ body, html {
   align-items: center;
 }
 
+.podiums.slide-left {
+    animation: PodiumSlideLeft 4s ease-out forwards;
+}
+
 .podium-labels {
   display: flex;
   align-items: flex-end;
@@ -253,7 +261,7 @@ body, html {
   width: 100%;
   max-width: 54rem;
   height: 4rem;
-  background: #370385;
+  background: #220252;
   box-shadow: 0 0 2rem -0.5rem rgba(0, 0, 0, 0.3);
   position: relative;
   z-index: 3;
@@ -327,6 +335,25 @@ body, html {
     opacity: 1;
   }
 }
+
+@keyframes ScoreboardSlideLeft {
+  0% {
+    transform: translateX(300%);
+  }
+  75% {
+    transform: translateX(300%);
+  }
+  90% {
+    transform: translateX(105%);
+  }
+  95% {
+    transform: translateX(113%);
+  }
+  100% {
+    transform: translateX(110%);
+  }
+}
+
 @keyframes PodiumSlideUp{
   0% {
     transform: translateY(100%);
