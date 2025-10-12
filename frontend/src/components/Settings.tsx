@@ -72,7 +72,7 @@ interface SettingsProps {
 // Dropdown options for each setting
 const options = {
   amountOfPlayers: ['Single Player', '2 Players', '3 Players', '4 Players', '5 Players', '6 Players', '7 Players', '8 Players'],
-  gameMode: ['Single Song', 'Mixed Songs', 'Guess the Artist', 'Quick Guess - 1s', 'Quick Guess - 3s', 'Quick Guess - 5s'],
+  gameMode: ['Single Song', 'Mixed Songs', 'Guess the Artist', 'Reverse Song', 'Quick Guess - 1s', 'Quick Guess - 3s', 'Quick Guess - 5s'],
   rounds: ['5 Rounds', '10 Rounds', '15 Rounds', '20 Rounds'],
   guessTime: ['10 sec', '15 sec', '20 sec', '30 sec'],
   genre: GENRES,

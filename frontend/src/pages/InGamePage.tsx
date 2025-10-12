@@ -58,6 +58,7 @@ const InGamePage: React.FC = () => {
   const isSingleSong = state?.gameMode === "Single Song";
   const isMixedSongs = state?.gameMode === "Mixed Songs";  
   const isGuessArtist = state?.gameMode === "Guess the Artist";
+  const isReverseSong = state?.gameMode === "Reverse Song";
   const isQuickGuess1Sec = state?.gameMode === "Quick Guess - 1s";
   const isQuickGuess3Sec = state?.gameMode === "Quick Guess - 3s";
   const isQuickGuess5Sec = state?.gameMode === "Quick Guess - 5s";
@@ -94,6 +95,9 @@ const InGamePage: React.FC = () => {
 
   // --- Guess Artist Mode ---
   const [hasGuessedArtistCorrectly, setHasGuessedArtistCorrectly] = useState(false);
+
+  // --- Reverse Song Mode ---
+  const [hasGuessedReverseCorrectly, setHasGuessedReverseCorrectly] = useState(false);
 
   // --- Quick Guess Mode ---
   const [hasPlayedSnippet, setHasPlayedSnippet] = useState(false);
@@ -134,6 +138,8 @@ const InGamePage: React.FC = () => {
           if (songIndex >= 0) {
             if (isSingleSong || isGuessArtist) {
               songService.playSong(songIndex);
+            } else if (isReverseSong) {
+              songService.playReverseSong(songIndex);
             } else if (isQuickGuess) {
               // For quick guess, play the snippet with same delay as host
               const duration = getSnippetDuration();
@@ -154,6 +160,7 @@ const InGamePage: React.FC = () => {
         setShowCorrectAnswer(false);
         setIsTimeUp(false);
         setHasGuessedArtistCorrectly(false);
+        setHasGuessedReverseCorrectly(false);
       }
     });
 
@@ -188,6 +195,7 @@ const InGamePage: React.FC = () => {
     setHasSelectedCorrectly(false);
     setShowCorrectAnswer(false);
     setIsTimeUp(false);
+    setHasGuessedReverseCorrectly(false);
   });
 
   // Host ends game - all players navigate to end game page
@@ -212,6 +220,7 @@ const InGamePage: React.FC = () => {
     setHasGuessedCorrectly(false);
     setHasSelectedCorrectly(false);
     setHasGuessedArtistCorrectly(false);
+    setHasGuessedReverseCorrectly(false);
     setSelectedIndex(null);
   });
 
@@ -258,6 +267,9 @@ const InGamePage: React.FC = () => {
     if (isSingleSong || isGuessArtist) {
       if (currentRound === 1) songService.playSong();
       else songService.playNextSong();
+    } else if (isReverseSong) {
+      if (currentRound === 1) songService.playReverseSong();
+      else songService.playNextReverseSong();
     } else if (isQuickGuess) {
       // Use secure random utilities for consistency
       const allSongs = songService.getCachedSongs();
@@ -289,21 +301,33 @@ const InGamePage: React.FC = () => {
     }
   };
 
-  // Helper function for single song/artist modes
+  // Helper function for single song/artist/reverse modes
   const setupSingleSongMode = () => {
     const currentSongData = currentRound === 1 ? 
       songService.getCurrentSong() : 
       songService.getNextSong();
     
     if (currentSongData) {
+      let answer = currentSongData.title; // Default for single song and reverse song
+      if (isGuessArtist) {
+        answer = currentSongData.artist;
+      }
+      
       const roundData = {
         song: currentSongData,
         choices: [],
-        answer: isGuessArtist ? currentSongData.artist : currentSongData.title
+        answer: answer
       };
       
-      if (currentRound === 1) songService.playSong();
-      else songService.playNextSong();
+      // Choose the appropriate playback method
+      if (isReverseSong) {
+        if (currentRound === 1) songService.playReverseSong();
+        else songService.playNextReverseSong();
+      } else if (currentRound === 1) {
+        songService.playSong();
+      } else {
+        songService.playNextSong();
+      }
       
       return roundData;
     }
@@ -360,7 +384,7 @@ const InGamePage: React.FC = () => {
   const startMultiplayerHostRound = () => {
     let roundData: any = {};
 
-    if (isSingleSong || isGuessArtist) {
+    if (isSingleSong || isGuessArtist || isReverseSong) {
       roundData = setupSingleSongMode();
     } else if (isQuickGuess) {
       roundData = setupQuickGuessMode();
@@ -486,6 +510,8 @@ const InGamePage: React.FC = () => {
       alreadyGuessed = hasGuessedCorrectly;
     } else if (isGuessArtist) {
       alreadyGuessed = hasGuessedArtistCorrectly;
+    } else if (isReverseSong) {
+      alreadyGuessed = hasGuessedReverseCorrectly;
     }
 
     if (!alreadyGuessed) {
@@ -496,6 +522,8 @@ const InGamePage: React.FC = () => {
         setHasGuessedCorrectly(true);
       } else if (isGuessArtist) {
         setHasGuessedArtistCorrectly(true);
+      } else if (isReverseSong) {
+        setHasGuessedReverseCorrectly(true);
       }
       // Stop the song and go immediately to round score display
       songService.stopSong();
@@ -591,6 +619,7 @@ const handleContinueToNextRound = () => {
     setIsTimeUp(false);
     setHasPlayedSnippet(false);
     setHasGuessedArtistCorrectly(false);
+    setHasGuessedReverseCorrectly(false);
 
     // Check if this is single player or multiplayer
     const isSinglePlayer = state?.amountOfPlayers === 1;
@@ -606,7 +635,7 @@ const handleContinueToNextRound = () => {
 
     // Release "starting lock" after 1s
     safeSetTimeoutAsync(async () => { isRoundStarting.current = false; }, 1000);
-  }, [currentRound, isSingleSong, isGuessArtist, isQuickGuess, roundTime]);
+  }, [currentRound, isSingleSong, isGuessArtist, isReverseSong, isQuickGuess, roundTime]);
 
   // Countdown timer logic
   useEffect(() => {
@@ -673,6 +702,22 @@ const handleContinueToNextRound = () => {
       );
     }
 
+    if (isReverseSong) {
+      return (
+        <SingleChoice
+          mode="title"
+          onCorrectGuess={handleCorrectGuess}
+          currentSong={currentSong}
+          hasGuessedCorrectly={hasGuessedReverseCorrectly}
+          onSkip={handleSkip}
+          isHost={isHost}
+          onWrongGuess={() => {
+            // Optional: Add any logic for wrong guesses
+          }}
+        />
+      );
+    }
+
     if (isQuickGuess) {
       return (
         <QuickGuessMultipleChoice
@@ -695,6 +740,7 @@ const handleContinueToNextRound = () => {
   const getCorrectAnswerForDisplay = () => {
     if (isSingleSong) return currentSong?.title;
     if (isGuessArtist) return currentSong?.artist;
+    if (isReverseSong) return currentSong?.title;
     if (isQuickGuess) return currentSong?.title;
     return correctAnswer; // For Mixed Songs mode
   };
@@ -703,6 +749,7 @@ const handleContinueToNextRound = () => {
   const getPlayerCorrectStatus = () => {
     if (isSingleSong) return hasGuessedCorrectly;
     if (isGuessArtist) return hasGuessedArtistCorrectly;
+    if (isReverseSong) return hasGuessedReverseCorrectly;
     return hasSelectedCorrectly; // For Quick Guess and Mixed Songs modes
   };
 

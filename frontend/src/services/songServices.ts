@@ -105,6 +105,154 @@ export default class SongService {
     this.playSong(this.currentIndex);
   }
 
+  // --- Reverse song playback ---
+  playReverseSong(index: number = this.currentIndex) {
+    if (!this.cachedSongs.length) return;
+    this.stopSong();
+
+    this.currentIndex = index;
+    const song = this.cachedSongs[this.currentIndex];
+
+    if (!song.previewUrl) return;
+
+    // Try Web Audio API approach first, fallback to simple approach
+    if (window.AudioContext || (window as any).webkitAudioContext) {
+      this.playReverseSongWithWebAudio(song);
+    } else {
+      // Fallback to simple reverse playback
+      this.playReverseSongSimple(song);
+    }
+  }
+
+  private async playReverseSongWithWebAudio(song: Song) {
+    try {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      const audioContext = new AudioContext();
+      
+      // Fetch and decode the audio
+      const response = await fetch(song.previewUrl);
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+      
+      // Reverse the audio buffer
+      const reversedBuffer = this.reverseAudioBuffer(audioContext, audioBuffer);
+      
+      // Create and play the reversed audio
+      const source = audioContext.createBufferSource();
+      const gainNode = audioContext.createGain();
+      
+      source.buffer = reversedBuffer;
+      gainNode.gain.value = this.isMuted ? 0 : this.currentVolume;
+      
+      source.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Store references for stopping and volume control
+      (this as any).webAudioSource = source;
+      (this as any).webAudioContext = audioContext;
+      (this as any).webAudioGain = gainNode;
+      
+      if (this.onMuteStateChange) {
+        this.onMuteStateChange(false);
+      }
+      
+      source.start(0);
+      
+      if (this.onTrackChange) {
+        this.onTrackChange(song, this.currentIndex);
+      }
+      
+      // Handle when the audio ends
+      source.onended = () => {
+        this.stopSong();
+      };
+      
+    } catch (error) {
+      console.error("Web Audio API reverse playback failed:", error);
+      // Fallback to simple approach
+      this.playReverseSongSimple(song);
+    }
+  }
+
+  private reverseAudioBuffer(audioContext: AudioContext, buffer: AudioBuffer): AudioBuffer {
+    const reversedBuffer = audioContext.createBuffer(
+      buffer.numberOfChannels,
+      buffer.length,
+      buffer.sampleRate
+    );
+    
+    for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+      const channelData = buffer.getChannelData(channel);
+      const reversedChannelData = reversedBuffer.getChannelData(channel);
+      
+      for (let i = 0; i < channelData.length; i++) {
+        reversedChannelData[i] = channelData[channelData.length - 1 - i];
+      }
+    }
+    
+    return reversedBuffer;
+  }
+
+  private playReverseSongSimple(song: Song) {
+    // Fallback: play small segments in reverse order
+    this.currentAudio = new Audio(song.previewUrl);
+    this.currentAudio.volume = this.currentVolume;
+    this.currentAudio.muted = false;
+    this.isMuted = false;
+    
+    if (this.onMuteStateChange) {
+      this.onMuteStateChange(false);
+    }
+
+    this.currentAudio.addEventListener('canplay', () => {
+      if (!this.currentAudio) return;
+      
+      // Start from the end and play small segments backwards
+      let currentPosition = this.currentAudio.duration - 1;
+      const segmentLength = 0.5; // Play 0.5 second segments
+      
+      if (this.onTrackChange) {
+        this.onTrackChange(song, this.currentIndex);
+      }
+      
+      this.playReverseSegments(currentPosition, segmentLength);
+    });
+
+    this.currentAudio.addEventListener('error', (err) => {
+      console.error("Simple reverse playback failed:", err);
+    });
+  }
+
+  private playReverseSegments(position: number, segmentLength: number) {
+    if (!this.currentAudio || position <= 0) {
+      this.stopSong();
+      return;
+    }
+    
+    const startTime = Math.max(0, position - segmentLength);
+    this.currentAudio.currentTime = startTime;
+    
+    this.currentAudio.play().then(() => {
+      // Stop after playing the segment
+      setTimeout(() => {
+        if (this.currentAudio) {
+          this.currentAudio.pause();
+          // Move to the previous segment
+          this.playReverseSegments(startTime, segmentLength);
+        }
+      }, segmentLength * 1000);
+    }).catch((err) => {
+      console.error("Segment playback failed:", err);
+      this.stopSong();
+    });
+  }
+
+  playNextReverseSong() {
+    if (!this.cachedSongs.length) return;
+    this.currentIndex = (this.currentIndex + 1) % this.cachedSongs.length;
+    this.playReverseSong(this.currentIndex);
+  }
+
   pauseSong() {
     this.currentAudio?.pause();
     this.multiAudios.forEach(audio => audio.pause());
@@ -116,6 +264,31 @@ export default class SongService {
       this.currentAudio.currentTime = 0;
       this.currentAudio = null;
     }
+    
+    // Stop Web Audio API sources if they exist
+    if ((this as any).webAudioSource) {
+      try {
+        (this as any).webAudioSource.stop();
+      } catch (e) {
+        console.warn("Could not stop web audio source:", e);
+      }
+      (this as any).webAudioSource = null;
+    }
+    
+    if ((this as any).webAudioContext) {
+      try {
+        (this as any).webAudioContext.close();
+      } catch (e) {
+        console.warn("Could not close web audio context:", e);
+      }
+      (this as any).webAudioContext = null;
+    }
+    
+    // Clear gain node reference
+    if ((this as any).webAudioGain) {
+      (this as any).webAudioGain = null;
+    }
+    
     this.stopMultiSong();
   }
 
@@ -226,6 +399,11 @@ export default class SongService {
     this.multiAudios.forEach(audio => {
       audio.volume = volume;
     });
+    
+    // Update Web Audio API gain node if it exists
+    if ((this as any).webAudioGain) {
+      (this as any).webAudioGain.gain.value = volume;
+    }
   }
 
   setMuted(muted: boolean) {
@@ -236,6 +414,12 @@ export default class SongService {
     this.multiAudios.forEach(audio => {
       audio.muted = muted;
     });
+    
+    // Update Web Audio API gain node if it exists
+    if ((this as any).webAudioGain) {
+      (this as any).webAudioGain.gain.value = muted ? 0 : this.currentVolume;
+    }
+    
     if (this.onMuteStateChange) {
       this.onMuteStateChange(muted);
     }
