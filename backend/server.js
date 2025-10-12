@@ -207,27 +207,26 @@ io.on("connection", (socket) => {
     pointsType: typeof points,
     correctAnswersType: typeof correctAnswers
   });
-    const room = rooms.get(code);
-    if (!room || !room.playerScores){
-          console.log(`❌ DEBUG: Room not found or no playerScores for code: ${code}`);
+  
+  const room = rooms.get(code);
+  if (!room || !room.playerScores){
+    console.log(`❌ DEBUG: Room not found or no playerScores for code: ${code}`);
     return;
   }
 
-    const playerScore = room.playerScores.get(playerName);
-    if (playerScore) {
-      playerScore.previousPoints = playerScore.points;
-      playerScore.points = points;
-      playerScore.correctAnswers = correctAnswers;
+  const playerScore = room.playerScores.get(playerName);
+  if (playerScore) {
+    playerScore.points = points;
+    playerScore.correctAnswers = correctAnswers;
 
-      console.log(`🔍 DEBUG: After update - playerScore:`, playerScore);
-      
-      console.log(`Score updated for ${playerName}: ${points} points, ${correctAnswers} correct`);
-      
-      // Send updated scores to all players in the room
-      const allScores = Array.from(room.playerScores.values());
-      io.to(code).emit("score-update", allScores);
-    }
-  });
+    console.log(`🔍 DEBUG: After update - playerScore:`, playerScore);
+    console.log(`Score updated for ${playerName}: ${points} points, ${correctAnswers} correct`);
+    
+    // Send updated scores to all players in the room
+    const allScores = Array.from(room.playerScores.values());
+    io.to(code).emit("score-update", allScores);
+  }
+});
 
   // Handle host continuing to next round
   socket.on("host-continue-round", ({ code, nextRound, totalRounds }) => {
@@ -269,6 +268,11 @@ io.on("connection", (socket) => {
       console.log(`Host tried to start round in non-existent room ${code}`);
       return;
     }
+
+    // Reset previousPoints for all players at the start of the round
+    room.playerScores.forEach((playerScore) => {
+      playerScore.previousPoints = playerScore.points;
+    });
 
     console.log(`Host starting round in room ${code} with song:`, song?.title);
     
