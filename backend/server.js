@@ -57,20 +57,27 @@ io.on("connection", (socket) => {
   console.log("New client connected:", socket.id);
 
   socket.on("create-room", ({ code, settings, host }) => {
-
     socket.join(code);
 
     // Initialize room if it doesn't exist (with default settings)
     if (!rooms.has(code)) {
-      console.log(`Creating new room ${code} with default settings`);
+      console.log(`Creating new room ${code} with settings:`, settings);
       const room = {
         players: [], 
         playerScores: new Map(), // Store player scores: playerName -> score object
         maxPlayers: settings.amountOfPlayers || 8, // default max players
         settings,
-        host
+        host: host, // store host name
+        hostSocketId: socket.id // store host socket ID
       }
       rooms.set(code, room);
+
+      // For single player mode, automatically add the host to the room
+      if (settings.amountOfPlayers === 1) {
+        room.players.push(host);
+        room.playerScores.set(host, initializePlayerScore(host));
+        console.log(`Single player mode: ${host} automatically joined room ${code}`);
+      }
 
       socket.emit("room-created", { code, rooms: Object.fromEntries(rooms.entries()) });
     }
@@ -91,6 +98,12 @@ io.on("connection", (socket) => {
       return;
     }
     
+    // If this player is the host, update the host socket ID
+    if (room.host === playerName) {
+      room.hostSocketId = socket.id;
+      console.log(`Host ${playerName} socket ID updated to ${socket.id}`);
+    }
+
     // Check if room is full
     if (room.players.length >= room.maxPlayers) {
       console.log(`${playerName} tried to join full room ${code} (${room.players.length}/${room.maxPlayers})`);
@@ -247,6 +260,36 @@ io.on("connection", (socket) => {
 
     console.log(`Game started in room ${code}`);
     io.to(code).emit("game-started", room.settings);
+  });
+
+  // host distributes round data to all players
+  socket.on("host-start-round", ({ code, song, choices, answer, startTime }) => {
+    const room = rooms.get(code);
+    if (!room) {
+      console.log(`Host tried to start round in non-existent room ${code}`);
+      return;
+    }
+
+    console.log(`Host starting round in room ${code} with song:`, song?.title);
+    
+    // Send round data to all players in the room
+    io.to(code).emit("round-start", { 
+      song, 
+      choices, 
+      answer, 
+      startTime: startTime || Date.now() 
+    });
+  });
+
+  socket.on('host-skip-round', ({ code }) => {
+    const room = rooms.get(code);
+    if (room && (room.hostSocketId === socket.id || room.host === socket.playerName)) {
+      // Host skipped - notify all players in the room to show leaderboard
+      io.to(code).emit('host-skipped-round');
+      console.log(`Host skipped round in room ${code}`);
+    } else {
+      console.log(`Non-host tried to skip in room ${code}. Socket ID: ${socket.id}, Host Socket ID: ${room?.hostSocketId}`);
+    }
   });
 
   socket.on("disconnect", () => {

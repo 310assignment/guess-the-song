@@ -92,7 +92,63 @@ _A real-time multiplayer music guessing game built with Deezer_
    ```
 
 3. **Open your browser**
+   
    Navigate to `http://localhost:8080`
+
+### Running Multiplayer Mode
+
+**⚠️ Important Note:** This multiplayer mode utilizes your IP address and only works if all users are connected to the same WiFi network. This is not a secure connection and should only be used in trusted environments.
+
+1. **As Host, Identify your IP Address**
+   
+    On MacOs, run: `ifconfig` in terminal. <br>
+    On Windows, run: `ipconfig` in terminal. <br>
+    Obtain your IP address, it should resemble: `inet 172.23.26.228`<br>
+    In the following steps your IP address will be reffered to as "YOUR_IP_ADDRESS"
+
+3. **Configure your URL**
+   
+   Your URL will be: `http://YOUR_IP_ADDRESS:8080`
+
+5. **Start the Backend server**
+
+   ```bash
+   cd backend
+   npm run dev
+   ```
+
+6. **Start the Frontend (in another terminal)**
+
+     For MacOs users:
+      ```bash
+      cd frontend
+      export VITE_API_BASE_URL=http://YOUR_IP_ADDRESS:8080
+      export VITE_SOCKET_URL=http://YOUR_IP_ADDRESS:8080
+      npm run dev
+      ```
+     For Windows users:
+      ```bash
+      cd frontend
+      set VITE_API_BASE_URL=http://YOUR_IP_ADDRESS:8080
+      set VITE_SOCKET_URL=http://YOUR_IP_ADDRESS:8080
+      npm run dev
+      ```
+     *Note: You can check to see whether these have been set using these commands:
+     ```bash
+     echo $VITE_API_BASE_URL
+     echo $VITE_SOCKET_URL
+     ```
+   
+     In your Frontend terminal you should see the appropriate links eg.
+     ```bash
+     ➜  Local:   http://localhost:5173/
+     ➜  Network: http://172.23.38.47:5173/
+     ```
+
+5. **Playing the Game**
+   
+     You can play on either the local URL or the Network URL. <br>
+     When asking other players to join, refer them to the Network Link.
 
 ### Testing & Deployment
 

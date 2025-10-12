@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../css/EnterName.css';
 interface GuessifyProps {}
 import { useNavigate } from 'react-router-dom';
@@ -7,13 +7,18 @@ const EnterName: React.FC<GuessifyProps> = () => {
   const [name, setName] = useState<string>('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement> | React.KeyboardEvent<HTMLInputElement>): void => {
+  useEffect(() => {
+    const savedName = localStorage.getItem('playerName');
+    if (savedName) {
+      setName(savedName);
+    }
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      console.log('Starting game with name:', name);
-      // Add your game logic here
-
-      navigate('/lobby', { state: { playerName: name } });
+      localStorage.setItem('playerName', name.trim());
+      navigate('/lobby', { state: { playerName: name.trim() } }); // Change underscore to hyphen
     }
   };
 

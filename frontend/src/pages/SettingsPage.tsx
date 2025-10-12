@@ -3,10 +3,8 @@ import "../css/SettingsPage.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { generateRoomCode } from "../utils/roomCode.tsx";
-import type { GameSettings } from "../components/Settings";
-import { PlayerCount } from "../components/Settings";
-import { RoundsCount } from "../components/Settings";
-import { io } from "socket.io-client";
+import { type GameSettings, PlayerCount, RoundsCount } from "../components/Settings";
+import { socket } from '../socket';
 
 const GENRES = ["kpop", "pop", "hiphop", "edm"] as const;
 type Genre = typeof GENRES[number];
@@ -48,28 +46,44 @@ const SettingsPage = () => {
   // Create room and move to game page, passing player info and settings
     const handleCreateRoom = () => {
 
-      // create socket
-      const socketUrl = import.meta.env.VITE_SOCKET_URL;
-      if (!socketUrl) {
-        alert("Socket URL is not defined. Please check your environment variables.");
-        return;
-      }
-      const socket = io(socketUrl);
-
-      socket.on("room-created", ({ code, rooms }) => {
+      // Set up room creation listener
+      const handleRoomCreated = ({ code, rooms }: { code: string; rooms: any }) => {
         console.log("Room created successfully with code:", code, 'in ROOMS:', rooms);
-        navigate(`/waiting/${code}`, {
-          state: {
-            playerName,
-            isHost: true, // Mark this player as the host
-          }
-        });
-      });
+        
+        // For single player mode, skip waiting room and go directly to game
+        if (settings.amountOfPlayers === 1) {
+          navigate(`/room/${code}`, {
+            state: {
+              ...settings,
+              playerName,
+              isHost: true,
+            }
+          });
+        } else {
+          navigate(`/waiting/${code}`, {
+            state: {
+              playerName,
+              isHost: true, // Mark this player as the host
+            }
+          });
+        }
+        
+        // Clean up listener after navigation
+        socket.off("room-created", handleRoomCreated);
+      };
 
-      socket.on("connect", () => {
-        // console.log("🔌 Connected to server with ID:", socket.id);
+      socket.on("room-created", handleRoomCreated);
+
+      // Create the room
+      if (socket.connected) {
         socket.emit("create-room", { code: roomCode, settings, host: playerName });
-      });
+      } else {
+        // If not connected, wait for connection then emit
+        socket.on("connect", () => {
+          console.log("🔌 Connected to server with ID:", socket.id);
+          socket.emit("create-room", { code: roomCode, settings, host: playerName });
+        });
+      }
   };
 
 
