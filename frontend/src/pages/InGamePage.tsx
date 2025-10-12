@@ -58,9 +58,9 @@ const InGamePage: React.FC = () => {
   const isSingleSong = state?.gameMode === "Single Song";
   const isMixedSongs = state?.gameMode === "Mixed Songs";  
   const isGuessArtist = state?.gameMode === "Guess the Artist";
-  const isQuickGuess1Sec = state?.gameMode === "Quick Guess - 1 Sec";
-  const isQuickGuess3Sec = state?.gameMode === "Quick Guess - 3 Sec";
-  const isQuickGuess5Sec = state?.gameMode === "Quick Guess - 5 Sec";
+  const isQuickGuess1Sec = state?.gameMode === "Quick Guess - 1s";
+  const isQuickGuess3Sec = state?.gameMode === "Quick Guess - 3s";
+  const isQuickGuess5Sec = state?.gameMode === "Quick Guess - 5s";
   const isQuickGuess = isQuickGuess1Sec || isQuickGuess3Sec || isQuickGuess5Sec;
 
   // Get the snipper duration for quick guess modes
