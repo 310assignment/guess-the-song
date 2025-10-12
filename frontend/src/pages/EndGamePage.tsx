@@ -1,6 +1,5 @@
 import '../css/EndGamePage.css';
 //import Leaderboard from "../components/Leaderboard";
-import Scoreboard from "../components/Scoreboard";
 import { useLocation, useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from "react";
 import { socket } from '../socket';
@@ -103,11 +102,37 @@ interface FinalRankingsProps {
 }
 
 const Rankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestions }) => {
-  const [first, second, third] = rankings;
+  // For testing purposes - add dummy players if none exist
+  const testPlayers: PlayerResult[] = rankings.length === 0 ? [
+    { name: "Alice", points: 850, correctAnswers: 8, totalRounds: 10 },
+    { name: "Bob", points: 720, correctAnswers: 7, totalRounds: 10 },
+    { name: "Charlie", points: 680, correctAnswers: 6, totalRounds: 10 },
+    { name: "Diana", points: 540, correctAnswers: 5, totalRounds: 10 },
+    { name: "Eve", points: 430, correctAnswers: 4, totalRounds: 10 },
+    { name: "Frank", points: 320, correctAnswers: 3, totalRounds: 10 }
+  ] : rankings;
+
+  const [first, second, third] = testPlayers;
+  const [currentPlayerName, setCurrentPlayerName] = useState<string>('Eve'); // Set to Alice for testing
   
   // Apply slide left animation only if there are more than 3 players
   //const shouldSlideLeft = rankings.length > 3;
   const shouldSlideLeft = true;
+
+  // Get current player name from socket
+  useEffect(() => {
+    if (!socket || !socket.connected) return;
+
+    socket.emit("get-player-name");
+    
+    socket.on("player-name", (playerName: string) => {
+      setCurrentPlayerName(playerName);
+    });
+
+    return () => {
+      socket.off("player-name");
+    };
+  }, []);
 
   const firstDiv = (
     <div className="column">
@@ -150,13 +175,36 @@ const Rankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestio
   return (
     <div className={`main-rankings ${shouldSlideLeft ? 'slide-left' : ''}`}>
       <div className="podiums">
+        <div className="podium-labels">
         {secondDiv}
         {firstDiv}
         {thirdDiv}
+        </div>
+        <div className="Podiums-Base"></div>
       </div>
       <div className="scoreboard-container">
-      <h2 className="final-rankings-title">Final Rankings</h2>
-      <Scoreboard players={rankings} />
+        <h2 className="final-rankings-title">Final Rankings</h2>
+        <div className="player-rankings-list">
+          {testPlayers
+            .sort((a, b) => b.points - a.points)
+            .map((player, index) => (
+              <div key={player.name} className={`player-ranking-row ${player.name === currentPlayerName ? 'current-player' : ''}`}>
+                <div className={`player-rank ${player.name === currentPlayerName ? 'current-player-rank' : ''}`}>
+                  {index === 0 && <span className="rank-medal">🥇</span>}
+                  {index === 1 && <span className="rank-medal">🥈</span>}
+                  {index === 2 && <span className="rank-medal">🥉</span>}
+                  {index > 2 && <span className="rank-number">#{index + 1}</span>}
+                </div>
+                <div className="player-details">
+                  <span className="player-name">{player.name}</span>
+                  <div className="player-stats">
+                    <span className="player-points">{player.points} pts</span>
+                    <span className="player-correct">{player.correctAnswers} correct</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+        </div>
       </div>
     </div>
   );
