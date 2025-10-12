@@ -2,7 +2,7 @@ import React from 'react';
 import Avatar1 from '../assets/avatars/avatar1.png';
 import Avatar2 from '../assets/avatars/avatar2.png';
 import Avatar3 from '../assets/avatars/avatar3.png';
-import '../css/AudioControls.css';
+import '../css/CharacterCustomiser.css';
 
 interface Props {
   avatar: string;

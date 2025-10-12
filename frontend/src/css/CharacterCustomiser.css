@@ -18,7 +18,7 @@
 
 .customizer-label {
   font-size: 12px;
-  color: #666;
+  color: #fff;
 }
 
 .avatar-grid {
@@ -32,8 +32,8 @@
   padding: 6px;
   border-radius: 8px;
   cursor: pointer;
-  width: 48px;
-  height: 48px;
+  width: 64px;
+  height: 64px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -44,8 +44,8 @@
 }
 
 .avatar-btn img {
-  max-width: 32px;
-  max-height: 32px;
+  max-width: 50px;
+  max-height: 50px;
 }
 
 .color-grid {
