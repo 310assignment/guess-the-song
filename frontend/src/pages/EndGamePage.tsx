@@ -1,5 +1,4 @@
 import '../css/EndGamePage.css';
-//import Leaderboard from "../components/Leaderboard";
 import { useLocation, useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from "react";
 import { socket } from '../socket';
@@ -27,16 +26,10 @@ const EndGamePage: React.FC = () => {
 
   const [ totalRounds, setTotalRounds ] = useState(0);
   const code: string = location.state?.code || '';
-
+  const currentPlayerName: string = location.state?.playerName || '';
   // Extract players from navigation state safely
   const [ players, setPlayers ] = useState<PlayerResult[]>([]);
 
-  // Format player data for Leaderboard: "correctAnswers / totalRounds"
-  const formattedPlayers = players.map((p) => ({
-    name: p.name,
-    points: p.points,
-    scoreDetail: `${p.correctAnswers}/${totalRounds}`,
-  }));
 
   // Navigate back to the lobby screen
   const handleBackToLobby = (): void => {
@@ -88,7 +81,7 @@ const EndGamePage: React.FC = () => {
         <div className="game-title">Guessify</div>
       </div>      
       {/* Podium Rankings */}
-      <Rankings rankings={players} totalNumberOfQuestions={totalRounds} />
+      <Rankings rankings={players} totalNumberOfQuestions={totalRounds} currentPlayerName={currentPlayerName} />
     </div>
   );
 };
@@ -99,46 +92,24 @@ const EndGamePage: React.FC = () => {
 interface FinalRankingsProps {
   rankings: PlayerResult[];
   totalNumberOfQuestions: number;
+  currentPlayerName: string;
 }
 
-const Rankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestions }) => {
-  // For testing purposes - add dummy players if none exist
-  const testPlayers: PlayerResult[] = rankings.length === 0 ? [
-    { name: "Alice", points: 850, correctAnswers: 8, totalRounds: 10 },
-    { name: "Bob", points: 720, correctAnswers: 7, totalRounds: 10 },
-    { name: "Charlie", points: 680, correctAnswers: 6, totalRounds: 10 },
-    { name: "Diana", points: 540, correctAnswers: 5, totalRounds: 10 },
-    { name: "Eve", points: 430, correctAnswers: 4, totalRounds: 10 },
-    { name: "Frank", points: 320, correctAnswers: 3, totalRounds: 10 }
-  ] : rankings;
-
-  const [first, second, third] = testPlayers;
-  const [currentPlayerName, setCurrentPlayerName] = useState<string>('Eve'); // Set to Alice for testing
+const Rankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestions, currentPlayerName }) => {
+  // Sort players by points in descending order (same method used for both podium and rankings)
+  const sortedRankings = rankings.sort((a, b) => b.points - a.points);
+  const [first, second, third] = sortedRankings;
   
   // Apply slide left animation only if there are more than 3 players
-  //const shouldSlideLeft = rankings.length > 3;
-  const shouldSlideLeft = true;
-
-  // Get current player name from socket
-  useEffect(() => {
-    if (!socket || !socket.connected) return;
-
-    socket.emit("get-player-name");
-    
-    socket.on("player-name", (playerName: string) => {
-      setCurrentPlayerName(playerName);
-    });
-
-    return () => {
-      socket.off("player-name");
-    };
-  }, []);
+  const shouldSlideLeft = rankings.length > 3;
 
   const firstDiv = (
     <div className="column">
       <div className="first-bar">
-        <div>{first?.points || 0} pts</div>
-        <div>{first?.correctAnswers || 0} out of {totalNumberOfQuestions}</div>
+        <div><b>{first?.points || 0}</b> pts</div>
+        <div className="correct-answers">
+          {first?.correctAnswers || 0} out of {totalNumberOfQuestions}
+        </div>
       </div>
       <div className="nickname">{first?.name || "No Player"}</div>
     </div>
@@ -147,8 +118,10 @@ const Rankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestio
   const secondDiv = second ? (
     <div className="column">
       <div className="second-bar">
-        <div>{second.points} pts</div>
-        <div>{second.correctAnswers} out of {totalNumberOfQuestions}</div>
+        <div><b>{second.points}</b> pts</div>
+        <div className="correct-answers">
+          {second.correctAnswers} out of {totalNumberOfQuestions}
+        </div>
       </div>
       <div className="nickname">{second.name}</div>
     </div>
@@ -161,8 +134,10 @@ const Rankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestio
   const thirdDiv = third ? (
     <div className="column">
       <div className="third-bar">
-        <div>{third.points} pts</div>
-        <div>{third.correctAnswers} out of {totalNumberOfQuestions}</div>
+        <div><b>{third.points}</b> pts</div>
+        <div className="correct-answers">
+          {third.correctAnswers} out of {totalNumberOfQuestions}
+        </div>
       </div>
       <div className="nickname">{third.name}</div>
     </div>
@@ -185,21 +160,20 @@ const Rankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestio
       <div className={`scoreboard-container ${shouldSlideLeft ? 'slide-left' : ''}`}>
         <h2 className="final-rankings-title">Final Rankings</h2>
         <div className="player-rankings-list">
-          {testPlayers
-            .sort((a, b) => b.points - a.points)
+          {sortedRankings
             .map((player, index) => (
               <div key={player.name} className={`player-ranking-row ${player.name === currentPlayerName ? 'current-player' : ''}`}>
-                <div className={`player-rank ${player.name === currentPlayerName ? 'current-player-rank' : ''}`}>
+                <div className={`display-player-rank ${player.name === currentPlayerName ? 'current-player-rank' : ''}`}>
                   {index === 0 && <span className="rank-medal">🥇</span>}
                   {index === 1 && <span className="rank-medal">🥈</span>}
                   {index === 2 && <span className="rank-medal">🥉</span>}
-                  {index > 2 && <span className="rank-number">#{index + 1}</span>}
+                  {index > 2 && <span className="players-final-placing">#{index + 1}</span>}
                 </div>
                 <div className="player-details">
-                  <span className="player-name">{player.name}</span>
+                  <span className="player-name-leaderboard">{player.name}</span>
                   <div className="player-stats">
                     <span className="player-points">{player.points} pts</span>
-                    <span className="player-correct">{player.correctAnswers} correct</span>
+                    <span className="players-correct-answers">{player.correctAnswers} correct</span>
                   </div>
                 </div>
               </div>
@@ -209,15 +183,5 @@ const Rankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestio
     </div>
   );
 };
-
-// const FinalRankingsList: React.FC<FinalRankingsProps> = ({ rankings }) => {
-//   return (
-//     <div className="final-rankings-container">
-//       <h2 className="final-rankings-title">Final Rankings</h2>
-//       <Scoreboard players={rankings} />
-//       </div>
-//   )
-// }
-
 
 export default EndGamePage;
