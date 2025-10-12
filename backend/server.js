@@ -160,6 +160,22 @@ io.on("connection", (socket) => {
       const allScores = Array.from(room.playerScores.values());
       socket.emit("score-update", allScores);
     }
+
+    // Check if game is already active
+    if (room.gameActive) {
+      // Game is in progress - send them directly to the game
+      socket.emit("join-active-game", {
+        ...room.settings,
+        playerName,
+        isHost: false
+      });
+    } else {
+      // Game hasn't started - normal waiting room flow
+      socket.emit("join-success", { 
+        players: room.players,
+        amountOfPlayersInRoom: room.maxPlayers
+      });
+    }
   });
 
   socket.on('get-room-players-scores', ( code ) => {
@@ -248,17 +264,14 @@ io.on("connection", (socket) => {
 
   // host starts game event
   socket.on("start-game", ({ code }) => {
-    socket.join(code);
     const room = rooms.get(code);
-
-    if (!room) {
-      console.log(`Room ${code} doesn't exist when starting game`);
-      socket.emit("game-start-error", { message: "Room not found" });
-      return;
+    if (room) {
+      room.gameActive = true; 
+      
+      const settings = room.settings;
+      io.to(code).emit("game-started", settings);
+      console.log(`Game started in room ${code}`);
     }
-
-    console.log(`Game started in room ${code}`);
-    io.to(code).emit("game-started", room.settings);
   });
 
   // host distributes round data to all players

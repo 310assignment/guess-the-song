@@ -25,27 +25,33 @@ const WaitingRoom: React.FC = () => {
 
 
   useEffect(() => {
-
     if (!socket?.connected) return;
 
     socket.emit("join", { code, playerName });
 
     socket.on("join-error", ({ message }) => {
       alert(message);
-      // Navigate back to lobby
       navigate('/lobby', { state: { playerName } });
     });
 
-    // Handle successful join
     socket.on("join-success", ({ players: roomPlayers, amountOfPlayersInRoom }) => {
       setPlayers(roomPlayers);
       setAmountOfPlayersInRoom(amountOfPlayersInRoom);
     });
 
+    // Add this handler for joining active games
+    socket.on("join-active-game", (gameSettings) => {
+      console.log("Joining active game");
+      navigate(`/room/${code}`, {
+        state: {
+          ...gameSettings,
+          playerName,
+          isHost: false
+        }
+      });
+    });
 
-    socket.on("game-started", ( settings ) => {  
-
-      // Navigate to actual game 
+    socket.on("game-started", (settings) => {  
       navigate(`/room/${code}`, {
         state: {
           ...settings,
@@ -58,6 +64,7 @@ const WaitingRoom: React.FC = () => {
     return () => {
       socket.off('join-error');
       socket.off('join-success');
+      socket.off('join-active-game'); 
       socket.off('game-started');
     };
   }, [code, playerName, navigate]);
