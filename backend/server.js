@@ -57,7 +57,6 @@ io.on("connection", (socket) => {
   console.log("New client connected:", socket.id);
 
   socket.on("create-room", ({ code, settings, host }) => {
-
     socket.join(code);
 
     // Initialize room if it doesn't exist (with default settings)
@@ -68,7 +67,8 @@ io.on("connection", (socket) => {
         playerScores: new Map(), // Store player scores: playerName -> score object
         maxPlayers: settings.amountOfPlayers || 8, // default max players
         settings,
-        host
+        host: host, // store host name
+        hostSocketId: socket.id // store host socket ID
       }
       rooms.set(code, room);
 
@@ -98,6 +98,12 @@ io.on("connection", (socket) => {
       return;
     }
     
+    // If this player is the host, update the host socket ID
+    if (room.host === playerName) {
+      room.hostSocketId = socket.id;
+      console.log(`Host ${playerName} socket ID updated to ${socket.id}`);
+    }
+
     // Check if room is full
     if (room.players.length >= room.maxPlayers) {
       console.log(`${playerName} tried to join full room ${code} (${room.players.length}/${room.maxPlayers})`);
@@ -273,6 +279,17 @@ io.on("connection", (socket) => {
       answer, 
       startTime: startTime || Date.now() 
     });
+  });
+
+  socket.on('host-skip-round', ({ code }) => {
+    const room = rooms.get(code);
+    if (room && (room.hostSocketId === socket.id || room.host === socket.playerName)) {
+      // Host skipped - notify all players in the room to show leaderboard
+      io.to(code).emit('host-skipped-round');
+      console.log(`Host skipped round in room ${code}`);
+    } else {
+      console.log(`Non-host tried to skip in room ${code}. Socket ID: ${socket.id}, Host Socket ID: ${room?.hostSocketId}`);
+    }
   });
 
   socket.on("disconnect", () => {

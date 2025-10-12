@@ -11,6 +11,7 @@ interface SingleChoiceProps {
   onWrongGuess?: () => void;           // Optional callback for wrong guess
   mode: 'title' | 'artist';             // Mode to guess either title or artist
   onSkip?: () => void;                 // Optional callback for skipping the round
+  isHost?: boolean;                    // Whether the current user is the host
 }
 
 const SingleChoice: React.FC<SingleChoiceProps> = ({
@@ -20,6 +21,7 @@ const SingleChoice: React.FC<SingleChoiceProps> = ({
   onWrongGuess,
   mode,
   onSkip,
+  isHost = true // Add this line
 }) => {
   const [guess, setGuess] = useState("");              // User input guess
   const [showWrongMessage, setShowWrongMessage] = useState(false); // Flag to show "wrong" feedback
@@ -165,13 +167,15 @@ const SingleChoice: React.FC<SingleChoiceProps> = ({
           {hasGuessedCorrectly ? "Correct! ✅" : "Submit Guess"}
         </button>
 
-        <button
-          onClick={handleSkip}
-          disabled={hasGuessedCorrectly}
-          className={`skip-btn ${hasGuessedCorrectly ? "skip-btn--disabled" : ""}`}
-        >
-          Skip
-        </button>
+        {onSkip && isHost && ( // Add "&& isHost" to this line
+          <button
+            className="skip-btn"
+            onClick={handleSkip}
+            disabled={hasGuessedCorrectly}
+          >
+            Skip
+          </button>
+        )}
 
         {/* Show wrong guess feedback */}
         {showWrongMessage && !hasGuessedCorrectly && (

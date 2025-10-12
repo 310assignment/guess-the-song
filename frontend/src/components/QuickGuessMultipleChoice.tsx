@@ -10,7 +10,8 @@ interface QuickGuessMultipleChoiceProps {
   showCorrectAnswer: boolean;
   hasPlayedSnippet: boolean;
   snippetDuration?: number;
-  onSkip?: () => void;                 // Optional callback for skipping the round
+  onSkip?: () => void;
+  isHost?: boolean; 
 }
 
 // Multiple choice component for quick guess mode
@@ -23,6 +24,7 @@ const QuickGuessMultipleChoice: React.FC<QuickGuessMultipleChoiceProps> = ({
   hasPlayedSnippet,
   snippetDuration = 3,
   onSkip,
+  isHost = true,
 }) => {
   const getButtonClass = (index: number) => {
     let className = "answer-btn";
@@ -74,7 +76,6 @@ const QuickGuessMultipleChoice: React.FC<QuickGuessMultipleChoiceProps> = ({
         <img src={songIcon} alt="Song Icon" />
       </div>
 
-
       <div className="answer-buttons">
         {options.map((option, index) => (
           <button
@@ -91,7 +92,7 @@ const QuickGuessMultipleChoice: React.FC<QuickGuessMultipleChoiceProps> = ({
       </div>
 
       {/* Skip button */}
-      {onSkip && (
+      {onSkip && isHost && (
         <div className="button-container">
           <button
             type="button"
