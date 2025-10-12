@@ -12,7 +12,7 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const playerName = location.state?.playerName; // get name from EnterName
+  const playerNameFromState = location.state?.playerName; // get name from EnterName
   
   const handleCreateRoom = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -21,7 +21,7 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
     });
 
     // Pass playerName along to SettingsPage
-    navigate("/create_room", { state: { playerName } });
+    navigate("/create_room", { state: { playerName: playerNameFromState } });
   };
 
   const handleJoinRoom = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -31,7 +31,7 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
           return;
         }
     
-    if (!playerName) {
+    if (!playerNameFromState) {
       alert("Please enter your name first!");
       return;
     }
@@ -43,7 +43,7 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
     // Navigate to waiting room first, then host will start the game
     navigate(`/waiting/${code}`, { 
       state: { 
-        playerName,
+        playerName: playerNameFromState,
         isHost: false
       } 
     });
@@ -63,6 +63,16 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
     console.log("Fetched songs", songs);
     });
   }, []);
+
+  // Add this useEffect after the existing useState declarations
+  useEffect(() => {
+    const savedName = localStorage.getItem('playerName');
+    if (playerNameFromState) {
+      localStorage.setItem('playerName', playerNameFromState);
+    } else if (savedName && !playerNameFromState) {
+      navigate("/lobby", { state: { playerName: savedName } }); // Change underscore to hyphen
+    }
+  }, [playerNameFromState, navigate]);
 
   return (
     <div className="guessify-container">
