@@ -226,6 +226,34 @@
   }
 }
 
+/* Active-game banner styles to make the waiting message clear and visible */
+.active-game-banner {
+  width: 45%;
+  margin: 1.5rem auto 0 auto;
+  padding: 1rem 1.25rem;
+  background: rgba(40, 1, 98, 0.95); /* dark purple with slight transparency */
+  color: #ffffff;
+  border-radius: 0.75rem;
+  box-shadow: 0 6px 20px rgba(40, 1, 98, 0.35);
+  text-align: center;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.active-game-banner p {
+  margin: 0.25rem 0;
+  font-size: 0.98rem;
+}
+
+/* Responsive*/
+@media (max-width: 768px) {
+  .active-game-banner {
+    width: 90%;
+    padding: 0.9rem;
+    font-size: 0.95rem;
+  }
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .waiting-room-container {

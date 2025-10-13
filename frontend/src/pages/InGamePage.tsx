@@ -26,8 +26,12 @@ interface Player {
   correctAnswers: number;
 }
 
-const getTimeAsNumber = (timeStr: string): number => {
-  return parseInt(timeStr.replace(' sec', ''));
+const getTimeAsNumber = (time?: string | number | null): number => {
+  // Accept string like "30 sec", "30", a number, or undefined/null.
+  if (typeof time === "number") return Math.max(1, Math.floor(time));
+  if (!time || typeof time !== "string") return 30; // default 30s
+  const m = time.match(/\d+/);
+  return m ? parseInt(m[0], 10) : 30;
 };
 
 type Genre = "kpop" | "pop" | "hiphop" | "edm";
@@ -40,7 +44,8 @@ const InGamePage: React.FC = () => {
   const { code } = useParams(); // room code from URL
 
   // --- Extract settings safely ---
-  const state = location.state 
+  // location.state can be undefined when navigating directly — default to empty object
+  const state = (location.state || {}) as any;
   const { playerName, isHost, rounds: totalRounds, guessTime: roundTime, gameMode, genre: Genre } = state;
 
   // --- Player State ---
@@ -73,7 +78,10 @@ const InGamePage: React.FC = () => {
 
 
   // --- Round State ---
-  const [currentRound, setCurrentRound] = useState(1);
+  // Initialize current round from navigation state if provided (handles mid-round joins)
+  const initialRound =
+    (state?.currentRound ?? state?.roundNumber ?? state?.currentRoundNumber ?? 1) as number;
+  const [currentRound, setCurrentRound] = useState<number>(Math.max(1, Number(initialRound)));
   const [timeLeft, setTimeLeft] = useState(getTimeAsNumber(roundTime));
   const [roundStartTime, setRoundStartTime] = useState<number | null>(null);
   const [isRoundActive, setIsRoundActive] = useState(false);
@@ -105,6 +113,51 @@ const InGamePage: React.FC = () => {
   useEffect(() => {
 
     socket.emit("get-room-players-scores", code );
+
+    // ask server for current round if we missed the live "round-start"
+    socket.emit("get-current-round", code);
+
+    // Listen for direct reply (covers the race when a client missed round-start)
+    socket.on("current-round", (payload) => {
+      if (!payload) return;
+      console.log("Recovered current-round from server:", payload);
+      const { song, choices, answer, startTime, currentRound: serverRound } = payload;
+      
+      // Merge payload into local state same as round-start handler
+      setCurrentSong(song);
+      setOptions(choices || []);
+      setCorrectAnswer(answer || "");
+      const roundStart = startTime || Date.now();
+      setRoundStartTime(roundStart);
+      setIsRoundActive(true);
+      setTimeLeft(getTimeAsNumber(roundTime));
+      if (typeof serverRound === "number") setCurrentRound(serverRound);
+      
+      // Reset non-host player states
+      const isSinglePlayer = state?.amountOfPlayers === 1;
+      if (!isSinglePlayer && !isHost) {
+        if (song) {
+          const allSongs = songService.getCachedSongs();
+          const songIndex = allSongs.findIndex(s => s.title === song.title && s.artist === song.artist);
+          if (songIndex >= 0) {
+            if (isSingleSong || isGuessArtist) {
+              songService.playSong(songIndex);
+            } else if (isQuickGuess) {
+              const duration = getSnippetDuration();
+              safeSetTimeoutAsync(async () => {
+                await songService.playQuickSnippet(songIndex, duration);
+                setHasPlayedSnippet(true);
+              }, 1000);
+            }
+          }
+        }
+        setHasGuessedCorrectly(false);
+        setHasSelectedCorrectly(false);
+        setShowCorrectAnswer(false);
+        setIsTimeUp(false);
+        setHasGuessedArtistCorrectly(false);
+      }
+    });
 
     // Listen for players joined the room
     socket.on("room-players-scores", ( playerScores ) => {

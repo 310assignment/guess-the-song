@@ -68,10 +68,15 @@ io.on("connection", (socket) => {
         maxPlayers: settings.amountOfPlayers || 8, // default max players
         settings,
         host: host, // store host name
-        hostSocketId: socket.id // store host socket ID
+        hostSocketId: socket.id, // store host socket ID
+        // New round state tracking
+        currentRound: 1,
+        isRoundActive: false,
+        isIntermission: false,
+        roundStartTime: null,
       }
       rooms.set(code, room);
-
+      
       // For single player mode, automatically add the host to the room
       if (settings.amountOfPlayers === 1) {
         room.players.push(host);
@@ -167,8 +172,15 @@ io.on("connection", (socket) => {
       socket.emit("join-active-game", {
         ...room.settings,
         playerName,
-        isHost: false
+        isHost: false,
+        currentRound: room.currentRound || 1,
+        isRoundActive: !!room.isRoundActive,
+        isIntermission: !!room.isIntermission,
+        roundStartTime: room.roundStartTime,
+        players: room.players,
+        playerScores: Array.from(room.playerScores.values())
       });
+      return;
     } else {
       // Game hasn't started - normal waiting room flow
       socket.emit("join-success", { 
@@ -247,6 +259,14 @@ io.on("connection", (socket) => {
   // Handle host continuing to next round
   socket.on("host-continue-round", ({ code, nextRound, totalRounds }) => {
     console.log(`Host in room ${code} continuing to round ${nextRound}`);
+    const room = rooms.get(code);
+    if (room) {
+      // update authoritative round state on server
+      room.currentRound = nextRound;
+      room.isRoundActive = true;
+      room.isIntermission = false;
+      room.roundStartTime = Date.now();
+    }
     
     // Emit to all players in the room (including host)
     socket.to(code).emit("continue-to-next-round", { nextRound });
@@ -267,6 +287,11 @@ io.on("connection", (socket) => {
     const room = rooms.get(code);
     if (room) {
       room.gameActive = true; 
+      // When game starts we consider the first round not yet active until host starts a round
+      room.currentRound = 1;
+      room.isRoundActive = false;
+      room.isIntermission = true; // waiting for host to start round
+      room.roundStartTime = null;
       
       const settings = room.settings;
       io.to(code).emit("game-started", settings);
@@ -278,7 +303,7 @@ io.on("connection", (socket) => {
   socket.on("host-start-round", ({ code, song, choices, answer, startTime }) => {
     const room = rooms.get(code);
     if (!room) {
-      console.log(`Host tried to start round in non-existent room ${code}`);
+      console.log(`Host tried to start round in room ${code}`);
       return;
     }
 
@@ -287,6 +312,17 @@ io.on("connection", (socket) => {
       playerScore.previousPoints = playerScore.points;
     });
 
+    // Mark the round active and store start time & ensure currentRound exists
+    room.isRoundActive = true;
+    room.isIntermission = false;
+    room.roundStartTime = startTime || Date.now();
+    room.gameActive = true;
+    // Ensure currentRound defaults to 1 if undefined
+    room.currentRound = room.currentRound || 1;
+
+    // --- Persist the current round payload so late joiners can request it ---
+    room.currentRoundData = { song, choices, answer };
+
     console.log(`Host starting round in room ${code} with song:`, song?.title);
     
     // Send round data to all players in the room
@@ -294,8 +330,26 @@ io.on("connection", (socket) => {
       song, 
       choices, 
       answer, 
-      startTime: startTime || Date.now() 
+      startTime: room.roundStartTime 
     });
+  });
+
+  // reply with current round data for clients that missed the live event 
+  socket.on("get-current-round", (code) => {
+    const room = rooms.get(code);
+    if (!room) {
+      socket.emit("current-round", null);
+      return;
+    }
+    if (room.isRoundActive && room.currentRoundData) {
+      socket.emit("current-round", {
+        ...room.currentRoundData,
+        startTime: room.roundStartTime,
+        currentRound: room.currentRound
+      });
+    } else {
+      socket.emit("current-round", null);
+    }
   });
 
   socket.on('host-skip-round', ({ code }) => {
