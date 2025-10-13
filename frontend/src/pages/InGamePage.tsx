@@ -72,6 +72,50 @@ const InGamePage: React.FC = () => {
     return 3; // default
   }
 
+  // Helper function to play quick guess snippet (eliminates code duplication)
+  const playQuickGuessSnippet = (songIndex: number, duration: number, delay: number = 1000) => {
+    safeSetTimeoutAsync(async () => {
+      // Play the song normally (from beginning, like single song mode)
+      songService.playSong(songIndex);
+      
+      // Stop after the specified duration (with safety check)
+      setTimeout(() => {
+        if (songService.getCurrentAudio() && !songService.getCurrentAudio()?.ended) {
+          songService.stopSong();
+        }
+      }, duration * 1000);
+      
+      setHasPlayedSnippet(true);
+    }, delay);
+  };
+
+  // Helper function for retry logic (eliminates code duplication)
+  const retryWithSongCheck = (retryCount: number, maxRetries: number, retryFunction: (count: number) => void, context: string) => {
+    if (retryCount >= maxRetries) {
+      console.error(`Failed to ${context} after ${maxRetries} retries, cannot start round`);
+      return;
+    }
+    console.warn(`${context} (attempt ${retryCount + 1}), waiting for songs to load...`);
+    setTimeout(() => {
+      const retryCheck = songService.getCachedSongs();
+      if (retryCheck.length > 0) {
+        console.log(`Songs now loaded, ${context.toLowerCase()}`);
+        retryFunction(0); // Reset retry count on success
+      } else {
+        retryFunction(retryCount + 1); // Increment retry count
+      }
+    }, 1000);
+  };
+
+  // Helper function for setup function safety checks (eliminates code duplication)
+  const checkSongsLoaded = (functionName: string): boolean => {
+    const cachedSongs = songService.getCachedSongs();
+    if (cachedSongs.length === 0) {
+      console.warn(`No songs loaded yet for ${functionName}, retrying...`);
+      return false;
+    }
+    return true;
+  };
 
   // --- Round State ---
   const [currentRound, setCurrentRound] = useState(1);
@@ -176,19 +220,7 @@ const InGamePage: React.FC = () => {
             } else if (isQuickGuess) {
               // For quick guess, play the full song like single mode but stop after duration
               const duration = getSnippetDuration();
-              safeSetTimeoutAsync(async () => {
-                // Play the song normally (from beginning, like single song mode)
-                songService.playSong(playbackIndex);
-                
-                // Stop after the specified duration (with safety check)
-                setTimeout(() => {
-                  if (songService.getCurrentAudio() && !songService.getCurrentAudio()?.ended) {
-                    songService.stopSong();
-                  }
-                }, duration * 1000);
-                
-                setHasPlayedSnippet(true);
-              }, 1000);
+              playQuickGuessSnippet(playbackIndex, duration);
             }
           } else {
             console.error(`Non-host player: Cannot find song "${song.title}" by "${song.artist}" in cached songs. Available songs: ${allSongs.length}`);
@@ -320,21 +352,7 @@ const InGamePage: React.FC = () => {
     // Safety check: ensure songs are loaded for the correct genre
     const cachedSongs = songService.getCachedSongs();
     if (cachedSongs.length === 0) {
-      if (retryCount >= 3) {
-        console.error("Failed to load songs after 3 retries, cannot start round");
-        return;
-      }
-      console.warn(`No songs loaded yet (attempt ${retryCount + 1}), waiting for songs to load...`);
-      // Wait a bit for songs to load, then retry
-      setTimeout(() => {
-        const retryCheck = songService.getCachedSongs();
-        if (retryCheck.length > 0) {
-          console.log("Songs now loaded, starting round");
-          startSinglePlayerRound(0); // Reset retry count on success
-        } else {
-          startSinglePlayerRound(retryCount + 1); // Increment retry count
-        }
-      }, 1000);
+      retryWithSongCheck(retryCount, 3, startSinglePlayerRound, "No songs loaded yet");
       return;
     }
     
@@ -385,19 +403,7 @@ const InGamePage: React.FC = () => {
 
         // Play the snippet with a delay
         const snippetDuration = getSnippetDuration();
-        safeSetTimeoutAsync(async () => {
-          // Play the song normally (from beginning, like single song mode)
-          songService.playSong(randomIndex);
-          
-          // Stop after the specified duration (with safety check)
-          setTimeout(() => {
-            if (songService.getCurrentAudio() && !songService.getCurrentAudio()?.ended) {
-              songService.stopSong();
-            }
-          }, snippetDuration * 1000);
-          
-          setHasPlayedSnippet(true);
-        }, 1000);
+        playQuickGuessSnippet(randomIndex, snippetDuration);
       }
     } else {
       // Mixed songs mode
@@ -413,9 +419,7 @@ const InGamePage: React.FC = () => {
   // Helper function for single song/artist/reverse modes
   const setupSingleSongMode = () => {
     // Safety check: ensure songs are loaded for the correct genre
-    const cachedSongs = songService.getCachedSongs();
-    if (cachedSongs.length === 0) {
-      console.warn("No songs loaded yet for setupSingleSongMode, retrying...");
+    if (!checkSongsLoaded("setupSingleSongMode")) {
       return null;
     }
     
@@ -479,19 +483,7 @@ const InGamePage: React.FC = () => {
       
       // Play the snippet with a delay
       const snippetDuration = getSnippetDuration();
-      safeSetTimeoutAsync(async () => {
-        // Play the song normally (from beginning, like single song mode)
-        songService.playSong(randomIndex);
-        
-        // Stop after the specified duration (with safety check)
-        setTimeout(() => {
-          if (songService.getCurrentAudio() && !songService.getCurrentAudio()?.ended) {
-            songService.stopSong();
-          }
-        }, snippetDuration * 1000);
-        
-        setHasPlayedSnippet(true);
-      }, 1000);
+      playQuickGuessSnippet(randomIndex, snippetDuration);
       
       return {
         song: selectedSong,
@@ -506,9 +498,7 @@ const InGamePage: React.FC = () => {
   // Helper function for mixed songs mode
   const setupMixedSongsMode = () => {
     // Safety check: ensure songs are loaded for the correct genre
-    const cachedSongs = songService.getCachedSongs();
-    if (cachedSongs.length === 0) {
-      console.warn("No songs loaded yet for setupMixedSongsMode, retrying...");
+    if (!checkSongsLoaded("setupMixedSongsMode")) {
       return null;
     }
     
@@ -541,21 +531,7 @@ const InGamePage: React.FC = () => {
     }
 
     if (!roundData) {
-      if (retryCount >= 3) {
-        console.error("Failed to get round data after 3 retries, cannot start round");
-        return;
-      }
-      console.warn(`Round data is null (attempt ${retryCount + 1}), waiting for songs to load...`);
-      // Wait a bit for songs to load, then retry
-      setTimeout(() => {
-        const retryCheck = songService.getCachedSongs();
-        if (retryCheck.length > 0) {
-          console.log("Songs now loaded, starting multiplayer host round");
-          startMultiplayerHostRound(0); // Reset retry count on success
-        } else {
-          startMultiplayerHostRound(retryCount + 1); // Increment retry count
-        }
-      }, 1000);
+      retryWithSongCheck(retryCount, 3, startMultiplayerHostRound, "Round data is null");
       return;
     }
 
