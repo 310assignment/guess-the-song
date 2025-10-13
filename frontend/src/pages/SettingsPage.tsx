@@ -100,14 +100,6 @@ const SettingsPage = () => {
           <div className="logo">
             <span className="logo-text">Guessify</span>
           </div>
-
-          <div className="game-code-section">
-            <span className="invite-text">INVITE CODE:</span>
-            <button className="game-code-button" onClick={handleGameCodeClick}>
-              <span className="code-text">{roomCode || "..."}</span>
-              <span className="copy-icon">📋</span>
-            </button>
-          </div>
         </div>
 
         {/* Game settings form */}

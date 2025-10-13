@@ -68,6 +68,9 @@ const InGamePage: React.FC = () => {
   const isQuickGuess5Sec = state?.gameMode === "Quick Guess - 5s";
   const isQuickGuess = isQuickGuess1Sec || isQuickGuess3Sec || isQuickGuess5Sec;
 
+  // Detect single-player sessions (used to hide invite/code UI)
+  const isSinglePlayer = state?.amountOfPlayers === 1;
+  
   // Get the snipper duration for quick guess modes
   const getSnippetDuration = () => {
     if (isQuickGuess1Sec) return 1;
@@ -751,7 +754,8 @@ const handleContinueToNextRound = () => {
             roundNumber={`${currentRound}/${totalRounds}`}
             timer={`${timeLeft}`}
             inviteCode={inviteCode}
-          />
+            showInvite={!isSinglePlayer}
+           />
           <div className="game-2-body">
             <Scoreboard players={players} />
             {renderGameModeComponent()}
