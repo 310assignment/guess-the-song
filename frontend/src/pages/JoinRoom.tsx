@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../css/JoinRoom.css";
 import { songService } from "../services/songServices";
-
 import { useNavigate, useLocation } from "react-router-dom";
+import { isValidRoomCode } from "../utils/roomCode.tsx";
+
 
 interface GuessifyProps {}
 
@@ -11,32 +12,67 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const playerName = location.state?.playerName; // get name from EnterName
-
+  const playerNameFromState = location.state?.playerName; // get name from EnterName
+  
   const handleCreateRoom = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    songService.fetchRandomKpop().then((songs) => {
+    songService.fetchRandom().then((songs) => {
       console.log("Fetched songs", songs);
     });
 
     // Pass playerName along to SettingsPage
-    navigate("/create_room", { state: { playerName } });
+    navigate("/create_room", { state: { playerName: playerNameFromState } });
   };
 
-  /* Commented out handleJoinRoom as it is only required for A2
-  const handleJoinRoom = () => {
-    // If you also want JOIN button to go somewhere and preserve the name
-    navigate("/create_room", { state: { playerName } });
-  };
-  */
+  const handleJoinRoom = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    if (!code.trim()) {
+          alert("Please enter a room code!");
+          return;
+        }
+    
+    if (!playerNameFromState) {
+      alert("Please enter your name first!");
+      return;
+    }
 
-  const handleBackClick = (): void => {
-    navigate("/");
+    if (!isValidRoomCode(code)) {
+      alert("Invalid room code format! Code should be 6 characters (letters and numbers).");
+      return;
+    }
+    // Navigate to waiting room first, then host will start the game
+    navigate(`/waiting/${code}`, { 
+      state: { 
+        playerName: playerNameFromState,
+        isHost: false
+      } 
+    });
   };
+
+  const handleBackClick = (): void => { 
+    navigate("/"); 
+  }; 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    setCode(e.target.value.toUpperCase());
+    const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    setCode(value);
   };
+
+  useEffect(() => {
+    songService.fetchRandom().then((songs) => {
+    console.log("Fetched songs", songs);
+    });
+  }, []);
+
+  // Add this useEffect after the existing useState declarations
+  useEffect(() => {
+    const savedName = localStorage.getItem('playerName');
+    if (playerNameFromState) {
+      localStorage.setItem('playerName', playerNameFromState);
+    } else if (savedName && !playerNameFromState) {
+      navigate("/lobby", { state: { playerName: savedName } }); // Change underscore to hyphen
+    }
+  }, [playerNameFromState, navigate]);
 
   return (
     <div className="guessify-container">
@@ -60,9 +96,11 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
             className="guessify-input"
             maxLength={8}
           />
-          <button className="guessify-join-button">
+          <button className="guessify-join-button"             
+          onClick={handleJoinRoom}
+          disabled={!code.trim()}
+          >
             JOIN
-            {/* Note: handleJoinRoom is currently disabled */}
           </button>
         </div>
 

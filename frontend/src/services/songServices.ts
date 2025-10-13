@@ -1,8 +1,16 @@
 import { type Song } from "../types/song";
 import axios from "axios";
+import { secureRandomInt } from "../utils/secureRandom";
+import { safeSetTimeoutAsync } from '../utils/safeTimers';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
+if (!API_BASE) {
+  throw new Error("VITE_API_BASE_URL is not defined");
+}
+console.log("Using API base URL:", API_BASE);
+
+export type Genre = "kpop" | "pop" | "hiphop" | "edm"; 
 type SongDTO = {
   id: string | number;
   name: string;
@@ -25,71 +33,55 @@ export default class SongService {
   private currentVolume: number = 0.6;
   private isMuted: boolean = false;
 
-  get currentAudioElement() {
-    return this.currentAudio;
-  }
-
-  get multiAudioElements() {
-    return this.multiAudios;
-  }
-
   constructor() {
-    this.baseUrl = `${API_BASE}/api/kpop`;
+    this.baseUrl = `${API_BASE}/api/tracks`;
     this.cachedSongs = [];
   }
 
   // --- API calls ---
-  async fetchRandomKpop(): Promise<Song[]> {
-    const res = await axios.get(this.baseUrl);
+  async fetchRandom(genre: Genre = "kpop", count = 50): Promise<Song[]> {
+    const res = await axios.get(this.baseUrl, { params: { genre, count } });
     const data = res.data;
 
-    this.cachedSongs = ((data.tracks ?? []) as SongDTO[]).map(
-      (track: SongDTO) => ({
-        id: String(track.id),
-        title: track.name,
-        artist:
-          track.artists && track.artists.length > 0
-            ? track.artists.join(", ")
-            : "Unknown",
-        previewUrl: track.preview_url ?? "",
-        imageUrl: track.image ?? "",
-        externalUrl: track.external_url ?? "",
-      })
-    );
+    this.cachedSongs = ((data.tracks ?? []) as SongDTO[]).map((track) => ({
+      id: String(track.id),
+      title: track.name,
+      artist: track.artists?.length ? track.artists.join(", ") : "Unknown",
+      previewUrl: track.preview_url ?? "",
+      imageUrl: track.image ?? "",
+      externalUrl: track.external_url ?? "",
+    }));
     return this.cachedSongs;
   }
 
-  async refreshKpop() {
-    const res = await axios.post(`${this.baseUrl}/refresh`);
-    const data = res.data;
-
-    this.cachedSongs = ((data.tracks ?? []) as SongDTO[]).map(
-      (track: SongDTO) => ({
-        id: String(track.id),
-        title: track.name,
-        artist:
-          track.artists && track.artists.length > 0
-            ? track.artists.join(", ")
-            : "Unknown",
-        previewUrl: track.preview_url ?? "",
-        imageUrl: track.image ?? "",
-        externalUrl: track.external_url ?? "",
-      })
-    );
-    return this.cachedSongs;
+  async refresh(genre: Genre = "kpop") {
+    await axios.post(`${this.baseUrl}/refresh`, null, { params: { genre } });
+    return this.fetchRandom(genre);
   }
-
   getCachedSongs() {
     return this.cachedSongs;
   }
 
+  getCurrentSong(): Song | null {
+    if (!this.cachedSongs.length) return null;
+    return this.cachedSongs[this.currentIndex];
+  }
+
+  getNextSong(): Song | null {
+    if (!this.cachedSongs.length) return null;
+    const nextIndex = (this.currentIndex + 1) % this.cachedSongs.length;
+    return this.cachedSongs[nextIndex];
+  }
+
   // --- Single-song controls ---
   playSong(index: number = this.currentIndex) {
+
     if (!this.cachedSongs.length) return;
     this.stopSong();
 
     this.currentIndex = index;
     const song = this.cachedSongs[this.currentIndex];
+
     if (!song.previewUrl) return;
 
     this.currentAudio = new Audio(song.previewUrl);
@@ -125,6 +117,54 @@ export default class SongService {
       this.currentAudio = null;
     }
     this.stopMultiSong();
+  }
+
+  // --- Quick snippet playback with flexible duration ---
+  async playQuickSnippet(index: number = this.currentIndex, duration: number = 3): Promise<void> {
+    if (!this.cachedSongs.length) return;
+    this.stopSong();
+
+    this.currentIndex = index;
+    const song = this.cachedSongs[this.currentIndex];
+    if (!song.previewUrl) return;
+
+    return new Promise((resolve) => {
+      this.currentAudio = new Audio(song.previewUrl);
+      this.currentAudio.volume = this.currentVolume;
+      this.currentAudio.muted = false;
+      this.isMuted = false;
+      
+      if (this.onMuteStateChange) {
+        this.onMuteStateChange(false);
+      }
+
+      const handleCanPlay = () => {
+        this.currentAudio!.removeEventListener('canplay', handleCanPlay);
+        
+        // Start from a random position (ensure we have enough time for the snippet)
+        const randomStart = secureRandomInt(Math.max(0, this.currentAudio!.duration - duration));
+        this.currentAudio!.currentTime = randomStart;
+        
+        this.currentAudio!.play().then(() => {
+          if (this.onTrackChange) this.onTrackChange(song, this.currentIndex);
+          
+          // Stop after specified duration and properly clear the audio
+          safeSetTimeoutAsync(async () => {
+            this.stopSong(); // Use the existing stopSong method for complete cleanup
+            resolve();
+          }, duration * 1000);
+        }).catch((err) => {
+          console.error("Quick snippet playback failed:", err);
+          resolve();
+        });
+      };
+
+      this.currentAudio.addEventListener('canplay', handleCanPlay);
+      this.currentAudio.addEventListener('error', () => {
+        console.error("Audio loading failed");
+        resolve();
+      });
+    });
   }
 
   // --- Multi-song controls (Play exactly 3 songs simultaneously) ---
