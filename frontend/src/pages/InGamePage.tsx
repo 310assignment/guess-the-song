@@ -560,7 +560,7 @@ const handleContinueToNextRound = () => {
   } else {
     // Navigate to end game page
     navigate("/end_game", {
-      state: { code }
+      state: { ...location.state, code }
     });
   }
 };
