@@ -45,8 +45,9 @@ const io = new Server(httpServer, {
 const rooms = new Map();
 
 // Helper function to initialize player score data
-const initializePlayerScore = (playerName) => ({
+const initializePlayerScore = (playerName, avatar = null) => ({
   name: playerName,
+  avatar: avatar || null, // { id, color } or simple string id
   points: 0,
   previousPoints: 0,
   correctAnswers: 0
@@ -56,8 +57,8 @@ const initializePlayerScore = (playerName) => ({
 io.on("connection", (socket) => {
   console.log("New client connected:", socket.id);
 
-  socket.on("create-room", ({ code, settings, host }) => {
-    socket.join(code);
+  socket.on("create-room", ({ code, settings, host, avatar }) => {
+     socket.join(code);
 
     // Initialize room if it doesn't exist (with default settings)
     if (!rooms.has(code)) {
@@ -75,7 +76,9 @@ io.on("connection", (socket) => {
       // For single player mode, automatically add the host to the room
       if (settings.amountOfPlayers === 1) {
         room.players.push(host);
-        room.playerScores.set(host, initializePlayerScore(host));
+        // host avatar may be provided as separate param
+        const hostAvatar = avatar || null;
+        room.playerScores.set(host, initializePlayerScore(host, hostAvatar));
         console.log(`Single player mode: ${host} automatically joined room ${code}`);
       }
 
@@ -84,7 +87,7 @@ io.on("connection", (socket) => {
   });
 
   // join room event
-  socket.on("join", ({ code, playerName }) => {
+  socket.on("join", ({ code, playerName, avatar }) => {
     console.log(`${playerName} attempting to join room ${code}`);
 
     socket.join(code);
@@ -134,9 +137,9 @@ io.on("connection", (socket) => {
       room.playerScores = new Map();
     }
     if (!room.playerScores.has(playerName)) {
-      room.playerScores.set(playerName, initializePlayerScore(playerName));
+      room.playerScores.set(playerName, initializePlayerScore(playerName, avatar || null));
     }
-    
+
     console.log(`${playerName} joined room ${code}. Players (${room.players.length}/${room.maxPlayers}):`, room.players);
     
     // Also send updated scores if available

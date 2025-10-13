@@ -1,6 +1,9 @@
 import '../css/EndGamePage.css';
 import { useLocation, useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from "react";
+import Avatar1 from "../assets/avatars/avatar1.png";
+import Avatar2 from "../assets/avatars/avatar2.png";
+import Avatar3 from "../assets/avatars/avatar3.png";
 import { socket } from '../socket';
 import { useWindowSize } from 'react-use'
 import Confetti from 'react-confetti'
@@ -14,6 +17,13 @@ interface PlayerResult {
   points: number;
   correctAnswers: number;
   totalRounds: number;
+}
+
+const avatarFor = (avatar: any) => {
+  const id = typeof avatar === "string" ? avatar : (avatar?.id || "a1");
+  if (id === "a2") return Avatar2;
+  if (id === "a3") return Avatar3;
+  return Avatar1;
 }
 
 /**
@@ -111,7 +121,20 @@ const Rankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestio
           {first?.correctAnswers || 0} out of {totalNumberOfQuestions}
         </div>
       </div>
-      <div className="nickname">{first?.name || "No Player"}</div>
+      <div className="nickname" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{
+          width: 40,
+          height: 40,
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: first?.avatar && typeof first.avatar === 'object' ? first.avatar.color : 'transparent'
+        }}>
+          <img src={avatarFor(first?.avatar)} style={{ width: 32, height: 32, borderRadius: '50%' }} />
+        </div>
+        <span>{first?.name || "No Player"}</span>
+      </div>
     </div>
   );
 
@@ -170,7 +193,20 @@ const Rankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestio
                   {index > 2 && <span className="players-final-placing">#{index + 1}</span>}
                 </div>
                 <div className="player-details">
-                  <span className="player-name-leaderboard">{player.name}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: player.avatar && typeof player.avatar === 'object' ? player.avatar.color : 'transparent'
+                    }}>
+                      <img src={avatarFor(player.avatar)} style={{ width: 28, height: 28, borderRadius: '50%' }} />
+                    </div>
+                    <span className="player-name-leaderboard">{player.name}</span>
+                  </div>
                   <div className="player-stats">
                     <span className="player-points">{player.points} pts</span>
                     <span className="players-correct-answers">{player.correctAnswers} correct</span>

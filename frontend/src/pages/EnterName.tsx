@@ -21,6 +21,9 @@ const EnterName: React.FC<GuessifyProps> = () => {
     e.preventDefault();
     if (name.trim()) {
       localStorage.setItem('playerName', name.trim());
+      // Persist avatar selection so other pages can send it to server
+      localStorage.setItem('avatarId', avatar || 'a1');
+      localStorage.setItem('avatarColor', color || '#FFD166');
       navigate('/lobby', { state: { playerName: name.trim() } }); // Change underscore to hyphen
     }
   };
