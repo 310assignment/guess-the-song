@@ -11,6 +11,7 @@ interface Player {
   readonly previousPoints: number;
   readonly correctAnswers: number;
   readonly avatar?: { id?: string; color?: string } | string;
+  readonly hasParticipatedThisRound?: boolean; 
 }
 
 /** Props interface for RoundScoreDisplay component */
@@ -61,6 +62,10 @@ const RoundScoreDisplay: React.FC<RoundScoreDisplayProps> = ({
           const scoreChange = player.points - player.previousPoints;
           const isPositive = scoreChange > 0;
           const isZero = scoreChange === 0;
+          
+          // Only show score change if it's actually positive (player earned points)
+          // Don't show negative changes or zero changes
+          const shouldShowScoreChange = scoreChange > 0;
 
           return (
             <div key={player.name} className="player-score-change">
@@ -81,12 +86,9 @@ const RoundScoreDisplay: React.FC<RoundScoreDisplayProps> = ({
                 </div>
                 <div className="score-details">
                   <span className="total-score">{player.points} pts</span>
-                  {!isZero && (
-                    <span
-                      className={`score-change ${isPositive ? "positive" : "negative"}`}
-                    >
-                      {isPositive ? "+" : ""}
-                      {scoreChange}
+                  {shouldShowScoreChange && (
+                    <span className="score-change positive">
+                      +{scoreChange}
                     </span>
                   )}
                 </div>

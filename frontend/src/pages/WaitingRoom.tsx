@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { socket } from '../socket';
+import CopyButton from '../components/CopyButton';
 import Avatar1 from "../assets/avatars/avatar1.png";
 import Avatar2 from "../assets/avatars/avatar2.png";
 import Avatar3 from "../assets/avatars/avatar3.png";
 import defaultAvatar from "../assets/avatars/avatar1.png";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { socket } from '../socket';
-import CopyButton from '../components/CopyButton';
 import "../css/WaitingRoom.css"; 
 
 interface PlayerObj {
@@ -33,8 +33,12 @@ const WaitingRoom: React.FC = () => {
   const [players, setPlayers] = useState<PlayerObj[]>([]);
   const [amountOfPlayersInRoom, setAmountOfPlayersInRoom] = useState(0);
 
-  useEffect(() => {
+  // If a player joins mid-round, keep them in this waiting room and show banner
+  const [activeGameInfo, setActiveGameInfo] = useState<any | null>(null);
+  // Keep a ref so socket handlers always use the latest settings
+  const activeGameInfoRef = useRef<any | null>(null);
 
+  useEffect(() => {
     if (!socket?.connected) return;
 
     const avatarId = localStorage.getItem("avatarId") || "a1";
@@ -43,7 +47,6 @@ const WaitingRoom: React.FC = () => {
 
     socket.on("join-error", ({ message }) => {
       alert(message);
-      // Navigate back to lobby
       navigate('/lobby', { state: { playerName } });
     });
 
@@ -56,9 +59,26 @@ const WaitingRoom: React.FC = () => {
       setAmountOfPlayersInRoom(amountOfPlayersInRoom);
     });
 
-    socket.on("game-started", ( settings ) => {  
+    // Add this handler for joining active games
+    socket.on("join-active-game", (gameSettings) => {
+      // If a round is active, keep the joining client in the waiting room and show banner.
+      // Store the full game settings so we can merge them with subsequent round events.
+      if (gameSettings?.isRoundActive) {
+        setActiveGameInfo(gameSettings);
+        activeGameInfoRef.current = gameSettings;
+      } else {
+        // If not mid-round, navigate straight into the room with full settings
+        navigate(`/room/${code}`, {
+          state: {
+            ...gameSettings,
+            playerName,
+            isHost: false
+          }
+        });
+      }
+    });
 
-      // Navigate to actual game 
+    socket.on("game-started", (settings) => {  
       navigate(`/room/${code}`, {
         state: {
           ...settings,
@@ -68,10 +88,47 @@ const WaitingRoom: React.FC = () => {
       });
     });
 
+    // If host starts a round while this client is waiting, navigate into the round
+    socket.on("round-start", (roundData) => {
+      const settings = activeGameInfoRef.current || {};
+     // Prefer an explicit round number from the round payload, otherwise fall back to stored settings
+     const roundNumber =
+       roundData?.roundNumber ??
+       roundData?.currentRound ??
+       settings?.currentRound ??
+       settings?.roundNumber ??
+       1;
+      navigate(`/room/${code}`, {
+        state: {
+          ...settings,
+          ...roundData,
+          currentRound: roundNumber,
+          playerName,
+          isHost: false
+        }
+      });
+    });
+    
+    // If host continues to next round, also navigate waiting players in
+    socket.on("continue-to-next-round", ({ nextRound }) => {
+      const settings = activeGameInfoRef.current || {};
+      navigate(`/room/${code}`, {
+        state: {
+          ...settings,
+          playerName,
+          isHost: false,
+          nextRound
+        }
+      });
+    });
+
     return () => {
       socket.off('join-error');
       socket.off('join-success');
+      socket.off('join-active-game'); 
       socket.off('game-started');
+      socket.off('round-start');
+      socket.off('continue-to-next-round');
     };
   }, [code, playerName, navigate]);
 
@@ -91,6 +148,13 @@ const WaitingRoom: React.FC = () => {
         </div>
       </div>
       <div className="waiting-room-content">
+
+        {activeGameInfo && (
+          <div className="active-game-banner">
+            <p>Game in progress. Please wait for the host to finish the round.</p>
+            <p>Current Round: {activeGameInfo.currentRound ?? "?"}</p>
+          </div>
+        )}
 
         <div className={`players-list-section ${amountOfPlayersInRoom === 1 ? 'single-player-mode' : ''}`}>
           <h2>{amountOfPlayersInRoom === 1 ? 'Single Player Mode' : `Players in Room - ${players.length} of ${amountOfPlayersInRoom}`}</h2>

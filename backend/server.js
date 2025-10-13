@@ -69,10 +69,15 @@ io.on("connection", (socket) => {
         maxPlayers: settings.amountOfPlayers || 8, // default max players
         settings,
         host: host, // store host name
-        hostSocketId: socket.id // store host socket ID
+        hostSocketId: socket.id, // store host socket ID
+        // New round state tracking
+        currentRound: 1,
+        isRoundActive: false,
+        isIntermission: false,
+        roundStartTime: null,
       }
       rooms.set(code, room);
-
+      
       // For single player mode, automatically add the host to the room
       if (settings.amountOfPlayers === 1) {
         room.players.push(host);
@@ -163,6 +168,29 @@ io.on("connection", (socket) => {
       const allScores = Array.from(room.playerScores.values());
       socket.emit("score-update", allScores);
     }
+
+    // Check if game is already active
+    if (room.gameActive) {
+      // Game is in progress - send them directly to the game
+      socket.emit("join-active-game", {
+        ...room.settings,
+        playerName,
+        isHost: false,
+        currentRound: room.currentRound || 1,
+        isRoundActive: !!room.isRoundActive,
+        isIntermission: !!room.isIntermission,
+        roundStartTime: room.roundStartTime,
+        players: room.players,
+        playerScores: Array.from(room.playerScores.values())
+      });
+      return;
+    } else {
+      // Game hasn't started - normal waiting room flow
+      socket.emit("join-success", { 
+        players: room.players,
+        amountOfPlayersInRoom: room.maxPlayers
+      });
+    }
   });
 
   socket.on('get-room-players-scores', ( code ) => {
@@ -210,31 +238,38 @@ io.on("connection", (socket) => {
     pointsType: typeof points,
     correctAnswersType: typeof correctAnswers
   });
-    const room = rooms.get(code);
-    if (!room || !room.playerScores){
-          console.log(`❌ DEBUG: Room not found or no playerScores for code: ${code}`);
+  
+  const room = rooms.get(code);
+  if (!room || !room.playerScores){
+    console.log(`❌ DEBUG: Room not found or no playerScores for code: ${code}`);
     return;
   }
 
-    const playerScore = room.playerScores.get(playerName);
-    if (playerScore) {
-      playerScore.previousPoints = playerScore.points;
-      playerScore.points = points;
-      playerScore.correctAnswers = correctAnswers;
+  const playerScore = room.playerScores.get(playerName);
+  if (playerScore) {
+    playerScore.points = points;
+    playerScore.correctAnswers = correctAnswers;
 
-      console.log(`🔍 DEBUG: After update - playerScore:`, playerScore);
-      
-      console.log(`Score updated for ${playerName}: ${points} points, ${correctAnswers} correct`);
-      
-      // Send updated scores to all players in the room
-      const allScores = Array.from(room.playerScores.values());
-      io.to(code).emit("score-update", allScores);
-    }
-  });
+    console.log(`🔍 DEBUG: After update - playerScore:`, playerScore);
+    console.log(`Score updated for ${playerName}: ${points} points, ${correctAnswers} correct`);
+    
+    // Send updated scores to all players in the room
+    const allScores = Array.from(room.playerScores.values());
+    io.to(code).emit("score-update", allScores);
+  }
+});
 
   // Handle host continuing to next round
   socket.on("host-continue-round", ({ code, nextRound, totalRounds }) => {
     console.log(`Host in room ${code} continuing to round ${nextRound}`);
+    const room = rooms.get(code);
+    if (room) {
+      // update authoritative round state on server
+      room.currentRound = nextRound;
+      room.isRoundActive = true;
+      room.isIntermission = false;
+      room.roundStartTime = Date.now();
+    }
     
     // Emit to all players in the room (including host)
     socket.to(code).emit("continue-to-next-round", { nextRound });
@@ -252,26 +287,44 @@ io.on("connection", (socket) => {
 
   // host starts game event
   socket.on("start-game", ({ code }) => {
-    socket.join(code);
     const room = rooms.get(code);
-
-    if (!room) {
-      console.log(`Room ${code} doesn't exist when starting game`);
-      socket.emit("game-start-error", { message: "Room not found" });
-      return;
+    if (room) {
+      room.gameActive = true; 
+      // When game starts we consider the first round not yet active until host starts a round
+      room.currentRound = 1;
+      room.isRoundActive = false;
+      room.isIntermission = true; // waiting for host to start round
+      room.roundStartTime = null;
+      
+      const settings = room.settings;
+      io.to(code).emit("game-started", settings);
+      console.log(`Game started in room ${code}`);
     }
-
-    console.log(`Game started in room ${code}`);
-    io.to(code).emit("game-started", room.settings);
   });
 
   // host distributes round data to all players
   socket.on("host-start-round", ({ code, song, choices, answer, startTime }) => {
     const room = rooms.get(code);
     if (!room) {
-      console.log(`Host tried to start round in non-existent room ${code}`);
+      console.log(`Host tried to start round in room ${code}`);
       return;
     }
+
+    // Reset previousPoints for all players at the start of the round
+    room.playerScores.forEach((playerScore) => {
+      playerScore.previousPoints = playerScore.points;
+    });
+
+    // Mark the round active and store start time & ensure currentRound exists
+    room.isRoundActive = true;
+    room.isIntermission = false;
+    room.roundStartTime = startTime || Date.now();
+    room.gameActive = true;
+    // Ensure currentRound defaults to 1 if undefined
+    room.currentRound = room.currentRound || 1;
+
+    // --- Persist the current round payload so late joiners can request it ---
+    room.currentRoundData = { song, choices, answer };
 
     console.log(`Host starting round in room ${code} with song:`, song?.title);
     
@@ -280,8 +333,26 @@ io.on("connection", (socket) => {
       song, 
       choices, 
       answer, 
-      startTime: startTime || Date.now() 
+      startTime: room.roundStartTime 
     });
+  });
+
+  // reply with current round data for clients that missed the live event 
+  socket.on("get-current-round", (code) => {
+    const room = rooms.get(code);
+    if (!room) {
+      socket.emit("current-round", null);
+      return;
+    }
+    if (room.isRoundActive && room.currentRoundData) {
+      socket.emit("current-round", {
+        ...room.currentRoundData,
+        startTime: room.roundStartTime,
+        currentRound: room.currentRound
+      });
+    } else {
+      socket.emit("current-round", null);
+    }
   });
 
   socket.on('host-skip-round', ({ code }) => {
