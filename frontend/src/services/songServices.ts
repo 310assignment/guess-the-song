@@ -85,6 +85,14 @@ export default class SongService {
     return this.cachedSongs[nextIndex];
   }
 
+  getCurrentIndex(): number {
+    return this.currentIndex;
+  }
+
+  getCurrentAudio(): HTMLAudioElement | null {
+    return this.currentAudio;
+  }
+
   // --- Single-song controls ---
   playSong(index: number = this.currentIndex) {
 

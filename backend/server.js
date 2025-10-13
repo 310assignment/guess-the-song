@@ -263,21 +263,23 @@ io.on("connection", (socket) => {
   });
 
   // host distributes round data to all players
-  socket.on("host-start-round", ({ code, song, choices, answer, startTime }) => {
+  socket.on("host-start-round", ({ code, song, choices, answer, startTime, songIndex, multiSongs }) => {
     const room = rooms.get(code);
     if (!room) {
       console.log(`Host tried to start round in non-existent room ${code}`);
       return;
     }
 
-    console.log(`Host starting round in room ${code} with song:`, song?.title);
+    console.log(`Host starting round in room ${code} with song:`, song?.title, `index: ${songIndex}`, `multiSongs: ${multiSongs?.length || 0}`);
     
     // Send round data to all players in the room
     io.to(code).emit("round-start", { 
       song, 
       choices, 
       answer, 
-      startTime: startTime || Date.now() 
+      startTime: startTime || Date.now(),
+      songIndex,
+      multiSongs 
     });
   });
 
