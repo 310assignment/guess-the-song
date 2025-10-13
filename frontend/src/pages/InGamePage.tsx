@@ -247,7 +247,15 @@ const InGamePage: React.FC = () => {
   const genre = (location.state?.genre ?? "kpop") as "kpop"|"pop"|"hiphop"|"edm";
 
   useEffect(() => {
-    songService.fetchRandom(genre, 50).catch(console.error);
+    // Always fetch fresh songs for the selected genre to ensure correct genre is loaded
+    console.log(`InGamePage: Loading songs for genre: ${genre}`);
+    songService.fetchRandom(genre, 50)
+      .then(() => {
+        console.log(`InGamePage: Successfully loaded ${songService.getCachedSongs().length} songs for genre: ${genre}`);
+      })
+      .catch((error) => {
+        console.error(`InGamePage: Failed to load songs for genre: ${genre}`, error);
+      });
   }, [genre]);
 
   // Get a random set of songs for multiple choice rounds
@@ -263,13 +271,60 @@ const InGamePage: React.FC = () => {
 
 
   // Single player round logic (local generation)
-  const startSinglePlayerRound = () => {
+  const startSinglePlayerRound = (retryCount = 0) => {
+    // Safety check: ensure songs are loaded for the correct genre
+    const cachedSongs = songService.getCachedSongs();
+    if (cachedSongs.length === 0) {
+      if (retryCount >= 3) {
+        console.error("Failed to load songs after 3 retries, cannot start round");
+        return;
+      }
+      console.warn(`No songs loaded yet (attempt ${retryCount + 1}), waiting for songs to load...`);
+      // Wait a bit for songs to load, then retry
+      setTimeout(() => {
+        const retryCheck = songService.getCachedSongs();
+        if (retryCheck.length > 0) {
+          console.log("Songs now loaded, starting round");
+          startSinglePlayerRound(0); // Reset retry count on success
+        } else {
+          startSinglePlayerRound(retryCount + 1); // Increment retry count
+        }
+      }, 1000);
+      return;
+    }
+    
     if (isSingleSong || isGuessArtist) {
-      if (currentRound === 1) songService.playSong();
-      else songService.playNextSong();
+      if (currentRound === 1) {
+        // For first round, get and set current song, then play it
+        const currentSongData = songService.getCurrentSong();
+        if (currentSongData) {
+          setCurrentSong(currentSongData);
+          songService.playSong();
+        }
+      } else {
+        // For subsequent rounds, move to next song and play it
+        songService.playNextSong();
+        const nextSongData = songService.getCurrentSong();
+        if (nextSongData) {
+          setCurrentSong(nextSongData);
+        }
+      }
     } else if (isReverseSong) {
-      if (currentRound === 1) songService.playReverseSong();
-      else songService.playNextReverseSong();
+      if (currentRound === 1) {
+        // For first round, get and set current song, then play reverse
+        const currentSongData = songService.getCurrentSong();
+        if (currentSongData) {
+          setCurrentSong(currentSongData);
+          songService.playReverseSong();
+        }
+      } else {
+        // For subsequent rounds, move to next song and play reverse
+        songService.playNextReverseSong();
+        const nextSongData = songService.getCurrentSong();
+        if (nextSongData) {
+          setCurrentSong(nextSongData);
+        }
+      }
     } else if (isQuickGuess) {
       // Use secure random utilities for consistency
       const allSongs = songService.getCachedSongs();
@@ -303,6 +358,13 @@ const InGamePage: React.FC = () => {
 
   // Helper function for single song/artist/reverse modes
   const setupSingleSongMode = () => {
+    // Safety check: ensure songs are loaded for the correct genre
+    const cachedSongs = songService.getCachedSongs();
+    if (cachedSongs.length === 0) {
+      console.warn("No songs loaded yet for setupSingleSongMode, retrying...");
+      return null;
+    }
+    
     const currentSongData = currentRound === 1 ? 
       songService.getCurrentSong() : 
       songService.getNextSong();
@@ -337,6 +399,13 @@ const InGamePage: React.FC = () => {
   // Helper function for quick guess mode
   const setupQuickGuessMode = () => {
     const allSongs = songService.getCachedSongs();
+    
+    // Safety check: ensure songs are loaded for the correct genre
+    if (allSongs.length === 0) {
+      console.warn("No songs loaded yet for setupQuickGuessMode, retrying...");
+      return null;
+    }
+    
     const { song: selectedSong, index: randomIndex } = selectRandomSong(allSongs);
     
     if (selectedSong) {
@@ -366,6 +435,13 @@ const InGamePage: React.FC = () => {
 
   // Helper function for mixed songs mode
   const setupMixedSongsMode = () => {
+    // Safety check: ensure songs are loaded for the correct genre
+    const cachedSongs = songService.getCachedSongs();
+    if (cachedSongs.length === 0) {
+      console.warn("No songs loaded yet for setupMixedSongsMode, retrying...");
+      return null;
+    }
+    
     const chosen = getRandomSongsForGame(3);
     songService.playMultiSong(chosen);
 
@@ -381,7 +457,7 @@ const InGamePage: React.FC = () => {
   };
 
   // Multiplayer host round logic (generate and distribute)
-  const startMultiplayerHostRound = () => {
+  const startMultiplayerHostRound = (retryCount = 0) => {
     let roundData: any = {};
 
     if (isSingleSong || isGuessArtist || isReverseSong) {
@@ -390,6 +466,25 @@ const InGamePage: React.FC = () => {
       roundData = setupQuickGuessMode();
     } else {
       roundData = setupMixedSongsMode();
+    }
+
+    if (!roundData) {
+      if (retryCount >= 3) {
+        console.error("Failed to get round data after 3 retries, cannot start round");
+        return;
+      }
+      console.warn(`Round data is null (attempt ${retryCount + 1}), waiting for songs to load...`);
+      // Wait a bit for songs to load, then retry
+      setTimeout(() => {
+        const retryCheck = songService.getCachedSongs();
+        if (retryCheck.length > 0) {
+          console.log("Songs now loaded, starting multiplayer host round");
+          startMultiplayerHostRound(0); // Reset retry count on success
+        } else {
+          startMultiplayerHostRound(retryCount + 1); // Increment retry count
+        }
+      }, 1000);
+      return;
     }
 
     // Send round data to all players via socket

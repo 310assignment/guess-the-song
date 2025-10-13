@@ -40,6 +40,11 @@ export default class SongService {
 
   // --- API calls ---
   async fetchRandom(genre: Genre = "kpop", count = 50): Promise<Song[]> {
+    console.log(`Fetching ${count} songs for genre: ${genre}`);
+    
+    // Clear existing cache to ensure fresh songs of correct genre
+    this.clearCache();
+    
     const res = await axios.get(this.baseUrl, { params: { genre, count } });
     const data = res.data;
 
@@ -51,6 +56,8 @@ export default class SongService {
       imageUrl: track.image ?? "",
       externalUrl: track.external_url ?? "",
     }));
+    
+    console.log(`Successfully cached ${this.cachedSongs.length} songs for genre: ${genre}`);
     return this.cachedSongs;
   }
 
@@ -60,6 +67,11 @@ export default class SongService {
   }
   getCachedSongs() {
     return this.cachedSongs;
+  }
+
+  clearCache() {
+    this.cachedSongs = [];
+    this.currentIndex = 0;
   }
 
   getCurrentSong(): Song | null {
