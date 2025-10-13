@@ -109,172 +109,138 @@ const InGamePage: React.FC = () => {
   // --- Round Control Helpers ---
   const isRoundStarting = useRef(false);
 
+  // apply a round payload (used by "round-start" and "current-round")
+  const applyRoundPayload = (payload: any) => {
+    if (!payload) return;
+    const { song, choices, answer, startTime, currentRound: serverRound } = payload;
+
+    setCurrentSong(song ?? null);
+    setOptions(choices ?? []);
+    setCorrectAnswer(answer ?? "");
+    const roundStart = startTime || Date.now();
+    setRoundStartTime(roundStart);
+    setIsRoundActive(true);
+    setTimeLeft(getTimeAsNumber(roundTime));
+    if (typeof serverRound === "number") setCurrentRound(serverRound);
+
+    // Reset non-host player states and attempt playback if needed
+    const isSinglePlayer = state?.amountOfPlayers === 1;
+    if (!isSinglePlayer && !isHost) {
+      if (song) {
+        const allSongs = songService.getCachedSongs();
+        const songIndex = allSongs.findIndex(
+          (s) => s.title === song.title && s.artist === song.artist
+        );
+
+        if (songIndex >= 0) {
+          if (isSingleSong || isGuessArtist) {
+            songService.playSong(songIndex);
+          } else if (isQuickGuess) {
+            const duration = getSnippetDuration();
+            safeSetTimeoutAsync(async () => {
+              try {
+                await songService.playQuickSnippet(songIndex, duration);
+                setHasPlayedSnippet(true);
+              } catch (err) {
+                /* ignore playback errors here (AbortError etc) */
+              }
+            }, 1000);
+          }
+        }
+      }
+      setHasGuessedCorrectly(false);
+      setHasSelectedCorrectly(false);
+      setShowCorrectAnswer(false);
+      setIsTimeUp(false);
+      setHasGuessedArtistCorrectly(false);
+    }
+  };
+
   /* ----------------- SOCKET CONNECTION ----------------- */
   useEffect(() => {
+    socket.emit("get-room-players-scores", code);
 
-    socket.emit("get-room-players-scores", code );
-
-    // ask server for current round if we missed the live "round-start"
+    // Ask server for current round in case we missed the live "round-start"
     socket.emit("get-current-round", code);
 
-    // Listen for direct reply (covers the race when a client missed round-start)
+    // Reply handler for missed round-start
     socket.on("current-round", (payload) => {
       if (!payload) return;
       console.log("Recovered current-round from server:", payload);
-      const { song, choices, answer, startTime, currentRound: serverRound } = payload;
-      
-      // Merge payload into local state same as round-start handler
-      setCurrentSong(song);
-      setOptions(choices || []);
-      setCorrectAnswer(answer || "");
-      const roundStart = startTime || Date.now();
-      setRoundStartTime(roundStart);
-      setIsRoundActive(true);
-      setTimeLeft(getTimeAsNumber(roundTime));
-      if (typeof serverRound === "number") setCurrentRound(serverRound);
-      
-      // Reset non-host player states
-      const isSinglePlayer = state?.amountOfPlayers === 1;
-      if (!isSinglePlayer && !isHost) {
-        if (song) {
-          const allSongs = songService.getCachedSongs();
-          const songIndex = allSongs.findIndex(s => s.title === song.title && s.artist === song.artist);
-          if (songIndex >= 0) {
-            if (isSingleSong || isGuessArtist) {
-              songService.playSong(songIndex);
-            } else if (isQuickGuess) {
-              const duration = getSnippetDuration();
-              safeSetTimeoutAsync(async () => {
-                await songService.playQuickSnippet(songIndex, duration);
-                setHasPlayedSnippet(true);
-              }, 1000);
-            }
-          }
-        }
-        setHasGuessedCorrectly(false);
-        setHasSelectedCorrectly(false);
-        setShowCorrectAnswer(false);
-        setIsTimeUp(false);
-        setHasGuessedArtistCorrectly(false);
-      }
+      applyRoundPayload(payload);
     });
 
     // Listen for players joined the room
-    socket.on("room-players-scores", ( playerScores ) => {
+    socket.on("room-players-scores", (playerScores) => {
       setPlayers(playerScores);
     });
 
     // Host starts round → everyone gets the same song
-    socket.on("round-start", ({ song, choices, answer, startTime }) => {
-      console.log("Received round-start from host:", { song: song?.title, choices, answer });
-      
-      setCurrentSong(song);
-      setOptions(choices);
-      setCorrectAnswer(answer);
-      const roundStart = startTime || Date.now();
-      setRoundStartTime(roundStart);
-      setIsRoundActive(true);
-      setTimeLeft(getTimeAsNumber(roundTime));
-      
-      // For non-host players, handle audio playback and state updates
-      const isSinglePlayer = state?.amountOfPlayers === 1;
-      if (!isSinglePlayer && !isHost) {
-        if (song) {
-          // Find the song in cached songs and play it for non-host players
-          const allSongs = songService.getCachedSongs();
-          const songIndex = allSongs.findIndex(s => s.title === song.title && s.artist === song.artist);
-          
-          if (songIndex >= 0) {
-            if (isSingleSong || isGuessArtist) {
-              songService.playSong(songIndex);
-            } else if (isQuickGuess) {
-              // For quick guess, play the snippet with same delay as host
-              const duration = getSnippetDuration();
-              safeSetTimeoutAsync(async () => {
-                await songService.playQuickSnippet(songIndex, duration);
-                setHasPlayedSnippet(true);
-              }, 1000);
-            }
-          }
-        } else if (choices && choices.length > 0) {
-          // Mixed songs mode - no specific song to play
-          // The host handles the audio for mixed mode
-        }
-        
-        // Reset round state for non-host players
-        setHasGuessedCorrectly(false);
-        setHasSelectedCorrectly(false);
-        setShowCorrectAnswer(false);
-        setIsTimeUp(false);
-        setHasGuessedArtistCorrectly(false);
-      }
+    socket.on("round-start", (roundData) => {
+      console.log("Received round-start from host:", { song: roundData?.song?.title, choices: roundData?.choices, answer: roundData?.answer });
+      applyRoundPayload(roundData);
     });
 
     // Score update - this will override the initial scores when available
     socket.on("score-update", (updatedPlayers: Player[]) => {
-  
       // Only update if we have valid data
       if (updatedPlayers && Array.isArray(updatedPlayers) && updatedPlayers.length > 0) {
-        // Sort players by points (highest first)
         const sortedPlayers = [...updatedPlayers].sort((a, b) => b.points - a.points);
         setPlayers(sortedPlayers);
-        
-        // Update current player state from the players list
-        const currentPlayer = updatedPlayers.find(p => p.name === playerName);
-        if (currentPlayer) {
-          setPlayer(currentPlayer);
-        }
+        const currentPlayer = updatedPlayers.find((p) => p.name === playerName);
+        if (currentPlayer) setPlayer(currentPlayer);
       } else {
         console.log("⚠️ WARNING: Received invalid score update data, keeping current players");
       }
     });
 
     // Host continues to next round - all players advance
-  socket.on("continue-to-next-round", ({ nextRound }) => {
-    console.log(`Host advanced all players to round ${nextRound}`);
-    setCurrentRound(nextRound);
-    setTimeLeft(getTimeAsNumber(roundTime));
-    setIsRoundActive(true);
-    setIsIntermission(false);
-    setSelectedIndex(null);
-    setHasGuessedCorrectly(false);
-    setHasSelectedCorrectly(false);
-    setShowCorrectAnswer(false);
-    setIsTimeUp(false);
-  });
-
-  // Host ends game - all players navigate to end game page
-  socket.on("navigate-to-end-game", () => {
-    console.log("Host ended the game, navigating all players to end game page");
-    navigate("/end_game", {
-      state: { code }
+    socket.on("continue-to-next-round", ({ nextRound }) => {
+      console.log(`Host advanced all players to round ${nextRound}`);
+      setCurrentRound(nextRound);
+      setTimeLeft(getTimeAsNumber(roundTime));
+      setIsRoundActive(true);
+      setIsIntermission(false);
+      setSelectedIndex(null);
+      setHasGuessedCorrectly(false);
+      setHasSelectedCorrectly(false);
+      setShowCorrectAnswer(false);
+      setIsTimeUp(false);
     });
-  });
 
-  socket.on("host-skipped-round", () => {
-    console.log("Host skipped the round for everyone");
-    songService.stopSong();
-    
-    // Set all the necessary states to show leaderboard
-    setIsRoundActive(false);
-    setIsIntermission(true);
-    setIsTimeUp(true);
-    setShowCorrectAnswer(true);
-    
-    // Reset guess states to ensure clean leaderboard display
-    setHasGuessedCorrectly(false);
-    setHasSelectedCorrectly(false);
-    setHasGuessedArtistCorrectly(false);
-    setSelectedIndex(null);
-  });
+    // Host ends game - all players navigate to end game page
+    socket.on("navigate-to-end-game", () => {
+      console.log("Host ended the game, navigating all players to end game page");
+      navigate("/end_game", {
+        state: { code },
+      });
+    });
+
+    socket.on("host-skipped-round", () => {
+      console.log("Host skipped the round for everyone");
+      songService.stopSong();
+
+      // Set all the necessary states to show leaderboard
+      setIsRoundActive(false);
+      setIsIntermission(true);
+      setIsTimeUp(true);
+      setShowCorrectAnswer(true);
+
+      // Reset guess states to ensure clean leaderboard display
+      setHasGuessedCorrectly(false);
+      setHasSelectedCorrectly(false);
+      setHasGuessedArtistCorrectly(false);
+      setSelectedIndex(null);
+    });
 
     return () => {
+      socket.off("current-round");
       socket.off("room-players-scores");
       socket.off("round-start");
       socket.off("score-update");
       socket.off("continue-to-next-round");
       socket.off("navigate-to-end-game");
-      socket.off("host-skipped-round"); 
+      socket.off("host-skipped-round");
     };
   }, [code, playerName, navigate, roundTime]);
 
