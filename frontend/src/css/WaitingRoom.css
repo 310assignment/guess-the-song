@@ -94,14 +94,20 @@
   color: black;
   font-weight: bold;
   font-size: 1.1rem;
-  text-align: center;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: flex-start;
 }
 
+/* ensure current-player styling still applies */
 .player-item.current-player {
   background-color: #eab308;
   color: black;
 }
 
+/* single-player layout adjustments */
 .single-player {
   display: flex;
   justify-content: center;
@@ -112,6 +118,9 @@
 .single-player .player-item {
   width: auto;
   max-width: 300px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 /* Single player mode adjustments */
