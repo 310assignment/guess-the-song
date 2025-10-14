@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import '../css/EnterName.css';
 interface GuessifyProps {}
 import { useNavigate } from 'react-router-dom';
+import CharacterCustomizer from '../components/CharacterCustomiser';
 
 const EnterName: React.FC<GuessifyProps> = () => {
   const [name, setName] = useState<string>('');
+  const [avatar, setAvatar] = useState<string>('a1');
+  const [color, setColor] = useState<string>('#FFD166');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -18,6 +21,9 @@ const EnterName: React.FC<GuessifyProps> = () => {
     e.preventDefault();
     if (name.trim()) {
       localStorage.setItem('playerName', name.trim());
+      // Persist avatar selection so other pages can send it to server
+      localStorage.setItem('avatarId', avatar || 'a1');
+      localStorage.setItem('avatarColor', color || '#FFD166');
       navigate('/lobby', { state: { playerName: name.trim() } }); // Change underscore to hyphen
     }
   };
@@ -57,6 +63,8 @@ const EnterName: React.FC<GuessifyProps> = () => {
             GO
           </button>
         </div>
+
+        <CharacterCustomizer avatar={avatar} setAvatar={setAvatar} color={color} setColor={setColor} />
       </div>
     </div>
   );

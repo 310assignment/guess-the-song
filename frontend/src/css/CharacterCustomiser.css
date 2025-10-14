@@ -1,0 +1,136 @@
+/* 2x2 grid with named areas so we can reorder responsively */
+.customizer {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(160px, 1fr));
+  grid-template-rows: auto auto;
+  column-gap: 24px;
+  row-gap: 12px;
+  justify-items: center; /* center each column */
+  align-items: center;   /* center content vertically so colors align with avatars */
+  width: 100%;
+  max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
+
+  /* wide layout: labels on first row, controls on second row */
+  grid-template-areas:
+    "avatar-label color-label"
+    "avatar-controls color-controls";
+}
+
+/* assign areas */
+.avatar-label { grid-area: avatar-label; }
+.color-label { grid-area: color-label; }
+.avatar-controls { grid-area: avatar-controls; }
+.color-controls { grid-area: color-controls; }
+
+/* label cells (top row) — labels stay centered */
+.label-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+/* controls cells (bottom row) */
+.controls-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+/* keep label styling */
+.customizer-label {
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+  text-align: center;
+  width: 100%;
+}
+
+/* avatar grid (bottom-left) */
+.avatar-grid {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+
+/* avatar button */
+.avatar-btn {
+  border: 2px solid transparent;
+  background: white;
+  padding: 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 64px;
+  height: 64px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 64px; /* prevent shrinking */
+}
+
+.avatar-btn.selected {
+  border-color: #333;
+}
+
+.avatar-btn img {
+  max-width: 50px;
+  max-height: 50px;
+  display: block;
+}
+
+/* color grid (bottom-right) */
+.color-grid {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  align-self: center; /* ensure vertical centering inside the grid cell */
+}
+
+.color-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  flex: 0 0 28px; /* prevent shrinking */
+}
+
+.color-swatch.selected {
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.12);
+  transform: scale(1.05);
+}
+
+/* Responsive: collapse to single-column but keep each label with its controls
+   Order becomes: avatar-label, avatar-controls, color-label, color-controls */
+@media (max-width: 520px) {
+  .customizer {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "avatar-label"
+      "avatar-controls"
+      "color-label"
+      "color-controls";
+    gap: 12px;
+  }
+
+  /* when stacked, keep label above its control and centered */
+  .label-cell, .controls-cell {
+    justify-content: center;
+  }
+
+  /* ensure avatar controls and color controls occupy full width in single-column mode */
+  .avatar-controls, .color-controls {
+    width: 100%;
+  }
+
+  .avatar-grid, .color-grid {
+    justify-content: center;
+  }
+}

@@ -27,8 +27,12 @@ interface Player {
   correctAnswers: number;
 }
 
-const getTimeAsNumber = (timeStr: string): number => {
-  return parseInt(timeStr.replace(' sec', ''));
+const getTimeAsNumber = (time?: string | number | null): number => {
+  // Accept string like "30 sec", "30", a number, or undefined/null.
+  if (typeof time === "number") return Math.max(1, Math.floor(time));
+  if (!time || typeof time !== "string") return 30; // default 30s
+  const m = time.match(/\d+/);
+  return m ? parseInt(m[0], 10) : 30;
 };
 
 type Genre = "kpop" | "pop" | "hiphop" | "edm";
@@ -41,9 +45,9 @@ const InGamePage: React.FC = () => {
   const { code } = useParams(); // room code from URL
 
   // --- Extract settings safely ---
-    const state = location.state || {};
-  const { playerName, isHost, rounds: totalRounds, guessTime: roundTime } = state as any;
-
+  // location.state can be undefined when navigating directly — default to empty object
+  const state = (location.state || {}) as any;
+  const { playerName, isHost, rounds: totalRounds, guessTime: roundTime, gameMode, genre: Genre } = state;
 
   // --- Player State ---
   const [players, setPlayers] = useState<Player[]>([]);
@@ -66,6 +70,9 @@ const InGamePage: React.FC = () => {
   const isQuickGuess5Sec = state?.gameMode === "Quick Guess - 5s";
   const isQuickGuess = isQuickGuess1Sec || isQuickGuess3Sec || isQuickGuess5Sec;
 
+  // Detect single-player sessions (used to hide invite/code UI)
+  const isSinglePlayer = state?.amountOfPlayers === 1;
+  
   // Get the snipper duration for quick guess modes
   const getSnippetDuration = () => {
     if (isQuickGuess1Sec) return 1;
@@ -120,7 +127,10 @@ const InGamePage: React.FC = () => {
   };
 
   // --- Round State ---
-  const [currentRound, setCurrentRound] = useState(1);
+  // Initialize current round from navigation state if provided (handles mid-round joins)
+  const initialRound =
+    (state?.currentRound ?? state?.roundNumber ?? state?.currentRoundNumber ?? 1) as number;
+  const [currentRound, setCurrentRound] = useState<number>(Math.max(1, Number(initialRound)));
   const [timeLeft, setTimeLeft] = useState(getTimeAsNumber(roundTime));
   const [roundStartTime, setRoundStartTime] = useState<number | null>(null);
   const [isRoundActive, setIsRoundActive] = useState(false);
@@ -151,13 +161,69 @@ const InGamePage: React.FC = () => {
   // --- Round Control Helpers ---
   const isRoundStarting = useRef(false);
 
+  // apply a round payload (used by "round-start" and "current-round")
+  const applyRoundPayload = (payload: any) => {
+    if (!payload) return;
+    const { song, choices, answer, startTime, currentRound: serverRound } = payload;
+
+    setCurrentSong(song ?? null);
+    setOptions(choices ?? []);
+    setCorrectAnswer(answer ?? "");
+    const roundStart = startTime || Date.now();
+    setRoundStartTime(roundStart);
+    setIsRoundActive(true);
+    setTimeLeft(getTimeAsNumber(roundTime));
+    if (typeof serverRound === "number") setCurrentRound(serverRound);
+
+    // Reset non-host player states and attempt playback if needed
+    const isSinglePlayer = state?.amountOfPlayers === 1;
+    if (!isSinglePlayer && !isHost) {
+      if (song) {
+        const allSongs = songService.getCachedSongs();
+        const songIndex = allSongs.findIndex(
+          (s) => s.title === song.title && s.artist === song.artist
+        );
+
+        if (songIndex >= 0) {
+          if (isSingleSong || isGuessArtist) {
+            songService.playSong(songIndex);
+          } else if (isQuickGuess) {
+            const duration = getSnippetDuration();
+            safeSetTimeoutAsync(async () => {
+              try {
+                await songService.playQuickSnippet(songIndex, duration);
+                setHasPlayedSnippet(true);
+              } catch (err) {
+                /* ignore playback errors here (AbortError etc) */
+              }
+            }, 1000);
+          }
+        }
+      }
+      setHasGuessedCorrectly(false);
+      setHasSelectedCorrectly(false);
+      setShowCorrectAnswer(false);
+      setIsTimeUp(false);
+      setHasGuessedArtistCorrectly(false);
+    }
+  };
+
   /* ----------------- SOCKET CONNECTION ----------------- */
   useEffect(() => {
+    socket.emit("get-room-players-scores", code);
 
-    socket.emit("get-room-players-scores", code );
+    // Ask server for current round in case we missed the live "round-start"
+    socket.emit("get-current-round", code);
+
+    // Reply handler for missed round-start
+    socket.on("current-round", (payload) => {
+      if (!payload) return;
+      console.log("Recovered current-round from server:", payload);
+      applyRoundPayload(payload);
+    });
 
     // Listen for players joined the room
-    socket.on("room-players-scores", ( playerScores ) => {
+    socket.on("room-players-scores", (playerScores) => {
       setPlayers(playerScores);
     });
 
@@ -277,18 +343,13 @@ const InGamePage: React.FC = () => {
 
     // Score update - this will override the initial scores when available
     socket.on("score-update", (updatedPlayers: Player[]) => {
- 
+
       // Only update if we have valid data
       if (updatedPlayers && Array.isArray(updatedPlayers) && updatedPlayers.length > 0) {
-        // Sort players by points (highest first)
         const sortedPlayers = [...updatedPlayers].sort((a, b) => b.points - a.points);
         setPlayers(sortedPlayers);
-       
-        // Update current player state from the players list
-        const currentPlayer = updatedPlayers.find(p => p.name === playerName);
-        if (currentPlayer) {
-          setPlayer(currentPlayer);
-        }
+        const currentPlayer = updatedPlayers.find((p) => p.name === playerName);
+        if (currentPlayer) setPlayer(currentPlayer);
       } else {
         console.log("⚠️ WARNING: Received invalid score update data, keeping current players");
       }
@@ -309,13 +370,15 @@ const InGamePage: React.FC = () => {
     setHasGuessedReverseCorrectly(false);
   });
 
-  // Host ends game - all players navigate to end game page
-  socket.on("navigate-to-end-game", () => {
-    console.log("Host ended the game, navigating all players to end game page");
-    navigate("/end_game", {
-      state: { code }
+
+    // Host ends game - all players navigate to end game page
+    socket.on("navigate-to-end-game", () => {
+      console.log("Host ended the game, navigating all players to end game page");
+      navigate("/end_game", {
+        state: { code },
+      });
     });
-  });
+
 
   socket.on("host-skipped-round", () => {
     console.log("Host skipped the round for everyone");
@@ -335,7 +398,9 @@ const InGamePage: React.FC = () => {
     setSelectedIndex(null);
   });
 
+
     return () => {
+      socket.off("current-round");
       socket.off("room-players-scores");
       socket.off("round-start");
       socket.off("score-update");
@@ -766,7 +831,7 @@ const handleContinueToNextRound = () => {
   } else {
     // Navigate to end game page
     navigate("/end_game", {
-      state: { code }
+      state: { ...location.state, code }
     });
   }
 };
@@ -976,7 +1041,8 @@ const handleContinueToNextRound = () => {
             roundNumber={`${currentRound}/${totalRounds}`}
             timer={`${timeLeft}`}
             inviteCode={inviteCode}
-          />
+            showInvite={!isSinglePlayer}
+           />
           <div className="game-2-body">
             <Scoreboard players={players} />
             {renderGameModeComponent()}

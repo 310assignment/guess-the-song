@@ -1,5 +1,8 @@
 import React from "react";
 import "../css/RoundScoreDisplay.css";
+import Avatar1 from "../assets/avatars/avatar1.png";
+import Avatar2 from "../assets/avatars/avatar2.png";
+import Avatar3 from "../assets/avatars/avatar3.png";
 
 /** Player interface for round score display */
 interface Player {
@@ -7,6 +10,8 @@ interface Player {
   readonly points: number;
   readonly previousPoints: number;
   readonly correctAnswers: number;
+  readonly avatar?: { id?: string; color?: string } | string;
+  readonly hasParticipatedThisRound?: boolean; 
 }
 
 /** Props interface for RoundScoreDisplay component */
@@ -21,6 +26,13 @@ interface RoundScoreDisplayProps {
   readonly isTimeUp?: boolean;
   readonly isHost?: boolean;
 }
+
+const avatarFor = (avatar: any) => {
+  const id = typeof avatar === "string" ? avatar : (avatar?.id || "a1");
+  if (id === "a2") return Avatar2;
+  if (id === "a3") return Avatar3;
+  return Avatar1;
+};
 
 const RoundScoreDisplay: React.FC<RoundScoreDisplayProps> = ({
   players,
@@ -50,19 +62,33 @@ const RoundScoreDisplay: React.FC<RoundScoreDisplayProps> = ({
           const scoreChange = player.points - player.previousPoints;
           const isPositive = scoreChange > 0;
           const isZero = scoreChange === 0;
+          
+          // Only show score change if it's actually positive (player earned points)
+          // Don't show negative changes or zero changes
+          const shouldShowScoreChange = scoreChange > 0;
 
           return (
             <div key={player.name} className="player-score-change">
               <div className="player-info">
-                <span className="player-name">{player.name}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: (player as any).avatar && typeof (player as any).avatar === 'object' ? (player as any).avatar.color : 'transparent'
+                  }}>
+                    <img src={avatarFor((player as any).avatar)} alt={`${player.name} avatar`} style={{ width: 32, height: 32, borderRadius: '50%' }} />
+                  </div>
+                  <span className="player-name">{player.name}</span>
+                </div>
                 <div className="score-details">
                   <span className="total-score">{player.points} pts</span>
-                  {!isZero && (
-                    <span
-                      className={`score-change ${isPositive ? "positive" : "negative"}`}
-                    >
-                      {isPositive ? "+" : ""}
-                      {scoreChange}
+                  {shouldShowScoreChange && (
+                    <span className="score-change positive">
+                      +{scoreChange}
                     </span>
                   )}
                 </div>

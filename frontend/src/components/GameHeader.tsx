@@ -9,11 +9,13 @@ import copyAndPasteIcon from '../assets/copy-and-paste.png';
  * @property {string} roundNumber - Current round number (e.g., "1/10")
  * @property {string} timer - Current timer value to display
  * @property {string} inviteCode - Room invite code for players to join
+ * @property {boolean} [showInvite=true] -  flag to show/hide invite code section
  */
 interface GameHeaderProps {
   roundNumber: string;
   timer: string;
   inviteCode: string;
+  showInvite?: boolean; 
 }
 
 /**
@@ -27,7 +29,7 @@ interface GameHeaderProps {
  * @param {GameHeaderProps} props - Component props
  * @returns {JSX.Element} The game header component
  */
-const GameHeader: React.FC<GameHeaderProps> = ({ roundNumber, timer, inviteCode }) => {
+const GameHeader: React.FC<GameHeaderProps> = ({ roundNumber, timer, inviteCode, showInvite = true }) => {
   /**
    * Handles copying the invite code to the user's clipboard
    * Uses the browser's clipboard API to copy the invite code
@@ -53,20 +55,22 @@ const GameHeader: React.FC<GameHeaderProps> = ({ roundNumber, timer, inviteCode 
       </div>
 
       {/* Right section: Invite code with copy functionality */}
-      <div className="header-right">
-        <div className="invite-container">
-          <span className="invite-label">INVITE CODE:</span>
-          <div className="invite-code-wrapper">
-            <span className="invite-code">{inviteCode}</span>
-            <img
-              src={copyAndPasteIcon}
-              alt="Copy code"
-              className="copy-and-paste-icon"
-              onClick={handleCopy}
-            />
+      {showInvite && (
+        <div className="header-right">
+          <div className="invite-container">
+            <span className="invite-label">INVITE CODE:</span>
+            <div className="invite-code-wrapper">
+              <span className="invite-code">{inviteCode}</span>
+              <img
+                src={copyAndPasteIcon}
+                alt="Copy code"
+                className="copy-and-paste-icon"
+                onClick={handleCopy}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </header>
 
   );

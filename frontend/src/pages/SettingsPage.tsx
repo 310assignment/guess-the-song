@@ -76,12 +76,16 @@ const SettingsPage = () => {
 
       // Create the room
       if (socket.connected) {
-        socket.emit("create-room", { code: roomCode, settings, host: playerName });
+        const avatarId = localStorage.getItem("avatarId") || "a1";
+        const avatarColor = localStorage.getItem("avatarColor") || "#FFD166";
+        socket.emit("create-room", { code: roomCode, settings, host: playerName, avatar: { id: avatarId, color: avatarColor } });
       } else {
         // If not connected, wait for connection then emit
         socket.on("connect", () => {
           console.log("🔌 Connected to server with ID:", socket.id);
-          socket.emit("create-room", { code: roomCode, settings, host: playerName });
+          const avatarId = localStorage.getItem("avatarId") || "a1";
+          const avatarColor = localStorage.getItem("avatarColor") || "#FFD166";
+          socket.emit("create-room", { code: roomCode, settings, host: playerName, avatar: { id: avatarId, color: avatarColor } });
         });
       }
   };
@@ -99,14 +103,6 @@ const SettingsPage = () => {
 
           <div className="logo">
             <span className="logo-text">Guessify</span>
-          </div>
-
-          <div className="game-code-section">
-            <span className="invite-text">INVITE CODE:</span>
-            <button className="game-code-button" onClick={handleGameCodeClick}>
-              <span className="code-text">{roomCode || "..."}</span>
-              <span className="copy-icon">📋</span>
-            </button>
           </div>
         </div>
 
