@@ -145,11 +145,11 @@ export default class SongService {
   }
 
 
-  // Shuffle the cached songs deterministically using a seed (optional)
+  // Shuffle the cached songs deterministically using a seed
   shuffleCachedSongs(seed?: number) {
     if (!this.cachedSongs || this.cachedSongs.length <= 1) return;
-    // Simple Fisher-Yates, seeded if seed provided
-    let rand = (max: number) => Math.floor(Math.random() * max);
+    // Use cryptographically secure random integer for unseeded shuffles
+    let rand = (max: number) => secureRandomInt(max);
     if (typeof seed === 'number') {
       // xorshift32 deterministic generator
       let x = seed >>> 0;
@@ -161,7 +161,6 @@ export default class SongService {
       };
     }
 
-
     for (let i = this.cachedSongs.length - 1; i > 0; i--) {
       const j = rand(i + 1);
       const tmp = this.cachedSongs[i];
@@ -170,7 +169,6 @@ export default class SongService {
     }
     this.currentIndex = 0;
   }
-
 
   // Play multiple songs by details (used for mixed songs mode)
   playMultiSongByDetails(songs: Song[]) {

@@ -18,6 +18,7 @@ import {
   generateMixedSongsOptions
 } from "../utils/gameLogic";
 import { safeSetTimeoutAsync } from "../utils/safeTimers";
+import { secureRandomInt } from "../utils/secureRandom";
 
 interface Player {
   name: string;
@@ -575,8 +576,9 @@ const InGamePage: React.FC = () => {
     let shuffleSeed: number | undefined = undefined;
     if (isSingleSong || isReverseSong) {
       if (currentRound === 1) {
-        shuffleSeed = Math.floor(Math.random() * 1e9);
+        // Use a secure random integer for the shuffle seed to avoid weak PRNG usage
         try {
+          shuffleSeed = secureRandomInt(1e9);
           songService.shuffleCachedSongs(shuffleSeed);
           console.log(`Host: Shuffled cached songs with seed ${shuffleSeed}`);
         } catch (e) {
