@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "../css/RoundScoreDisplay.css";
 import Avatar1 from "../assets/avatars/avatar1.png";
 import Avatar2 from "../assets/avatars/avatar2.png";
@@ -25,6 +25,14 @@ interface RoundScoreDisplayProps {
   readonly playerGotCorrect?: boolean;
   readonly isTimeUp?: boolean;
   readonly isHost?: boolean;
+
+  // props to display waiting state
+  readonly timeLeft?: number;
+  readonly playersRemaining?: number | null;
+
+  // authoritative round timing so component can compute a live countdown
+  readonly roundStartTime?: number | null;
+  readonly roundDuration?: number;
 }
 
 const avatarFor = (avatar: any) => {
@@ -44,17 +52,71 @@ const RoundScoreDisplay: React.FC<RoundScoreDisplayProps> = ({
   playerGotCorrect = true,
   isTimeUp = false,
   isHost = false,
+  timeLeft = 0,
+  playersRemaining = null,
+  roundStartTime = null,
+  roundDuration,
 }) => {
   // Sort players by points descending
   const sortedPlayers = [...players].sort((a, b) => b.points - a.points);
 
+  // Determine how many players are still playing
+  // If server provided playersRemaining use that, otherwise derive from player score differences
+  const derivedRemaining = players.filter(p => (p.points === p.previousPoints) ? true : false).length;
+  // players with points === previousPoints may or may not have finished (server should supply playersRemaining)
+  const remaining = typeof playersRemaining === "number" ? playersRemaining : derivedRemaining;
+
+  // decide header: waiting vs complete
+  const everyoneDone = remaining === 0;
+  const showWaiting = !everyoneDone && !isTimeUp;
+
+  // enable continue button only if host and either everyone done or timer expired
+  const canContinue = isHost && (everyoneDone || isTimeUp);
+
+  // compute remaining seconds (prefer server authoritative start + duration)
+  const computeRemaining = (): number => {
+    if (typeof roundStartTime === "number" && typeof roundDuration === "number") {
+      const end = roundStartTime + roundDuration * 1000;
+      return Math.max(0, Math.ceil((end - Date.now()) / 1000));
+    }
+    // fallback to provided timeLeft prop
+    return Math.max(0, Math.ceil(Number(timeLeft ?? 0)));
+  };
+
+  // countdown state that updates every second while showing waiting
+  const [countdown, setCountdown] = useState<number>(computeRemaining());
+
+  useEffect(() => {
+    // update immediately
+    setCountdown(computeRemaining());
+
+    if (!showWaiting) return;
+
+    const id = setInterval(() => {
+      const rem = computeRemaining();
+      setCountdown(rem);
+      if (rem <= 0) clearInterval(id);
+    }, 1000);
+
+    return () => clearInterval(id);
+  // include inputs that affect computation
+  }, [roundStartTime, roundDuration, timeLeft, showWaiting, playersRemaining]);
+
   return (
     <div className="round-score-display">
       <div className="round-score-header">
-        <h2>{isFinalRound ? "Game Complete!" : `Round ${roundNumber} Complete!`}</h2>
+        <h2>
+          {showWaiting
+            ? `Waiting on ${remaining} player${remaining === 1 ? "" : "s"}...`
+            : (isFinalRound ? "Game Complete!" : `Round ${roundNumber} Complete!`)
+          }
+        </h2>
         <p className="round-progress">
           {roundNumber} of {totalRounds}
         </p>
+        {showWaiting && (
+          <p className="waiting-timer">Time left: {countdown}s</p>
+        )}
       </div>
 
       <div className="score-changes">
@@ -131,23 +193,28 @@ const RoundScoreDisplay: React.FC<RoundScoreDisplayProps> = ({
         </div>
       )}
 
-      <div className="continue-section">
-        <button
-          className={`continue-button ${!isHost ? 'disabled' : ''}`}
-          onClick={isHost ? onContinue : undefined}
-          disabled={!isHost}
-          aria-label={
-            isHost 
-              ? (isFinalRound ? "View final results" : `Continue to Round ${roundNumber + 1}`)
-              : (isFinalRound ? "Waiting for host to view results" : `Waiting to start Round ${roundNumber + 1}`)
-          }
-        >
-          {isHost 
-            ? (isFinalRound ? "View Final Results" : `Continue to Round ${roundNumber + 1}`)
-            : (isFinalRound ? "Waiting for host..." : `Waiting to start Round ${roundNumber + 1}`)
-          } 
-          </button>
-      </div>
+      {/* Show continue section only when the round is actually over */}
+      {(everyoneDone || isTimeUp) && (
+        <div className="continue-section">
+          {isHost ? (
+            <button
+              className="continue-button"
+              onClick={onContinue}
+              aria-label={isFinalRound ? "View final results" : `Continue to Round ${roundNumber + 1}`}
+            >
+              {isFinalRound ? "View Final Results" : `Continue to Round ${roundNumber + 1}`}
+            </button>
+          ) : (
+            <button
+              className="continue-button disabled"
+              disabled
+              aria-label="Waiting for host..."
+            >
+              Waiting for host...
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };

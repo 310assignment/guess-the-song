@@ -49,6 +49,16 @@
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+.waiting-timer {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.95);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
 .round-progress {
   color: rgba(255, 255, 255, 0.8);
   font-size: 1.2rem;
