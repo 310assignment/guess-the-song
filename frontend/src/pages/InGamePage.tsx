@@ -11,11 +11,11 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { songService } from "../services/songServices";
 import type { Song } from "../types/song";
 import {socket} from '../socket';
-import { 
-  generateMultipleChoiceOptions, 
-  selectRandomSong, 
+import {
+  generateMultipleChoiceOptions,
+  selectRandomSong,
   getRandomSongs,
-  generateMixedSongsOptions 
+  generateMixedSongsOptions
 } from "../utils/gameLogic";
 import { safeSetTimeoutAsync } from "../utils/safeTimers";
 
@@ -40,8 +40,9 @@ const InGamePage: React.FC = () => {
   const { code } = useParams(); // room code from URL
 
   // --- Extract settings safely ---
-  const state = location.state 
-  const { playerName, isHost, rounds: totalRounds, guessTime: roundTime, gameMode, genre: Genre } = state;
+    const state = location.state || {};
+  const { playerName, isHost, rounds: totalRounds, guessTime: roundTime } = state as any;
+
 
   // --- Player State ---
   const [players, setPlayers] = useState<Player[]>([]);
@@ -77,14 +78,14 @@ const InGamePage: React.FC = () => {
     safeSetTimeoutAsync(async () => {
       // Play the song normally (from beginning, like single song mode)
       songService.playSong(songIndex);
-      
+     
       // Stop after the specified duration (with safety check)
       setTimeout(() => {
         if (songService.getCurrentAudio() && !songService.getCurrentAudio()?.ended) {
           songService.stopSong();
         }
       }, duration * 1000);
-      
+     
       setHasPlayedSnippet(true);
     }, delay);
   };
@@ -159,10 +160,11 @@ const InGamePage: React.FC = () => {
       setPlayers(playerScores);
     });
 
-    // Host starts round → everyone gets the same song
-    socket.on("round-start", ({ song, choices, answer, startTime, songIndex, multiSongs }) => {
+
+  // Host starts round → everyone gets the same song
+  socket.on("round-start", ({ song, choices, answer, startTime, songIndex, multiSongs, shuffleSeed }) => {
       console.log("Received round-start from host:", { song: song?.title, choices, answer, songIndex, multiSongs: multiSongs?.length });
-      
+     
       setCurrentSong(song);
       setOptions(choices);
       setCorrectAnswer(answer);
@@ -170,14 +172,23 @@ const InGamePage: React.FC = () => {
       setRoundStartTime(roundStart);
       setIsRoundActive(true);
       setTimeLeft(getTimeAsNumber(roundTime));
-      
+     
       // For non-host players, handle audio playback and state updates
       const isSinglePlayer = state?.amountOfPlayers === 1;
       if (!isSinglePlayer && !isHost) {
+        // If host provided a shuffle seed for deterministic order, apply it
+        if (typeof (shuffleSeed as any) === 'number') {
+          try {
+            songService.shuffleCachedSongs(shuffleSeed as number);
+            console.log(`Non-host: Applied shuffle seed ${shuffleSeed}`);
+          } catch (e) {
+            console.warn('Non-host: failed to apply shuffle seed', e);
+          }
+        }
         if (song) {
           // Use provided songIndex if available, otherwise find the song in cached songs
           const allSongs = songService.getCachedSongs();
-          
+         
           if (allSongs.length === 0) {
             console.warn(`Non-host player: No songs cached yet, cannot play "${song.title}". Will retry in 1 second.`);
             // Retry after a delay to give time for songs to load
@@ -200,27 +211,49 @@ const InGamePage: React.FC = () => {
             }, 1000);
             return;
           }
-          
+         
           let playbackIndex = songIndex;
-          
+         
           if (playbackIndex === undefined) {
             playbackIndex = allSongs.findIndex(s => s.title === song.title && s.artist === song.artist);
             console.log(`Non-host player: Found song "${song.title}" by "${song.artist}" at index ${playbackIndex}`);
           } else {
             console.log(`Non-host player: Using provided song index ${playbackIndex} for "${song.title}"`);
           }
-          
+         
           if (playbackIndex >= 0 && playbackIndex < allSongs.length) {
             if (isSingleSong || isGuessArtist) {
               console.log(`Non-host player: Playing single song at index ${playbackIndex}`);
-              songService.playSong(playbackIndex);
+              // Prefer playing by details when host provided explicit song object
+              if (song && song.previewUrl) {
+                songService.playSongByDetails(song);
+              } else {
+                songService.playSong(playbackIndex);
+              }
             } else if (isReverseSong) {
               console.log(`Non-host player: Playing reverse song at index ${playbackIndex}`);
-              songService.playReverseSong(playbackIndex);
+              if (song && song.previewUrl) {
+                songService.playReverseSongByDetails(song);
+              } else {
+                songService.playReverseSong(playbackIndex);
+              }
             } else if (isQuickGuess) {
               // For quick guess, play the full song like single mode but stop after duration
               const duration = getSnippetDuration();
-              playQuickGuessSnippet(playbackIndex, duration);
+              if (song && song.previewUrl) {
+                // play by details and stop after duration
+                safeSetTimeoutAsync(async () => {
+                  songService.playSongByDetails(song);
+                  setTimeout(() => {
+                    if (songService.getCurrentAudio() && !songService.getCurrentAudio()?.ended) {
+                      songService.stopSong();
+                    }
+                  }, duration * 1000);
+                  setHasPlayedSnippet(true);
+                }, 1000);
+              } else {
+                playQuickGuessSnippet(playbackIndex, duration);
+              }
             }
           } else {
             console.error(`Non-host player: Cannot find song "${song.title}" by "${song.artist}" in cached songs. Available songs: ${allSongs.length}`);
@@ -230,7 +263,7 @@ const InGamePage: React.FC = () => {
           console.log(`Non-host player: Playing ${multiSongs.length} mixed songs`);
           songService.playMultiSong(multiSongs);
         }
-        
+       
         // Reset round state for non-host players
         setHasGuessedCorrectly(false);
         setHasSelectedCorrectly(false);
@@ -243,13 +276,13 @@ const InGamePage: React.FC = () => {
 
     // Score update - this will override the initial scores when available
     socket.on("score-update", (updatedPlayers: Player[]) => {
-  
+ 
       // Only update if we have valid data
       if (updatedPlayers && Array.isArray(updatedPlayers) && updatedPlayers.length > 0) {
         // Sort players by points (highest first)
         const sortedPlayers = [...updatedPlayers].sort((a, b) => b.points - a.points);
         setPlayers(sortedPlayers);
-        
+       
         // Update current player state from the players list
         const currentPlayer = updatedPlayers.find(p => p.name === playerName);
         if (currentPlayer) {
@@ -286,13 +319,13 @@ const InGamePage: React.FC = () => {
   socket.on("host-skipped-round", () => {
     console.log("Host skipped the round for everyone");
     songService.stopSong();
-    
+   
     // Set all the necessary states to show leaderboard
     setIsRoundActive(false);
     setIsIntermission(true);
     setIsTimeUp(true);
     setShowCorrectAnswer(true);
-    
+   
     // Reset guess states to ensure clean leaderboard display
     setHasGuessedCorrectly(false);
     setHasSelectedCorrectly(false);
@@ -307,7 +340,7 @@ const InGamePage: React.FC = () => {
       socket.off("score-update");
       socket.off("continue-to-next-round");
       socket.off("navigate-to-end-game");
-      socket.off("host-skipped-round"); 
+      socket.off("host-skipped-round");
     };
   }, [code, playerName, navigate, roundTime]);
 
@@ -355,7 +388,7 @@ const InGamePage: React.FC = () => {
       retryWithSongCheck(retryCount, 3, startSinglePlayerRound, "No songs loaded yet");
       return;
     }
-    
+   
     if (isSingleSong || isGuessArtist) {
       if (currentRound === 1) {
         // For first round, get and set current song, then play it
@@ -392,11 +425,11 @@ const InGamePage: React.FC = () => {
       // Use secure random utilities for consistency
       const allSongs = songService.getCachedSongs();
       const { song: selectedSong, index: randomIndex } = selectRandomSong(allSongs);
-      
+     
       if (selectedSong) {
         // Generate consistent multiple choice options using secure utility
         const choices = generateMultipleChoiceOptions(selectedSong, allSongs);
-        
+       
         setCurrentSong(selectedSong);
         setOptions(choices);
         setCorrectAnswer(selectedSong.title);
@@ -422,29 +455,29 @@ const InGamePage: React.FC = () => {
     if (!checkSongsLoaded("setupSingleSongMode")) {
       return null;
     }
-    
-    const currentSongData = currentRound === 1 ? 
-      songService.getCurrentSong() : 
+   
+    const currentSongData = currentRound === 1 ?
+      songService.getCurrentSong() :
       songService.getNextSong();
-    
+   
     if (currentSongData) {
       let answer = currentSongData.title; // Default for single song and reverse song
       if (isGuessArtist) {
         answer = currentSongData.artist;
       }
-      
+     
       // Get the current index for consistent playback across players
-      const currentIndex = currentRound === 1 ? 
-        songService.getCurrentIndex() : 
+      const currentIndex = currentRound === 1 ?
+        songService.getCurrentIndex() :
         (songService.getCurrentIndex() + 1) % songService.getCachedSongs().length;
-      
+     
       const roundData = {
         song: currentSongData,
         choices: [],
         answer: answer,
         songIndex: currentIndex
       };
-      
+     
       // Choose the appropriate playback method
       if (isReverseSong) {
         if (currentRound === 1) songService.playReverseSong();
@@ -454,7 +487,7 @@ const InGamePage: React.FC = () => {
       } else {
         songService.playNextSong();
       }
-      
+     
       return roundData;
     }
     return null;
@@ -463,28 +496,28 @@ const InGamePage: React.FC = () => {
   // Helper function for quick guess mode
   const setupQuickGuessMode = () => {
     const allSongs = songService.getCachedSongs();
-    
+   
     // Safety check: ensure songs are loaded for the correct genre
     if (allSongs.length === 0) {
       console.warn("No songs loaded yet for setupQuickGuessMode, retrying...");
       return null;
     }
-    
+   
     const { song: selectedSong, index: randomIndex } = selectRandomSong(allSongs);
-    
+   
     if (selectedSong) {
       // Generate consistent multiple choice options using secure utility
       const choices = generateMultipleChoiceOptions(selectedSong, allSongs);
-      
+     
       // Setup local state
       setCurrentSong(selectedSong);
       setOptions(choices);
       setCorrectAnswer(selectedSong.title);
-      
+     
       // Play the snippet with a delay
       const snippetDuration = getSnippetDuration();
       playQuickGuessSnippet(randomIndex, snippetDuration);
-      
+     
       return {
         song: selectedSong,
         choices,
@@ -501,14 +534,14 @@ const InGamePage: React.FC = () => {
     if (!checkSongsLoaded("setupMixedSongsMode")) {
       return null;
     }
-    
+   
     const chosen = getRandomSongsForGame(3);
     songService.playMultiSong(chosen);
 
     const opts = generateMixedSongsOptions(chosen, songService.getCachedSongs());
     setOptions(opts);
     setCorrectAnswer(chosen.map((s: Song) => s.title).join(", "));
-    
+   
     return {
       song: null, // Mixed mode doesn't have a single song
       choices: opts,
@@ -535,22 +568,41 @@ const InGamePage: React.FC = () => {
       return;
     }
 
+    // If we're the host, and this is the first round for single/reverse modes,
+    // produce a deterministic shuffle seed and apply it to cached songs so
+    // the order is game-specific. We also send the seed to clients so they
+    // can apply the same shuffle.
+    let shuffleSeed: number | undefined = undefined;
+    if (isSingleSong || isReverseSong) {
+      if (currentRound === 1) {
+        shuffleSeed = Math.floor(Math.random() * 1e9);
+        try {
+          songService.shuffleCachedSongs(shuffleSeed);
+          console.log(`Host: Shuffled cached songs with seed ${shuffleSeed}`);
+        } catch (e) {
+          console.warn('Host: shuffleCachedSongs failed', e);
+        }
+      }
+    }
+
     // Send round data to all players via socket
     if (socket && code && roundData) {
       socket.emit("host-start-round", {
         code,
         ...roundData,
-        startTime: Date.now()
+        startTime: Date.now(),
+        shuffleSeed
       });
     }
   };
-  
+ 
+
 
   // Calculate points based on how quickly the answer was given (min 100, max 1000)
   const calculatePoints = (): number => {
     if (!roundStartTime) return 500; // fallback if no start time
     const roundTimeAsNumber = getTimeAsNumber(roundTime);
-    
+   
     const maxPoints = 1000;
     const minPoints = 100;
     const elapsedTime = (Date.now() - roundStartTime) / 1000; // seconds
@@ -573,8 +625,8 @@ const InGamePage: React.FC = () => {
     }));
 
     // Update the players list
-    setPlayers(prev => prev.map(p => 
-      p.name === playerName 
+    setPlayers(prev => prev.map(p =>
+      p.name === playerName
         ? {
             ...p,
             points: newPoints,
@@ -628,7 +680,7 @@ const InGamePage: React.FC = () => {
   const handleSkip = () => {
     if (!hasGuessedCorrectly) {
       const isSinglePlayer = state?.amountOfPlayers === 1;
-      
+     
       if (isSinglePlayer) {
         // Single player: skip locally
         songService.stopSong();
@@ -660,7 +712,7 @@ const InGamePage: React.FC = () => {
     if (!alreadyGuessed) {
       const points = calculatePoints();
       addPointsToPlayer(points, true); // correct answer count
-      
+     
       if (isSingleSong) {
         setHasGuessedCorrectly(true);
       } else if (isGuessArtist) {
@@ -691,17 +743,17 @@ const handleContinueToNextRound = () => {
   if (isHost && socket) {
     if (currentRound < totalRounds) {
       // Emit event to advance all players to next round
-      socket.emit("host-continue-round", { 
-        code, 
+      socket.emit("host-continue-round", {
+        code,
         nextRound: currentRound + 1,
-        totalRounds 
+        totalRounds
       });
     } else {
       // Emit event to navigate all players to end game
       socket.emit("host-end-game", { code });
     }
   }
-  
+ 
   // Local state update (will be overridden by socket event for consistency)
   if (currentRound < totalRounds) {
     setCurrentRound(r => r + 1);
@@ -718,7 +770,7 @@ const handleContinueToNextRound = () => {
 };
 
 
-  /* ----------------- EFFECTS ----------------- */ 
+  /* ----------------- EFFECTS ----------------- */
 
   // Subscribe to song changes
   useEffect(() => {
@@ -745,7 +797,7 @@ const handleContinueToNextRound = () => {
         ...prev,
         previousPoints: prev.points,
       }));
-      
+     
       setPlayers(prev => prev.map(p => ({
         ...p,
         previousPoints: p.points,
@@ -766,7 +818,7 @@ const handleContinueToNextRound = () => {
 
     // Check if this is single player or multiplayer
     const isSinglePlayer = state?.amountOfPlayers === 1;
-    
+   
     if (isSinglePlayer) {
       // Single player: generate songs locally as before
       startSinglePlayerRound();
@@ -795,7 +847,7 @@ const handleContinueToNextRound = () => {
 
   // Single timer that decrements every second
   const timer = safeSetTimeoutAsync(async () => setTimeLeft((t: number) => t - 1), 1000);
-  
+ 
   return () => clearTimeout(timer);
 }, [timeLeft, isRoundActive, isIntermission, socket, code]);
 
@@ -872,7 +924,7 @@ const handleContinueToNextRound = () => {
           hasPlayedSnippet={hasPlayedSnippet}
           snippetDuration={getSnippetDuration()}
           onSkip={handleSkip}
-          isHost={isHost} 
+          isHost={isHost}
         />
       );
     }
