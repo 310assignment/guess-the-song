@@ -22,8 +22,16 @@ const colors = ['#FFD166', '#06D6A0', '#118AB2', '#EF476F'];
 const CharacterCustomizer: React.FC<Props> = ({ avatar, setAvatar, color, setColor }) => {
   return (
     <div className="customizer">
-      <div className="customizer-section">
+      {/* Row 1: labels (distinct cells) */}
+      <div className="label-cell avatar-label">
         <div className="customizer-label">Choose avatar</div>
+      </div>
+      <div className="label-cell color-label">
+        <div className="customizer-label">Choose color</div>
+      </div>
+
+      {/* Row 2: controls (distinct cells) */}
+      <div className="controls-cell avatar-controls">
         <div className="avatar-grid">
           {avatars.map(a => (
             <button
@@ -31,7 +39,6 @@ const CharacterCustomizer: React.FC<Props> = ({ avatar, setAvatar, color, setCol
               className={`avatar-btn ${avatar === a.id ? 'selected' : ''}`}
               onClick={() => setAvatar(a.id)}
               type="button"
-              // apply background color; uses selected color only for the chosen avatar
               style={{ backgroundColor: avatar === a.id ? color : 'transparent' }}
               aria-label={`Choose ${a.id}`}
             >
@@ -41,8 +48,7 @@ const CharacterCustomizer: React.FC<Props> = ({ avatar, setAvatar, color, setCol
         </div>
       </div>
 
-      <div className="customizer-section">
-        <div className="customizer-label">Choose color</div>
+      <div className="controls-cell color-controls">
         <div className="color-grid">
           {colors.map(c => (
             <button
@@ -51,6 +57,7 @@ const CharacterCustomizer: React.FC<Props> = ({ avatar, setAvatar, color, setCol
               style={{ backgroundColor: c }}
               onClick={() => setColor(c)}
               type="button"
+              aria-label={`Choose color ${c}`}
             />
           ))}
         </div>
