@@ -17,6 +17,7 @@ interface PlayerResult {
   points: number;
   correctAnswers: number;
   totalRounds: number;
+  avatar?: { id?: string; color?: string } | string;
 }
 
 const avatarFor = (avatar: any) => {
@@ -121,17 +122,19 @@ const Rankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestio
           {first?.correctAnswers || 0} out of {totalNumberOfQuestions}
         </div>
       </div>
-      <div className="nickname" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div style={{
-          width: 40,
-          height: 40,
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: first?.avatar && typeof first.avatar === 'object' ? first.avatar.color : 'transparent'
-        }}>
-          <img src={avatarFor(first?.avatar)} style={{ width: 32, height: 32, borderRadius: '50%' }} />
+      <div className="nickname">
+        <div
+          className="podium-avatar"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: "50%",
+            backgroundColor: first?.avatar && typeof first.avatar === "object" ? first.avatar.color : "transparent",
+            marginBottom: 1
+          }}
+        >
+          <img src={avatarFor(first?.avatar)} alt={`${first?.name || "Player"} avatar`} />
         </div>
         <span>{first?.name || "No Player"}</span>
       </div>
@@ -146,7 +149,22 @@ const Rankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestio
           {second.correctAnswers} out of {totalNumberOfQuestions}
         </div>
       </div>
-      <div className="nickname">{second.name}</div>
+      <div className="nickname">
+        <div
+          className="podium-avatar"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: "50%",
+            backgroundColor: second?.avatar && typeof second.avatar === "object" ? second.avatar.color : "transparent",
+            marginBottom: 1
+          }}
+        >
+          <img src={avatarFor(second?.avatar)} alt={`${second?.name || "Player"} avatar`} />
+        </div>
+        <span>{second.name}</span>
+      </div>
     </div>
   ) : (
     <div className="column">
@@ -162,7 +180,22 @@ const Rankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestio
           {third.correctAnswers} out of {totalNumberOfQuestions}
         </div>
       </div>
-      <div className="nickname">{third.name}</div>
+      <div className="nickname">
+        <div
+          className="podium-avatar"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: "50%",
+            backgroundColor: third?.avatar && typeof third.avatar === "object" ? third.avatar.color : "transparent",
+            marginBottom: 1
+          }}
+        >
+          <img src={avatarFor(third?.avatar)} alt={`${third?.name || "Player"} avatar`} />
+        </div>
+        <span>{third.name}</span>
+      </div>
     </div>
   ) : (
     <div className="column">

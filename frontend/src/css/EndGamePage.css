@@ -249,23 +249,43 @@ body, html {
 }
 
 .nickname {
-    font-size: 2rem;
-    margin-bottom: 0;
-    font-weight: bold;
-    color: rgba(255, 255, 255, 0);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 1.6rem;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0); /* name fades in via animation */
 }
 
-.column:nth-child(1) .nickname {
+.podium-avatar img {
+  display: block;
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.column:nth-child(1) .podium-avatar img { /* second place */
+  width: 64px;
+  height: 64px;
   animation: fadeInNickname 0.8s ease-in-out 1s forwards;
 }
 
-.column:nth-child(2) .nickname {
+.column:nth-child(2) .podium-avatar img { /* first place */
+  width: 96px;
+  height: 96px;
   animation: fadeInNickname 0.8s ease-in-out 2s forwards;
 }
 
-.column:nth-child(3) .nickname {
+.column:nth-child(3) .podium-avatar img { /* third place */
+  width: 56px;
+  height: 56px;
   animation: fadeInNickname 0.8s ease-in-out 0s forwards;
 }
+
+.column:nth-child(1) .nickname { animation: fadeInNickname 0.8s ease-in-out 1s forwards; }
+.column:nth-child(2) .nickname { animation: fadeInNickname 0.8s ease-in-out 2s forwards; }
+.column:nth-child(3) .nickname { animation: fadeInNickname 0.8s ease-in-out 0s forwards; }
 
 .ground {
   background-color: #ffffff;
@@ -329,9 +349,13 @@ body, html {
 @keyframes fadeInNickname {
   from {
     color: rgba(255, 255, 255, 0);
+    opacity: 0;
+    transform: translateY(6px);
   }
   to {
     color: #ffffff;
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
