@@ -695,8 +695,7 @@ const InGamePage: React.FC = () => {
     setIsTimeUp(false);
     setHasPlayedSnippet(false);
     setHasGuessedArtistCorrectly(false);
-    -setPlayersRemaining((prev) => prev ?? players.length); // ensure some value until server updates
-    +setPlayersRemaining((prev: number | null) => prev ?? players.length); // ensure some value until server updates
+    setPlayersRemaining((prev: number | null) => prev ?? players.length); // ensure some value until server updates
 
     // Check if this is single player or multiplayer
     const isSinglePlayer = state?.amountOfPlayers === 1;
