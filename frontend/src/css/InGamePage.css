@@ -14,20 +14,29 @@ html {
   height: 100%;
 }
 
-.in-game-container {
+.game-2-container {
   width: 100vw;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  padding: 0;
-  /* Remove or change this line */
-  /* position: absolute; */
+  padding: 0; /* Remove top padding */
   position: relative;
   top: 0;
   left: 0;
   background-image: url(../assets/Background.png);
+}
+
+.game-content {
+  margin-top: 8vh; /* Add gap after header (header is ~10vh + 2vh gap) */
+  flex: 1;
+}
+
+.scoreboard {
+  width: calc(100% - 30vw);
+  max-width: 800px;
+  margin: 0 0 2rem 12vw; /* Remove top margin since we're using game-content margin */
 }
 
 .choose-song-container {
@@ -50,7 +59,7 @@ html {
 }
 
 .song-icon::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -96,6 +105,6 @@ html {
 }
 
 .answer-btn.selected {
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
 }
