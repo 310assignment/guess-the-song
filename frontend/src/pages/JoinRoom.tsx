@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import "../css/JoinRoom.css";
-import { songService } from "../services/songServices";
 import { useNavigate, useLocation } from "react-router-dom";
 import { isValidRoomCode } from "../utils/roomCode.tsx";
 
@@ -16,10 +15,7 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
   
   const handleCreateRoom = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    songService.fetchRandom().then((songs) => {
-      console.log("Fetched songs", songs);
-    });
-
+    // Songs will be fetched later when the game starts with the selected genre
     // Pass playerName along to SettingsPage
     navigate("/create_room", { state: { playerName: playerNameFromState } });
   };
@@ -58,11 +54,7 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
     setCode(value);
   };
 
-  useEffect(() => {
-    songService.fetchRandom().then((songs) => {
-    console.log("Fetched songs", songs);
-    });
-  }, []);
+  // Songs will be fetched when the game starts with the selected genre
 
   // Add this useEffect after the existing useState declarations
   useEffect(() => {

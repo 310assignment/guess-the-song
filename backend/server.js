@@ -278,7 +278,7 @@ io.on("connection", (socket) => {
   });
 
   // host distributes round data to all players
-  socket.on("host-start-round", ({ code, song, choices, answer, startTime }) => {
+  socket.on("host-start-round", ({ code, song, choices, answer, startTime, songIndex, multiSongs, shuffleSeed }) => {
     const room = rooms.get(code);
     if (!room) {
       console.log(`Host tried to start round in room ${code}`);
@@ -301,17 +301,21 @@ io.on("connection", (socket) => {
     // reset finished players for this round
     room.finishedPlayers = new Set();
 
-    // --- Persist the current round payload so late joiners can request it ---
-    room.currentRoundData = { song, choices, answer };
+    // Persist the full current round payload so late joiners can request it
+    room.currentRoundData = { song, choices, answer, songIndex, multiSongs, shuffleSeed };
 
-    console.log(`Host starting round in room ${code} with song:`, song?.title);
-    
-    // Send round data to all players in the room
-    io.to(code).emit("round-start", { 
-      song, 
-      choices, 
-      answer, 
-      startTime: room.roundStartTime 
+    console.log(`Host starting round ${room.currentRound} in room ${code} with song:`, song?.title);
+
+    // Send round data to all players in the room and include authoritative currentRound
+    io.to(code).emit("round-start", {
+      song,
+      choices,
+      answer,
+      startTime: room.roundStartTime,
+      songIndex,
+      multiSongs,
+      shuffleSeed,
+      currentRound: room.currentRound
     });
 
     // Broadcast initial finished state (everyone remaining)
@@ -371,6 +375,26 @@ io.on("connection", (socket) => {
     // Navigate all players to end game page
     socket.to(code).emit("navigate-to-end-game");
     socket.emit("navigate-to-end-game"); // Also send to host
+  });
+
+  // Allow late-joiners / recovered clients to ask for the current round payload
+  socket.on("get-current-round", (code) => {
+    socket.join(code);
+    const room = rooms.get(code);
+    if (!room || !room.currentRoundData) {
+      // No active round to recover
+      socket.emit("current-round", null);
+      return;
+    }
+
+    const payload = {
+      ...room.currentRoundData,
+      currentRound: room.currentRound || 1,
+      startTime: room.roundStartTime || Date.now(),
+    };
+
+    console.log(`Providing current-round to ${socket.id} for room ${code}:`, { currentRound: payload.currentRound, song: payload.song?.title });
+    socket.emit("current-round", payload);
   });
 
   socket.on("disconnect", () => {

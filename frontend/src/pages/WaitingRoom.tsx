@@ -160,8 +160,8 @@ const WaitingRoom: React.FC = () => {
           <h2>{amountOfPlayersInRoom === 1 ? 'Single Player Mode' : `Players in Room - ${players.length} of ${amountOfPlayersInRoom}`}</h2>
           {amountOfPlayersInRoom === 1 ? (
             <div className="single-player">
-              <div className={`player-item ${players[0] === playerName ? 'current-player' : ''}`}>
-                {players[0]} {players[0] === playerName && isHost ? '(Host)' : ''}
+              <div className={`player-item ${players[0]?.name === playerName ? 'current-player' : ''}`}>
+                {players[0]?.name ?? playerName} {players[0]?.name === playerName && isHost ? '(Host)' : ''}
               </div>
             </div>
           ) : (
