@@ -191,18 +191,29 @@ This project is released under the **MIT License**. You're free to:
 - Guess from single audio or mixed previews
 - Timed guessing and scoring
 - Song caching and preview fetching from Deezer (Genre set to K-pop)
-- Game settings and customization
+- Game settings and customisation
 - Final results and winner display
 
-### Future A2 Releases
+### v0.2.0 – A2 Releases
 
-**Planned Features:**
+**New Features:**
 
-- Live multiplayer using Socket.io
+- Live multiplayer support using Socket.io
 - Game rooms and lobbies
-- User authentication for storing history
-- Leaderboards and statistics
+- Waiting room page for multiplayer sessions
+- Host permissions (e.g., host can manage rounds and skip songs)
+- Avatar customisation so players can represent themselves as a chosen character
+- New music genres: K-pop, Pop, Hip-Hop, Karaoke Hits, R&B, Top Hits
+- New game modes: Single Song, Mixed Songs, Guess the Artist, Reverse Song, Quick Guess)
+- Leaderboard podium animation at the end of games
 - Enhanced UI/UX improvements
+
+**Changes:**
+- Removed the plans for user authentication/login system
+  - We decided to remove login/user accounts to preserve the casual, drop-in nature of the game. Keeping the experience quick and accessible better fits the intended gameplay flow.
+ 
+**Fixes & Improvements:**
+- General bug fixes and performance optimizations
 
 ---
 
