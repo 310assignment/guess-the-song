@@ -91,7 +91,7 @@ io.on("connection", (socket) => {
       socket.emit("room-created", { code, rooms: Object.fromEntries(rooms.entries()) });
     }
   });
-
+  
   // join room event
   socket.on("join", ({ code, playerName, avatar }) => {
     console.log(`${playerName} attempting to join room ${code}`);
@@ -161,7 +161,8 @@ io.on("connection", (socket) => {
       players: room.players,
       maxPlayers: room.maxPlayers,
       amountOfPlayersInRoom: room.settings.amountOfPlayers, // default to 8 if not set,
-      playerScores: Array.from(room.playerScores.values())
+      playerScores: Array.from(room.playerScores.values()),
+      host: room.host 
     });
     
     // Send current scores to the new player
@@ -182,18 +183,20 @@ io.on("connection", (socket) => {
         isIntermission: !!room.isIntermission,
         roundStartTime: room.roundStartTime,
         players: room.players,
-        playerScores: Array.from(room.playerScores.values())
+        playerScores: Array.from(room.playerScores.values()),
+        host: room.host
       });
       return;
     } else {
       // Game hasn't started - normal waiting room flow
       socket.emit("join-success", { 
         players: room.players,
-        amountOfPlayersInRoom: room.maxPlayers
+        amountOfPlayersInRoom: room.maxPlayers,
+        host: room.host
       });
     }
   });
-
+  
   socket.on('get-room-players-scores', ( code ) => {
     socket.join(code);
 
@@ -272,7 +275,7 @@ io.on("connection", (socket) => {
       room.roundStartTime = null;
       
       const settings = room.settings;
-      io.to(code).emit("game-started", settings);
+      io.to(code).emit("game-started", { ...settings, host: room.host });
       console.log(`Game started in room ${code}`);
     }
   });
@@ -420,7 +423,8 @@ io.on("connection", (socket) => {
         // Update remaining players
         io.to(socket.roomCode).emit("players-updated", { 
           players: room.players, 
-          maxPlayers: room.maxPlayers 
+          maxPlayers: room.maxPlayers,
+          host: room.host
         });
         
         // Clean up empty rooms
