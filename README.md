@@ -154,8 +154,15 @@ _A real-time multiplayer music guessing game built with Deezer_
 
 **Testing:**
 
+To run tests in the frontend, use the following commands:
 ```bash
-# Run tests (when implemented)
+cd frontend
+npm run test
+```
+
+Similarly, to run tests in the backend, use the following commands:
+```bash
+cd backend
 npm run test
 ```
 
