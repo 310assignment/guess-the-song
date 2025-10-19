@@ -19,7 +19,7 @@
 .waiting-header-section {
   width: 100%;
   display: flex;
-  justify-content: space-between; /* Change back to space-between */
+  justify-content: space-between;
   align-items: center;
   padding: 5vh 15vw;
   background-color: transparent;
@@ -37,8 +37,8 @@
   align-items: flex-start;
   gap: 4px;
   color: #ffffff;
-  flex: 1; /* Add this */
-  min-width: 0; /* Add this */
+  flex: 1;
+  min-width: 0;
 }
 
 .waiting-header-center {
@@ -47,7 +47,7 @@
   align-items: center;
   text-align: center;
   white-space: nowrap;
-  flex: 0 0 auto; /* Add this - don't grow or shrink */
+  flex: 0 0 auto;
 }
 
 .waiting-header-right {
@@ -56,16 +56,16 @@
   align-items: center;
   gap: 12px;
   color: #ffffff;
-  flex: 1; /* Add this */
-  justify-content: flex-end; /* Add this */
-  min-width: 0; /* Add this */
+  flex: 1;
+  justify-content: flex-end;
+  min-width: 0;
 }
 
 .waiting-room-label,
 .invite-label {
   font-size: 30px;
   font-weight: 500;
-  white-space: nowrap; /* keep text in one line */
+  white-space: nowrap;
 }
 
 /* Game Code Section */
@@ -279,24 +279,26 @@
   margin-left: auto;
   justify-content: center;
   padding-top: 3rem;
-  > button {
-    flex-grow: 1;
-    flex-basis: 0;
-    padding: 0.8rem;
-    border: none;
-    border-radius: 0.5rem;
-    font-size: 1.1rem;
-    cursor: pointer;
-    font-weight: bold;
-    transition: all 0.3s ease;
-    display: block;
-    line-height: 1.5;
-  }
-  > div {
-    flex-grow: 1;
-    flex-basis: 0;
-    width: 100%;
-  }
+}
+
+.buttons-section > button {
+  flex-grow: 1;
+  flex-basis: 0;
+  padding: 0.8rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  display: block;
+  line-height: 1.5;
+}
+
+.buttons-section > div {
+  flex-grow: 1;
+  flex-basis: 0;
+  width: 100%;
 }
 
 .start-game-button {
@@ -363,7 +365,7 @@
   width: 45%;
   margin: 1.5rem auto 0 auto;
   padding: 1rem 1.25rem;
-  background: rgba(40, 1, 98, 0.95); /* dark purple with slight transparency */
+  background: rgba(40, 1, 98, 0.95);
   color: #ffffff;
   border-radius: 0.75rem;
   box-shadow: 0 6px 20px rgba(40, 1, 98, 0.35);

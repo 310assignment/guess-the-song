@@ -215,15 +215,46 @@ const WaitingRoom: React.FC = () => {
     socket.emit("leaveRoom");
     navigate("/", { state: { playerName } });
   };
+
+  const handleGameCodeClick = async () => {
+    try {
+      if (code) {
+        await navigator.clipboard.writeText(code);
+      }
+    } catch (err) {
+      console.error("Failed to copy room code: ", err);
+    }
+  };
+
   return (
     <div className="waiting-room-container">
-      <div className="gradient">
-        <h1 className="waiting-room-title">Waiting Room</h1>
-        <div className="room-code-section">
-          <h2>Room Code: {code}</h2>
-          <CopyButton textToCopy={code || ""} />
+      <div className="waiting-header-section">
+        <div className="waiting-header-left">
+          <div className="waiting-room-label">WAITING ROOM</div>
+        </div>
+
+        <div className="waiting-header-center">
+          <h1 className="title">Guessify</h1>
+        </div>
+
+        <div className="waiting-header-right">
+          <div className="game-code-section">
+            <span className="invite-text">INVITE CODE:</span>
+            <button className="game-code-button" onClick={handleGameCodeClick}>
+              <span className="code-text">{code}</span>
+              <span className="copy-icon">
+                <img
+                  src="/src/assets/copy-symbol.svg"
+                  alt="Copy Icon"
+                  className="copy-icon-img"
+                />
+              </span>
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Move this div OUTSIDE of the header section */}
       <div className="waiting-room-content">
         {activeGameInfo && (
           <div className="active-game-banner">
