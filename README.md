@@ -14,19 +14,12 @@ _A real-time multiplayer music guessing game built with Deezer_
 
 **Guessify!** is a web-based, real-time multiplayer game where players listen to short song previews and try to guess either the song title or artist as quickly as possible. It's built to make music discovery fun, social, and competitive.
 
-### Features included in part 1
-
-- Audio preview guessing
-- Song caching and preview fetching from Deezer
-- Timed guessing and scoring
-- Selecting game mode and difficulty
-
 ---
 
 ## Why is this project useful?
 
 - Promotes interactive music discovery in a playful environment
-- Demonstrates how to build a full-stack real-time web application
+- Demonstrates how to build a real-time web application
 - Provides a fun way to discover new music with friends
 - Showcases modern web development technologies
 
