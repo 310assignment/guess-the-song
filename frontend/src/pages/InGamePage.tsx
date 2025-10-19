@@ -968,7 +968,7 @@ const InGamePage: React.FC = () => {
         setIsRoundActive(false);
         setIsIntermission(true);
         notifyPlayerFinished();
-      } else if (isHost) {
+      } else if (isCurrentUserHost) {
         // Multiplayer host: skip for everyone
         socket?.emit("host-skip-round", { code });
         // Also skip locally for the host
@@ -1032,7 +1032,7 @@ const InGamePage: React.FC = () => {
   // Continue to next round or navigate to end game screen
   const handleContinueToNextRound = () => {
     // Only the host should emit the continue event
-    if (isHost && socket) {
+    if (isCurrentUserHost && socket) {
       if (currentRound < totalRounds) {
         // Emit event to advance all players to next round
         socket.emit("host-continue-round", {
@@ -1116,7 +1116,7 @@ const InGamePage: React.FC = () => {
     if (isSinglePlayer) {
       // Single player: generate songs locally as before
       startSinglePlayerRound();
-    } else if (isHost) {
+    } else if (isCurrentUserHost) {
       // Multiplayer host: generate and distribute round data
       startMultiplayerHostRound();
     }
@@ -1230,7 +1230,7 @@ const InGamePage: React.FC = () => {
           hasPlayedSnippet={hasPlayedSnippet}
           snippetDuration={getSnippetDuration()}
           onSkip={handleSkip}
-          isHost={isHost}
+          isHost={isCurrentUserHost}
         />
       );
     }
