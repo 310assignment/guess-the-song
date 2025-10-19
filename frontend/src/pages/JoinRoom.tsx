@@ -3,16 +3,18 @@ import "../css/JoinRoom.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import { isValidRoomCode } from "../utils/roomCode.tsx";
 
-
 interface GuessifyProps {}
-
+/**
+ * JoinRoom Component for joining or creating a game room
+ * @returns {JSX.Element} The JoinRoom page
+ */
 const JoinRoom: React.FC<GuessifyProps> = () => {
   const [code, setCode] = useState<string>("");
 
   const navigate = useNavigate();
   const location = useLocation();
   const playerNameFromState = location.state?.playerName; // get name from EnterName
-  
+
   const handleCreateRoom = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     // Songs will be fetched later when the game starts with the selected genre
@@ -23,34 +25,36 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
   const handleJoinRoom = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     if (!code.trim()) {
-          alert("Please enter a room code!");
-          return;
-        }
-    
+      alert("Please enter a room code!");
+      return;
+    }
+
     if (!playerNameFromState) {
       alert("Please enter your name first!");
       return;
     }
 
     if (!isValidRoomCode(code)) {
-      alert("Invalid room code format! Code should be 6 characters (letters and numbers).");
+      alert(
+        "Invalid room code format! Code should be 6 characters (letters and numbers)."
+      );
       return;
     }
     // Navigate to waiting room first, then host will start the game
-    navigate(`/waiting/${code}`, { 
-      state: { 
+    navigate(`/waiting/${code}`, {
+      state: {
         playerName: playerNameFromState,
-        isHost: false
-      } 
+        isHost: false,
+      },
     });
   };
 
-  const handleBackClick = (): void => { 
-    navigate("/"); 
-  }; 
+  const handleBackClick = (): void => {
+    navigate("/");
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
     setCode(value);
   };
 
@@ -58,9 +62,9 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
 
   // Add this useEffect after the existing useState declarations
   useEffect(() => {
-    const savedName = localStorage.getItem('playerName');
+    const savedName = localStorage.getItem("playerName");
     if (playerNameFromState) {
-      localStorage.setItem('playerName', playerNameFromState);
+      localStorage.setItem("playerName", playerNameFromState);
     } else if (savedName && !playerNameFromState) {
       navigate("/lobby", { state: { playerName: savedName } }); // Change underscore to hyphen
     }
@@ -88,9 +92,10 @@ const JoinRoom: React.FC<GuessifyProps> = () => {
             className="guessify-input"
             maxLength={8}
           />
-          <button className="guessify-join-button"             
-          onClick={handleJoinRoom}
-          disabled={!code.trim()}
+          <button
+            className="guessify-join-button"
+            onClick={handleJoinRoom}
+            disabled={!code.trim()}
           >
             JOIN
           </button>

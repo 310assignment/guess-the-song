@@ -1,13 +1,12 @@
-import '../css/EndGamePage.css';
-import { useLocation, useNavigate } from 'react-router-dom';
+import "../css/EndGamePage.css";
+import { useLocation, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import Avatar1 from "../assets/avatars/avatar1.png";
 import Avatar2 from "../assets/avatars/avatar2.png";
 import Avatar3 from "../assets/avatars/avatar3.png";
-import { socket } from '../socket';
-import { useWindowSize } from 'react-use'
-import Confetti from 'react-confetti'
-
+import { socket } from "../socket";
+import { useWindowSize } from "react-use";
+import Confetti from "react-confetti";
 
 /**
  * Represents the result of a player at the end of the game.
@@ -21,11 +20,11 @@ interface PlayerResult {
 }
 
 const avatarFor = (avatar: any) => {
-  const id = typeof avatar === "string" ? avatar : (avatar?.id || "a1");
+  const id = typeof avatar === "string" ? avatar : avatar?.id || "a1";
   if (id === "a2") return Avatar2;
   if (id === "a3") return Avatar3;
   return Avatar1;
-}
+};
 
 /**
  * EndGamePage - displays the final leaderboard and a button to return to the lobby.
@@ -35,28 +34,26 @@ const EndGamePage: React.FC = () => {
   const navigate = useNavigate();
   const { width, height } = useWindowSize();
 
-  const [ totalRounds, setTotalRounds ] = useState(0);
-  const code: string = location.state?.code || '';
-  const currentPlayerName: string = location.state?.playerName || '';
+  const [totalRounds, setTotalRounds] = useState(0);
+  const code: string = location.state?.code || "";
+  const currentPlayerName: string = location.state?.playerName || "";
   // Extract players from navigation state safely
-  const [ players, setPlayers ] = useState<PlayerResult[]>([]);
-
+  const [players, setPlayers] = useState<PlayerResult[]>([]);
 
   // Navigate back to the lobby screen
   const handleBackToLobby = (): void => {
     navigate("/lobby");
   };
 
-    /* ----------------- SOCKET CONNECTION ----------------- */
+  /* ----------------- SOCKET CONNECTION ----------------- */
   useEffect(() => {
     if (!socket?.connected) return;
 
-
-    socket.emit("get-room-players-scores", code );
-    socket.emit("get-total-rounds", code );
+    socket.emit("get-room-players-scores", code);
+    socket.emit("get-total-rounds", code);
 
     // Listen for players joined the room
-    socket.on("room-players-scores", ( playerScores ) => {
+    socket.on("room-players-scores", (playerScores) => {
       setPlayers(playerScores);
     });
 
@@ -69,7 +66,7 @@ const EndGamePage: React.FC = () => {
       socket.off("room-players-scores");
       socket.off("total-rounds");
     };
-  }, [ code ]);
+  }, [code]);
 
   return (
     <div className="end-game-container">
@@ -81,7 +78,7 @@ const EndGamePage: React.FC = () => {
         numberOfPieces={300}
         gravity={0.8}
       />
-      
+
       {/* Game Title */}
       <div className="header-section">
         <div className="back-button">
@@ -90,9 +87,13 @@ const EndGamePage: React.FC = () => {
           </button>
         </div>
         <div className="game-title">Guessify</div>
-      </div>      
+      </div>
       {/* Podium Rankings */}
-      <Rankings rankings={players} totalNumberOfQuestions={totalRounds} currentPlayerName={currentPlayerName} />
+      <Rankings
+        rankings={players}
+        totalNumberOfQuestions={totalRounds}
+        currentPlayerName={currentPlayerName}
+      />
     </div>
   );
 };
@@ -106,18 +107,24 @@ interface FinalRankingsProps {
   currentPlayerName: string;
 }
 
-const Rankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestions, currentPlayerName }) => {
+const Rankings: React.FC<FinalRankingsProps> = ({
+  rankings,
+  totalNumberOfQuestions,
+  currentPlayerName,
+}) => {
   // Sort players by points in descending order (same method used for both podium and rankings)
   const sortedRankings = rankings.sort((a, b) => b.points - a.points);
   const [first, second, third] = sortedRankings;
-  
+
   // Apply slide left animation only if there are more than 3 players
   const shouldSlideLeft = rankings.length > 3;
 
   const firstDiv = (
     <div className="column">
       <div className="first-bar">
-        <div><b>{first?.points || 0}</b> pts</div>
+        <div>
+          <b>{first?.points || 0}</b> pts
+        </div>
         <div className="correct-answers">
           {first?.correctAnswers || 0} out of {totalNumberOfQuestions}
         </div>
@@ -130,11 +137,17 @@ const Rankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestio
             alignItems: "center",
             justifyContent: "center",
             borderRadius: "50%",
-            backgroundColor: first?.avatar && typeof first.avatar === "object" ? first.avatar.color : "transparent",
-            marginBottom: 1
+            backgroundColor:
+              first?.avatar && typeof first.avatar === "object"
+                ? first.avatar.color
+                : "transparent",
+            marginBottom: 1,
           }}
         >
-          <img src={avatarFor(first?.avatar)} alt={`${first?.name || "Player"} avatar`} />
+          <img
+            src={avatarFor(first?.avatar)}
+            alt={`${first?.name || "Player"} avatar`}
+          />
         </div>
         <span>{first?.name || "No Player"}</span>
       </div>
@@ -144,7 +157,9 @@ const Rankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestio
   const secondDiv = second ? (
     <div className="column">
       <div className="second-bar">
-        <div><b>{second.points}</b> pts</div>
+        <div>
+          <b>{second.points}</b> pts
+        </div>
         <div className="correct-answers">
           {second.correctAnswers} out of {totalNumberOfQuestions}
         </div>
@@ -157,11 +172,17 @@ const Rankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestio
             alignItems: "center",
             justifyContent: "center",
             borderRadius: "50%",
-            backgroundColor: second?.avatar && typeof second.avatar === "object" ? second.avatar.color : "transparent",
-            marginBottom: 1
+            backgroundColor:
+              second?.avatar && typeof second.avatar === "object"
+                ? second.avatar.color
+                : "transparent",
+            marginBottom: 1,
           }}
         >
-          <img src={avatarFor(second?.avatar)} alt={`${second?.name || "Player"} avatar`} />
+          <img
+            src={avatarFor(second?.avatar)}
+            alt={`${second?.name || "Player"} avatar`}
+          />
         </div>
         <span>{second.name}</span>
       </div>
@@ -175,7 +196,9 @@ const Rankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestio
   const thirdDiv = third ? (
     <div className="column">
       <div className="third-bar">
-        <div><b>{third.points}</b> pts</div>
+        <div>
+          <b>{third.points}</b> pts
+        </div>
         <div className="correct-answers">
           {third.correctAnswers} out of {totalNumberOfQuestions}
         </div>
@@ -188,11 +211,17 @@ const Rankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestio
             alignItems: "center",
             justifyContent: "center",
             borderRadius: "50%",
-            backgroundColor: third?.avatar && typeof third.avatar === "object" ? third.avatar.color : "transparent",
-            marginBottom: 1
+            backgroundColor:
+              third?.avatar && typeof third.avatar === "object"
+                ? third.avatar.color
+                : "transparent",
+            marginBottom: 1,
           }}
         >
-          <img src={avatarFor(third?.avatar)} alt={`${third?.name || "Player"} avatar`} />
+          <img
+            src={avatarFor(third?.avatar)}
+            alt={`${third?.name || "Player"} avatar`}
+          />
         </div>
         <span>{third.name}</span>
       </div>
@@ -205,48 +234,72 @@ const Rankings: React.FC<FinalRankingsProps> = ({ rankings, totalNumberOfQuestio
 
   return (
     <div className={`main-rankings`}>
-      <div className={`podiums ${shouldSlideLeft ? 'slide-left' : ''}`}>
+      <div className={`podiums ${shouldSlideLeft ? "slide-left" : ""}`}>
         <div className="podium-labels">
-        {secondDiv}
-        {firstDiv}
-        {thirdDiv}
+          {secondDiv}
+          {firstDiv}
+          {thirdDiv}
         </div>
         <div className="Podiums-Base"></div>
       </div>
-      <div className={`scoreboard-container ${shouldSlideLeft ? 'slide-left' : ''}`}>
+      <div
+        className={`scoreboard-container ${
+          shouldSlideLeft ? "slide-left" : ""
+        }`}
+      >
         <h2 className="final-rankings-title">Final Rankings</h2>
         <div className="player-rankings-list">
-          {sortedRankings
-            .map((player, index) => (
-              <div key={player.name} className={`player-ranking-row ${player.name === currentPlayerName ? 'current-player' : ''}`}>
-                <div className={`display-player-rank ${player.name === currentPlayerName ? 'current-player-rank' : ''}`}>
-                  {index === 0 && <span className="rank-medal">🥇</span>}
-                  {index === 1 && <span className="rank-medal">🥈</span>}
-                  {index === 2 && <span className="rank-medal">🥉</span>}
-                  {index > 2 && <span className="players-final-placing">#{index + 1}</span>}
-                </div>
-                <div className="player-details">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{
+          {sortedRankings.map((player, index) => (
+            <div
+              key={player.name}
+              className={`player-ranking-row ${
+                player.name === currentPlayerName ? "current-player" : ""
+              }`}
+            >
+              <div
+                className={`display-player-rank ${
+                  player.name === currentPlayerName ? "current-player-rank" : ""
+                }`}
+              >
+                {index === 0 && <span className="rank-medal">🥇</span>}
+                {index === 1 && <span className="rank-medal">🥈</span>}
+                {index === 2 && <span className="rank-medal">🥉</span>}
+                {index > 2 && (
+                  <span className="players-final-placing">#{index + 1}</span>
+                )}
+              </div>
+              <div className="player-details">
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div
+                    style={{
                       width: 36,
                       height: 36,
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: player.avatar && typeof player.avatar === 'object' ? player.avatar.color : 'transparent'
-                    }}>
-                      <img src={avatarFor(player.avatar)} style={{ width: 28, height: 28, borderRadius: '50%' }} />
-                    </div>
-                    <span className="player-name-leaderboard">{player.name}</span>
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor:
+                        player.avatar && typeof player.avatar === "object"
+                          ? player.avatar.color
+                          : "transparent",
+                    }}
+                  >
+                    <img
+                      src={avatarFor(player.avatar)}
+                      style={{ width: 28, height: 28, borderRadius: "50%" }}
+                    />
                   </div>
-                  <div className="player-stats">
-                    <span className="player-points">{player.points} pts</span>
-                    <span className="players-correct-answers">{player.correctAnswers} correct</span>
-                  </div>
+                  <span className="player-name-leaderboard">{player.name}</span>
+                </div>
+                <div className="player-stats">
+                  <span className="player-points">{player.points} pts</span>
+                  <span className="players-correct-answers">
+                    {player.correctAnswers} correct
+                  </span>
                 </div>
               </div>
-            ))}
+            </div>
+          ))}
         </div>
       </div>
     </div>

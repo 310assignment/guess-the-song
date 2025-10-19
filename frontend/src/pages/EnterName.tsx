@@ -4,6 +4,10 @@ interface GuessifyProps {}
 import { useNavigate, useLocation } from "react-router-dom";
 import CharacterCustomizer from "../components/CharacterCustomiser";
 
+/**
+ * EnterName Component for player name input and customization
+ * @returns {JSX.Element} The EnterName page
+ */
 const EnterName: React.FC<GuessifyProps> = () => {
   const [name, setName] = useState<string>("");
   const [avatar, setAvatar] = useState<string>("a1");
