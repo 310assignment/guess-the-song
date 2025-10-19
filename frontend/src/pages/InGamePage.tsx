@@ -1171,6 +1171,8 @@ const InGamePage: React.FC = () => {
           onWrongGuess={() => {
             // Optional: Add any logic for wrong guesses
           }}
+          isHost={isCurrentUserHost}
+          onHostSkip={handleHostSkip}
         />
       );
     }
@@ -1195,6 +1197,8 @@ const InGamePage: React.FC = () => {
           onCorrectGuess={handleCorrectGuess}
           currentSong={currentSong}
           hasGuessedCorrectly={hasGuessedArtistCorrectly}
+          isHost={isCurrentUserHost}
+          onHostSkip={handleHostSkip}
         />
       );
     }
@@ -1209,6 +1213,8 @@ const InGamePage: React.FC = () => {
           onWrongGuess={() => {
             // Optional: Add any logic for wrong guesses
           }}
+          isHost={isCurrentUserHost}
+          onHostSkip={handleHostSkip}
         />
       );
     }
@@ -1285,19 +1291,6 @@ const InGamePage: React.FC = () => {
             inviteCode={inviteCode}
             showInvite={!isSinglePlayer}
           />
-
-          {/* CENTRALIZED HOST CONTROLS - Always visible when user is host */}
-          {isCurrentUserHost && (
-            <div className="host-controls">
-              <button
-                className="skip-round-btn host-btn"
-                onClick={handleHostSkip}
-                disabled={!isRoundActive}
-              >
-                Skip Round
-              </button>
-            </div>
-          )}
 
           <button
             className="leave-game-room-btn"
