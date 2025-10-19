@@ -5,10 +5,10 @@ _A real-time multiplayer music guessing game built with Deezer_
 [GitHub Repository](https://github.com/310assignment/guess-the-song)
 
 > Developed as part of the University of Auckland SOFTENG 310 Assignment 1 (Semester 2, 2025)
-> **Team: Butter** | Members: Eddie Kim, Lucas Jung, Caleb Jung, Jaeha Chang, Kevin Kim, Andrew Jeon
+> **Group 7: Team Butter** | Members: Eddie Kim, Lucas Jung, Caleb Jung, Jaeha Chang, Kevin Kim, Andrew Jeon
 >
 > Developed as part of the University of Auckland SOFTENG 310 Assignment 2 (Semester 2, 2025)
-> **Team: Butter** | Members: Anna Chibel, Aye Thu, Ivory Huang, Jayde Lal, Rebecca Ngan, Seerat Mann
+> **Group 2: Pink Yoshi Technologies** | Members: Anna Chibel, Aye Thu, Ivory Huang, Jayde Lal, Rebecca Ngan, Seerat Mann
 
 ## What does this project do?
 
