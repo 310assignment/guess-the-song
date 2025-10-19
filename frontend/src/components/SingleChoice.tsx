@@ -5,13 +5,13 @@ import { songService } from "../services/songServices";
 import type { Song } from "../types/song";
 
 interface SingleChoiceProps {
-  onCorrectGuess: () => void;          // Called when user guesses correctly
-  currentSong: Song | null;            // Current song data
-  hasGuessedCorrectly: boolean;        // Whether the user already guessed right
-  onWrongGuess?: () => void;           // Optional callback for wrong guess
-  mode: 'title' | 'artist';             // Mode to guess either title or artist
-  onSkip?: () => void;                 // Optional callback for skipping the round
-  isHost?: boolean;                    // Whether the current user is the host
+  onCorrectGuess: () => void; // Called when user guesses correctly
+  currentSong: Song | null; // Current song data
+  hasGuessedCorrectly: boolean; // Whether the user already guessed right
+  onWrongGuess?: () => void; // Optional callback for wrong guess
+  mode: "title" | "artist"; // Mode to guess either title or artist
+  isHost?: boolean; // Whether the current user is the host
+  onHostSkip?: () => void; // Callback for host skip
 }
 
 const SingleChoice: React.FC<SingleChoiceProps> = ({
@@ -20,30 +20,30 @@ const SingleChoice: React.FC<SingleChoiceProps> = ({
   hasGuessedCorrectly,
   onWrongGuess,
   mode,
-  onSkip,
-  isHost = true // Add this line
+  isHost = false,
+  onHostSkip,
 }) => {
-  const [guess, setGuess] = useState("");              // User input guess
+  const [guess, setGuess] = useState(""); // User input guess
   const [showWrongMessage, setShowWrongMessage] = useState(false); // Flag to show "wrong" feedback
 
   /** Create a masked version of the text (blanks only, no punctuation/featuring info) */
   const createBlanks = (text: string): string => {
     let mainText = text
-      .replace(/\s*\([^)]*\)/g, "")   // Remove parentheses content
+      .replace(/\s*\([^)]*\)/g, "") // Remove parentheses content
       .replace(/\s*feat\.?\s+.*/gi, "") // Remove "feat."
-      .replace(/\s*ft\.?\s+.*/gi, "")   // Remove "ft."
+      .replace(/\s*ft\.?\s+.*/gi, "") // Remove "ft."
       .replace(/\s*featuring\s+.*/gi, "") // Remove "featuring"
       .trim();
 
     const cleanText = mainText
-      .replace(/[^\w\s]/g, "")        // Remove punctuation
-      .replace(/\s+/g, " ")           // Normalize spaces
+      .replace(/[^\w\s]/g, "") // Remove punctuation
+      .replace(/\s+/g, " ") // Normalize spaces
       .trim();
 
     return cleanText
       .split(" ")
       .filter(Boolean)
-      .map(word => "_".repeat(word.length)) // Replace words with underscores
+      .map((word) => "_".repeat(word.length)) // Replace words with underscores
       .join("   ");
   };
 
@@ -70,19 +70,12 @@ const SingleChoice: React.FC<SingleChoiceProps> = ({
     setGuess(e.target.value);
   };
 
-  /** Handle skip button click */
-  const handleSkip = () => {
-    if (!hasGuessedCorrectly && onSkip) {
-      onSkip();
-    }
-  };
-
   /** Check guess against the song title */
   const handleSubmitGuess = () => {
     if (!currentSong || hasGuessedCorrectly) return;
 
     const normalizedGuess = normalizeForComparison(guess);
-    const target = mode === 'title' ? currentSong.title : currentSong.artist;
+    const target = mode === "title" ? currentSong.title : currentSong.artist;
     const normalizedTarget = normalizeForComparison(target);
 
     if (normalizedGuess === normalizedTarget) {
@@ -103,15 +96,15 @@ const SingleChoice: React.FC<SingleChoiceProps> = ({
   const getDisplayContent = () => {
     if (!currentSong) return { blanked: "Loading...", shown: "" };
 
-    if (mode === 'title') {
+    if (mode === "title") {
       return {
         blanked: `TITLE: ${createBlanks(currentSong.title)}`,
-        shown: `ARTIST: ${currentSong.artist}`
+        shown: `ARTIST: ${currentSong.artist}`,
       };
     } else {
       return {
         blanked: `ARTIST: ${createBlanks(currentSong.artist)}`,
-        shown: `TITLE: ${currentSong.title}`
+        shown: `TITLE: ${currentSong.title}`,
       };
     }
   };
@@ -159,25 +152,28 @@ const SingleChoice: React.FC<SingleChoiceProps> = ({
 
       {/* Submit + Skip + feedback */}
       <div className="controls">
-        <div className="button-container">
-          <button
-            onClick={() => handleSubmitGuess()}
-            disabled={hasGuessedCorrectly}
-            className={`submit-btn ${hasGuessedCorrectly ? "submit-btn--disabled" : ""}`}
-          >
-            {hasGuessedCorrectly ? "Correct! ✅" : "Submit Guess"}
-          </button>
+        <button
+          onClick={() => handleSubmitGuess()}
+          disabled={hasGuessedCorrectly}
+          className={`submit-btn ${
+            hasGuessedCorrectly ? "submit-btn--disabled" : ""
+          }`}
+        >
+          {hasGuessedCorrectly ? "Correct! ✅" : "Submit Guess"}
+        </button>
 
-          {onSkip && isHost && (
-            <button
-              className="skip-btn"
-              onClick={handleSkip}
-              disabled={hasGuessedCorrectly}
-            >
-              Skip
-            </button>
-          )}
-        </div>
+        {/* Host Skip Button - only show if user is host */}
+        {isHost && onHostSkip && (
+          <button
+            onClick={onHostSkip}
+            disabled={hasGuessedCorrectly}
+            className={`skip-btn ${
+              hasGuessedCorrectly ? "skip-btn--disabled" : ""
+            }`}
+          >
+            Skip Round
+          </button>
+        )}
 
         {/* Show wrong guess feedback - now centered under buttons */}
         {showWrongMessage && !hasGuessedCorrectly && (

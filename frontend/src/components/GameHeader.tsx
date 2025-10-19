@@ -38,8 +38,28 @@ const GameHeader: React.FC<GameHeaderProps> = ({
    * Handles copying the invite code to the user's clipboard
    * Uses the browser's clipboard API to copy the invite code
    */
-  const handleCopy = () => {
-    navigator.clipboard.writeText(inviteCode);
+  /**
+   * Handles copying the invite code to the user's clipboard
+   * Uses the browser's clipboard API to copy the invite code
+   */
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(inviteCode);
+      // Optional: Add visual feedback
+      console.log("Invite code copied to clipboard!");
+    } catch (err) {
+      // Fallback for older browsers or when clipboard API fails
+      console.error("Failed to copy: ", err);
+
+      // Fallback method
+      const textArea = document.createElement("textarea");
+      textArea.value = inviteCode;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      console.log("Invite code copied using fallback method!");
+    }
   };
 
   return (

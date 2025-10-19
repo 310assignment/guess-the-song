@@ -25,6 +25,7 @@ interface Player {
   points: number;
   previousPoints: number;
   correctAnswers: number;
+  socketId?: string;
 }
 
 const getTimeAsNumber = (time?: string | number | null): number => {
@@ -64,6 +65,8 @@ const InGamePage: React.FC = () => {
     previousPoints: 0,
     correctAnswers: 0,
   });
+
+  const [isCurrentUserHost, setIsCurrentUserHost] = useState(isHost);
 
   // --- Game Settings ---
   //const roundTime = parseInt(state?guessTime || "30");
@@ -502,6 +505,37 @@ const InGamePage: React.FC = () => {
       setSelectedIndex(null);
     });
 
+    socket.on("playerLeft", (data) => {
+      console.log("Player left during game:", data);
+      if (data.newHost) {
+        setIsCurrentUserHost(data.newHost === playerName);
+      }
+    });
+
+    socket.on("hostChanged", (data) => {
+      console.log("Host changed during game:", data);
+      setIsCurrentUserHost(data.newHost === playerName);
+
+      // Show notification that user is now host
+      if (data.newHost === playerName) {
+        console.log("You are now the host!");
+        // You can add a toast notification here
+      }
+    });
+
+    socket.on("roomClosed", () => {
+      window.location.href = "/";
+    });
+
+    socket.on("players-updated", (data) => {
+      if (data.playerScores) {
+        setPlayers(data.playerScores);
+      }
+      if (data.host) {
+        setIsCurrentUserHost(data.host === playerName);
+      }
+    });
+
     return () => {
       socket.off("current-round");
       socket.off("room-players-scores");
@@ -511,8 +545,19 @@ const InGamePage: React.FC = () => {
       socket.off("navigate-to-end-game");
       socket.off("host-skipped-round");
       socket.off("player-finished-updated");
+      socket.off("playerLeft");
+      socket.off("hostChanged");
+      socket.off("roomClosed");
+      socket.off("players-updated");
     };
   }, [code, playerName, navigate, roundTime]);
+
+  // Add handleSkip function for host
+  const handleHostSkip = () => {
+    if (isCurrentUserHost && socket) {
+      socket.emit("host-skip-round", { code });
+    }
+  };
 
   /* ----------------- ROUND LOGIC ----------------- */
   useEffect(() => {
@@ -580,7 +625,8 @@ const InGamePage: React.FC = () => {
       if (currentRound === 1) {
         // For first round, get and set current song, then play it
         // const currentSongData = songService.getCurrentSong();
-        const { song: currentSongData, index: randomIndex } = selectRandomSong(cachedSongs);
+        const { song: currentSongData, index: randomIndex } =
+          selectRandomSong(cachedSongs);
         if (currentSongData) {
           setCurrentSong(currentSongData);
           songService.playSong(randomIndex);
@@ -644,64 +690,65 @@ const InGamePage: React.FC = () => {
   // Helper function for single song/artist/reverse modes
   const setupSingleSongMode = () => {
     // Safety check: ensure songs are loaded for the correct genre
-      if (!checkSongsLoaded("setupSingleSongMode")) {
-    return null;
-  }
+    if (!checkSongsLoaded("setupSingleSongMode")) {
+      return null;
+    }
 
-  // For round 1, select randomly like Quick Guess
-  if (currentRound === 1) {
-    const allSongs = songService.getCachedSongs();
-    const { song: selectedSong, index: randomIndex } = selectRandomSong(allSongs);
+    // For round 1, select randomly like Quick Guess
+    if (currentRound === 1) {
+      const allSongs = songService.getCachedSongs();
+      const { song: selectedSong, index: randomIndex } =
+        selectRandomSong(allSongs);
 
-    if (selectedSong) {
-      let answer = selectedSong.title;
+      if (selectedSong) {
+        let answer = selectedSong.title;
+        if (isGuessArtist) {
+          answer = selectedSong.artist;
+        }
+
+        // Ensure host plays exactly this selection (by details to avoid index drift)
+        if (isReverseSong) {
+          songService.playReverseSongByDetails(selectedSong);
+        } else {
+          songService.playSongByDetails(selectedSong);
+        }
+
+        return {
+          song: selectedSong,
+          choices: [],
+          answer,
+          songIndex: randomIndex, // send exact index to clients
+        };
+      }
+      return null;
+    }
+
+    // Subsequent rounds: keep previous next-song behavior
+    const currentSongData = songService.getNextSong();
+    if (currentSongData) {
+      let answer = currentSongData.title; // default for single/reverse
       if (isGuessArtist) {
-        answer = selectedSong.artist;
+        answer = currentSongData.artist;
       }
 
-      // Ensure host plays exactly this selection (by details to avoid index drift)
+      const currentIndex = songService.getCurrentIndex();
+
       if (isReverseSong) {
-        songService.playReverseSongByDetails(selectedSong);
+        songService.playNextReverseSong();
       } else {
-        songService.playSongByDetails(selectedSong);
+        songService.playNextSong();
       }
 
       return {
-        song: selectedSong,
+        song: currentSongData,
         choices: [],
         answer,
-        songIndex: randomIndex, // send exact index to clients
+        songIndex: currentIndex,
       };
     }
+
     return null;
-  }
-
-  // Subsequent rounds: keep previous next-song behavior
-  const currentSongData = songService.getNextSong();
-  if (currentSongData) {
-    let answer = currentSongData.title; // default for single/reverse
-    if (isGuessArtist) {
-      answer = currentSongData.artist;
-    }
-
-    const currentIndex = songService.getCurrentIndex();
-
-    if (isReverseSong) {
-      songService.playNextReverseSong();
-    } else {
-      songService.playNextSong();
-    }
-
-    return {
-      song: currentSongData,
-      choices: [],
-      answer,
-      songIndex: currentIndex,
-    };
-  }
-
-  return null;
-};
+  };
 
   // Helper function for quick guess mode
   const setupQuickGuessMode = () => {
@@ -921,7 +968,7 @@ const InGamePage: React.FC = () => {
         setIsRoundActive(false);
         setIsIntermission(true);
         notifyPlayerFinished();
-      } else if (isHost) {
+      } else if (isCurrentUserHost) {
         // Multiplayer host: skip for everyone
         socket?.emit("host-skip-round", { code });
         // Also skip locally for the host
@@ -985,7 +1032,7 @@ const InGamePage: React.FC = () => {
   // Continue to next round or navigate to end game screen
   const handleContinueToNextRound = () => {
     // Only the host should emit the continue event
-    if (isHost && socket) {
+    if (isCurrentUserHost && socket) {
       if (currentRound < totalRounds) {
         // Emit event to advance all players to next round
         socket.emit("host-continue-round", {
@@ -1069,7 +1116,7 @@ const InGamePage: React.FC = () => {
     if (isSinglePlayer) {
       // Single player: generate songs locally as before
       startSinglePlayerRound();
-    } else if (isHost) {
+    } else if (isCurrentUserHost) {
       // Multiplayer host: generate and distribute round data
       startMultiplayerHostRound();
     }
@@ -1121,11 +1168,11 @@ const InGamePage: React.FC = () => {
           onCorrectGuess={handleCorrectGuess}
           currentSong={currentSong}
           hasGuessedCorrectly={hasGuessedCorrectly}
-          onSkip={handleSkip}
-          isHost={isHost} // Add this line
           onWrongGuess={() => {
             // Optional: Add any logic for wrong guesses
           }}
+          isHost={isCurrentUserHost}
+          onHostSkip={handleHostSkip}
         />
       );
     }
@@ -1150,8 +1197,8 @@ const InGamePage: React.FC = () => {
           onCorrectGuess={handleCorrectGuess}
           currentSong={currentSong}
           hasGuessedCorrectly={hasGuessedArtistCorrectly}
-          onSkip={handleSkip}
-          isHost={isHost}
+          isHost={isCurrentUserHost}
+          onHostSkip={handleHostSkip}
         />
       );
     }
@@ -1163,11 +1210,11 @@ const InGamePage: React.FC = () => {
           onCorrectGuess={handleCorrectGuess}
           currentSong={currentSong}
           hasGuessedCorrectly={hasGuessedReverseCorrectly}
-          onSkip={handleSkip}
-          isHost={isHost}
           onWrongGuess={() => {
             // Optional: Add any logic for wrong guesses
           }}
+          isHost={isCurrentUserHost}
+          onHostSkip={handleHostSkip}
         />
       );
     }
@@ -1183,7 +1230,7 @@ const InGamePage: React.FC = () => {
           hasPlayedSnippet={hasPlayedSnippet}
           snippetDuration={getSnippetDuration()}
           onSkip={handleSkip}
-          isHost={isHost}
+          isHost={isCurrentUserHost}
         />
       );
     }
@@ -1212,6 +1259,11 @@ const InGamePage: React.FC = () => {
     return <div>No room code found in URL</div>;
   }
 
+  const handleLeaveGame = () => {
+    socket.emit("leaveRoom");
+    navigate("/", { state: { playerName } });
+  };
+
   return (
     <div className="game-2-container">
       <AudioControls />
@@ -1225,7 +1277,7 @@ const InGamePage: React.FC = () => {
           correctAnswer={getCorrectAnswerForDisplay()}
           playerGotCorrect={getPlayerCorrectStatus()}
           isTimeUp={isTimeUp}
-          isHost={isHost}
+          isHost={isCurrentUserHost}
           // pass authoritative start time + duration so RoundScoreDisplay can compute a live countdown
           roundStartTime={roundStartTime}
           roundDuration={getTimeAsNumber(roundTime)}
@@ -1239,11 +1291,22 @@ const InGamePage: React.FC = () => {
             inviteCode={inviteCode}
             showInvite={!isSinglePlayer}
           />
-          <div className="game-content">
-            <div className="game-2-body">
-              <Scoreboard players={players} />
-              {renderGameModeComponent()}
-            </div>
+
+          <button
+            className="leave-game-room-btn"
+            onClick={handleLeaveGame}
+            style={{
+              position: "fixed",
+              bottom: "20px",
+              left: "20px",
+              zIndex: 1000,
+            }}
+          >
+            Leave Game
+          </button>
+          <div className="game-2-body">
+            <Scoreboard players={players} />
+            {renderGameModeComponent()}
           </div>
         </>
       )}

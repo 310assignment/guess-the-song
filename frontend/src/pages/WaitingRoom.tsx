@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, use } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { socket } from "../socket";
 import CopyButton from "../components/CopyButton";
@@ -14,6 +14,7 @@ interface PlayerObj {
   previousPoints?: number;
   correctAnswers?: number;
   avatar?: { id?: string; color?: string } | string;
+  socketId?: string;
 }
 
 const WaitingRoom: React.FC = () => {
@@ -41,6 +42,13 @@ const WaitingRoom: React.FC = () => {
   // Keep a ref so socket handlers always use the latest settings
   const activeGameInfoRef = useRef<any | null>(null);
 
+  const [isCurrentUserHost, setIsCurrentUserHost] = useState(isHost);
+  const [copyFeedback, setCopyFeedback] = useState<string>("");
+
+  useEffect(() => {
+    setIsCurrentUserHost(hostName === playerName);
+  }, [hostName, playerName]);
+
   useEffect(() => {
     if (!socket?.connected) return;
 
@@ -58,17 +66,22 @@ const WaitingRoom: React.FC = () => {
     });
 
     // Handle successful join
-    socket.on("join-success", ({ playerScores, amountOfPlayersInRoom, host }) => {
-      // server sends full player score objects; use them to render avatars and names
-      if (Array.isArray(playerScores)) {
-        setPlayers(playerScores);
+    socket.on(
+      "join-success",
+      ({ playerScores, amountOfPlayersInRoom, host }) => {
+        // server sends full player score objects; use them to render avatars and names
+        if (Array.isArray(playerScores)) {
+          setPlayers(playerScores);
+        }
+        setAmountOfPlayersInRoom(amountOfPlayersInRoom);
+        if (host) setHostName(host);
       }
-      setAmountOfPlayersInRoom(amountOfPlayersInRoom);
-      if (host) setHostName(host);
-    });
+    );
 
     // Add this handler for joining active games
     socket.on("join-active-game", (gameSettings) => {
+      console.log("Joining active game:", gameSettings);
+
       // capture host when provided
       if (gameSettings?.host) {
         setHostName(gameSettings.host);
@@ -77,10 +90,13 @@ const WaitingRoom: React.FC = () => {
       // If a round is active, keep the joining client in the waiting room and show banner.
       // Store the full game settings so we can merge them with subsequent round events.
       if (gameSettings?.isRoundActive) {
+        console.log("Round is active, staying in waiting room");
         setActiveGameInfo(gameSettings);
         activeGameInfoRef.current = gameSettings;
       } else {
-        // If not mid-round, navigate straight into the room with full settings
+        // If game is not in active round (intermission, waiting for next round, etc.)
+        // Navigate straight into the game so they can see leaderboard or participate
+        console.log("Game not in active round, navigating to game");
         navigate(`/room/${code}`, {
           state: {
             ...gameSettings,
@@ -91,8 +107,7 @@ const WaitingRoom: React.FC = () => {
       }
     });
 
-
-    socket.on("game-started", (settings) => {  
+    socket.on("game-started", (settings) => {
       // capture host if provided
       if (settings?.host) setHostName(settings.host);
 
@@ -127,16 +142,53 @@ const WaitingRoom: React.FC = () => {
     });
 
     // If host continues to next round, also navigate waiting players in
-    socket.on("continue-to-next-round", ({ nextRound }) => {
+    socket.on("continue-to-next-round", (roundData) => {
       const settings = activeGameInfoRef.current || {};
+
       navigate(`/room/${code}`, {
         state: {
           ...settings,
+          ...roundData, // Include all the enhanced round data from backend
           playerName,
           isHost: false,
-          nextRound,
+          currentRound: roundData.nextRound || roundData.currentRound,
         },
       });
+    });
+
+    socket.on("playerLeft", (data) => {
+      console.log("Player left:", data);
+      setPlayers(data.remainingPlayers);
+
+      // Update host info if provided
+      if (data.newHost) {
+        setHostName(data.newHost);
+        setIsCurrentUserHost(data.newHost === playerName);
+      }
+    });
+
+    socket.on("hostChanged", (data) => {
+      console.log("Host changed:", data);
+      setHostName(data.newHost);
+      setIsCurrentUserHost(data.newHost === playerName);
+    });
+
+    socket.on("players-updated", (data) => {
+      console.log("Players updated:", data);
+      if (data.playerScores) {
+        setPlayers(data.playerScores);
+      } else {
+        setPlayers(data.players || []);
+      }
+      if (data.host) {
+        setHostName(data.host);
+        setIsCurrentUserHost(data.host === playerName);
+      }
+    });
+
+    socket.on("roomClosed", () => {
+      // Room was closed, navigate home with player name preserved
+      navigate("/", { state: { playerName } });
     });
 
     return () => {
@@ -146,6 +198,10 @@ const WaitingRoom: React.FC = () => {
       socket.off("game-started");
       socket.off("round-start");
       socket.off("continue-to-next-round");
+      socket.off("playerLeft");
+      socket.off("hostChanged");
+      socket.off("roomClosed");
+      socket.off("players-updated");
     };
   }, [code, playerName, navigate]);
 
@@ -156,13 +212,50 @@ const WaitingRoom: React.FC = () => {
     }
   };
 
+  const handleLeaveRoom = () => {
+    socket.emit("leaveRoom");
+    navigate("/", { state: { playerName } });
+  };
+
   const handleGameCodeClick = async () => {
+    if (!code) {
+      console.error("No code available to copy");
+      return;
+    }
+
     try {
-      if (code) {
-        await navigator.clipboard.writeText(code);
-      }
+      await navigator.clipboard.writeText(code);
+      setCopyFeedback("Copied!");
+      console.log("Game code copied to clipboard!");
+
+      // Clear feedback after 2 seconds
+      setTimeout(() => setCopyFeedback(""), 2000);
     } catch (err) {
-      console.error("Failed to copy room code: ", err);
+      console.error("Failed to copy game code: ", err);
+
+      // Fallback method for older browsers or when clipboard API fails
+      try {
+        const textArea = document.createElement("textarea");
+        textArea.value = code;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+
+        setCopyFeedback("Copied!");
+        console.log("Game code copied using fallback method!");
+
+        // Clear feedback after 2 seconds
+        setTimeout(() => setCopyFeedback(""), 2000);
+      } catch (fallbackErr) {
+        console.error("Fallback copy method also failed: ", fallbackErr);
+        setCopyFeedback("Copy failed");
+        setTimeout(() => setCopyFeedback(""), 2000);
+      }
     }
   };
 
@@ -189,10 +282,15 @@ const WaitingRoom: React.FC = () => {
                   className="copy-icon-img"
                 />
               </span>
+              {copyFeedback && (
+                <span className="copied-text">{copyFeedback}</span>
+              )}
             </button>
           </div>
         </div>
       </div>
+
+      {/* Move this div OUTSIDE of the header section */}
       <div className="waiting-room-content">
         {activeGameInfo && (
           <div className="active-game-banner">
@@ -217,14 +315,13 @@ const WaitingRoom: React.FC = () => {
             <div className="single-player">
               <div
                 className={`player-item ${
-                  players.length > 0 && players[0].name === playerName
-                    ? "current-player"
-                    : ""
+                  players[0]?.name === playerName ? "current-player" : ""
                 }`}
               >
-                {players.length > 0 ? players[0].name : "Loading..."}{" "}
-                {players.length > 0 && players[0].name === playerName && isHost
-                  ? "(Host)"
+                {players[0]?.name ?? playerName}{" "}
+                {players[0]?.name === hostName ? "(Host)" : ""}{" "}
+                {players[0]?.name === playerName && isHost
+                  ? "(You / Host)"
                   : ""}
               </div>
             </div>
@@ -270,8 +367,7 @@ const WaitingRoom: React.FC = () => {
                         style={{ width: 28, height: 28, borderRadius: "50%" }}
                       />
                     </div>
-                    {player.name}{" "}
-                    {player.name === playerName && isHost ? "(Host)" : ""}
+                    {player.name} {player.name === hostName ? "(Host)" : ""}
                   </li>
                 );
               })}
@@ -283,13 +379,10 @@ const WaitingRoom: React.FC = () => {
             amountOfPlayersInRoom === 1 ? "single-player-mode" : ""
           }`}
         >
-          <button
-            onClick={() => navigate("/lobby", { state: { playerName } })}
-            className="leave-room-button"
-          >
+          <button onClick={handleLeaveRoom} className="leave-room-button">
             Leave Room
           </button>
-          {isHost ? (
+          {isCurrentUserHost ? (
             <button onClick={handleStartGame} className="start-game-button">
               START GAME
             </button>
