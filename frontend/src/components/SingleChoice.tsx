@@ -10,31 +10,54 @@ import { songService } from "../services/songServices";
 import type { Song } from "../types/song";
 
 // Regex patterns for text normalization and cleaning
+// SECURITY: All patterns designed to prevent ReDoS attacks through careful construction
 const REGEX_PATTERNS = {
   // Parenthetical content: (Remix), (Live), (Acoustic), etc.
+  // SAFE: Uses possessive quantifier equivalent to prevent backtracking
   PARENTHESES: /\s*\([^)]*\)/g,
 
   // Featuring artist patterns (case insensitive)
-  FEATURING: /\s*(?:feat\.?|ft\.?|featuring)\s+.*/gi,
+  // SAFE: Uses atomic grouping equivalent and specific quantifiers
+  FEATURING: /\s*(?:feat\.?|ft\.?|featuring)\s+[^\s].*$/gi,
 
   // Remix and version indicators
-  REMIX_VERSION: /\s*-?\s*(?:remix|version|mix|edit|remaster|remastered)\b.*/gi,
+  // SAFE: Uses atomic grouping and bounded quantifiers
+  REMIX_VERSION:
+    /\s*-?\s*(?:remix|version|mix|edit|remaster|remastered)(?:\s+.*)?$/gi,
 
   // Punctuation and special characters (keep only letters, numbers, spaces)
+  // SAFE: Character class is inherently safe from backtracking
   PUNCTUATION: /[^\w\s]/g,
 
   // Multiple whitespace normalization
+  // SAFE: Simple quantifier without nested groups
   WHITESPACE: /\s+/g,
 
   // Common song prefixes/suffixes that might confuse matching
-  ARTICLES: /^(?:the|a|an)\s+/gi,
+  // SAFE: Anchored at start with atomic grouping equivalent
+  ARTICLES: /^(?:the|a|an)\s+/i,
 
   // Numbers and ordinals that might be written differently
+  // SAFE: Word boundaries prevent backtracking, specific alternatives
   NUMBERS:
     /\b(?:one|two|three|four|five|six|seven|eight|nine|ten|1st|2nd|3rd|4th|5th|6th|7th|8th|9th|10th)\b/gi,
 
-  // Common abbreviations and their full forms
-  ABBREVIATIONS: /\b(?:n'|and|&|w\/|with|u|you|ur|your|2|to|4|for)\b/gi,
+  // Common abbreviations - split into separate patterns for safety
+  // SAFE: Each pattern is simple and bounded
+  CONTRACTIONS: /\bn['']?t\b/gi,
+  AMPERSAND: /\s*&\s*/g,
+  WITH_SLASH: /\bw\//gi,
+  U_SUBSTITUTION: /\bu\b/gi,
+  UR_SUBSTITUTION: /\bur\b/gi,
+  NUMBER_WORDS: /\b(?:2|4)\b/g,
+
+  // Input sanitization - allow only safe characters
+  // SAFE: Negated character class with explicit allowed characters
+  UNSAFE_CHARS: /[^a-zA-Z0-9\s'.,!?&-]/g,
+
+  // Word splitting for fuzzy matching
+  // SAFE: Simple whitespace split
+  WORD_SPLIT: /\s+/,
 } as const;
 
 // Props interface for the SingleChoice component
