@@ -211,7 +211,7 @@ This project is released under the **MIT License**. You're free to:
 - Host permissions (e.g., host can manage rounds and skip songs)
 - Avatar customisation so players can represent themselves as a chosen character
 - New music genres: K-pop, Pop, Hip-Hop, Karaoke Hits, R&B, Top Hits
-- New game modes: Single Song, Mixed Songs, Guess the Artist, Reverse Song, Quick Guess)
+- New game modes: Single Song, Mixed Songs, Guess the Artist, Reverse Song, Quick Guess
 - Leaderboard podium animation at the end of games
 - Enhanced UI/UX improvements
 
@@ -239,19 +239,18 @@ This project is released under the **MIT License**. You're free to:
 
 - React.js
 - HTML/CSS/TypeScript
-- Socket.IO Client (not yet implemented)
+- Socket.IO Client
 
 **Backend:**
 
 - Node.js
 - Express.js
-- Socket.IO Server (not yet implemented)
-- PostgreSQL (not yet implemented)
+- Socket.IO Server
 
 **APIs & Services:**
 
 - Deezer API
-- Real-time communication via WebSockets (not yet implemented)
+- Real-time communication via WebSockets
 
 ---
 
