@@ -300,8 +300,10 @@ io.on("connection", (socket) => {
 
     // Check if game is already active
     if (room.gameActive) {
-      console.log(`${playerName} joining active game in room ${code} (Round ${room.currentRound})`);
-      
+      console.log(
+        `${playerName} joining active game in room ${code} (Round ${room.currentRound})`
+      );
+
       // Game is in progress - send them to waiting room with game info
       socket.emit("join-active-game", {
         ...room.settings,
@@ -316,9 +318,9 @@ io.on("connection", (socket) => {
         host: room.host,
         gameActive: room.gameActive,
         // Include the current round data so they can join immediately if in intermission
-        currentRoundData: room.currentRoundData
+        currentRoundData: room.currentRoundData,
       });
-      
+
       // Also notify other players that someone joined
       socket.to(code).emit("players-updated", {
         players: room.players,
@@ -326,7 +328,7 @@ io.on("connection", (socket) => {
         maxPlayers: room.maxPlayers,
         host: room.host,
       });
-      
+
       return;
     } else {
       // Game hasn't started - normal waiting room flow
@@ -494,7 +496,7 @@ io.on("connection", (socket) => {
         host: room.host,
         isRoundActive: true,
         isIntermission: false,
-        gameActive: true
+        gameActive: true,
       });
 
       // Broadcast initial finished state (everyone remaining)
@@ -572,7 +574,7 @@ io.on("connection", (socket) => {
       host: room.host,
       isRoundActive: true,
       isIntermission: false,
-      roundStartTime: room.roundStartTime
+      roundStartTime: room.roundStartTime,
     };
 
     io.to(code).emit("continue-to-next-round", roundData);

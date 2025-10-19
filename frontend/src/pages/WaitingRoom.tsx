@@ -80,7 +80,7 @@ const WaitingRoom: React.FC = () => {
     // Add this handler for joining active games
     socket.on("join-active-game", (gameSettings) => {
       console.log("Joining active game:", gameSettings);
-      
+
       // capture host when provided
       if (gameSettings?.host) {
         setHostName(gameSettings.host);
@@ -143,7 +143,7 @@ const WaitingRoom: React.FC = () => {
     // If host continues to next round, also navigate waiting players in
     socket.on("continue-to-next-round", (roundData) => {
       const settings = activeGameInfoRef.current || {};
-      
+
       navigate(`/room/${code}`, {
         state: {
           ...settings,
