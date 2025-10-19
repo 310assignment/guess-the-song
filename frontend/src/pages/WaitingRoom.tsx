@@ -214,7 +214,8 @@ const WaitingRoom: React.FC = () => {
   const handleLeaveRoom = () => {
     socket.emit("leaveRoom");
     navigate("/", { state: { playerName } });
-  };  return (
+  };
+  return (
     <div className="waiting-room-container">
       <div className="gradient">
         <h1 className="waiting-room-title">Waiting Room</h1>
