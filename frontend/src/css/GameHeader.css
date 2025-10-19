@@ -1,31 +1,49 @@
 .game-header {
   width: 100%;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10vh 15vw;
+  justify-content: space-between; /* Change back to space-between */
+  align-items: flex-start; /* Change to flex-start for top alignment */
+  padding: 5vh 15vw;
   background-color: transparent;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: "Segoe UI", sans-serif;
   z-index: 10;
-  flex-wrap: nowrap; /* prevent wrapping to next line */
-  gap: 20px; /* spacing between items */
-  overflow: hidden; /* optional: prevent layout overflow */
-}
-
-.header-right {
-  display: flex;
-  flex-direction: row; /* row instead of column */
-  align-items: center;
-  gap: 12px; /* spacing between items in each section */
-  color: #ffffff;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  position: relative;
 }
 
 .header-left {
   display: flex;
-  flex-direction: column; /* stack items vertically */
-  align-items: flex-start; /* align text to the left */
-  gap: 4px; /* small gap between round and timer */
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 4px;
   color: #ffffff;
+  flex: 1; /* Add this */
+  min-width: 0; /* Add this */
+  /* Remove position: absolute and positioning values */
+}
+
+.header-center {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  text-align: center;
+  white-space: nowrap;
+  padding-top: 0;
+  flex: 0 0 auto; /* Don't grow or shrink */
+}
+
+.header-right {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  color: #ffffff;
+  flex: 1; /* Add this */
+  justify-content: flex-end; /* Add this */
+  min-width: 0; /* Add this */
+  padding-top: 1.5vh;
 }
 
 .round-label,
@@ -35,15 +53,49 @@
   white-space: nowrap; /* keep text in one line */
 }
 
-.invite-code {
-  font-size: 30px;
-  font-weight: bold;
-  background-color: #e0e0e0;
-  padding: 1px 6px;
-  border-radius: 6px;
-  font-family: monospace;
-  color: black;
-  white-space: nowrap; /* prevent wrapping */
+/* Game Code Section */
+.game-code-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.invite-text {
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.game-code-button {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 15px;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  gap: 0.5rem;
+}
+
+.game-code-button:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.code-text {
+  letter-spacing: 0.1em;
+}
+
+.copy-icon {
+  font-size: 0.9rem;
 }
 
 .timer {
@@ -64,20 +116,13 @@
   display: block; /* remove inline image baseline offset */
 }
 
-.header-center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  white-space: nowrap;
-}
-
 .title {
   font-size: 70px;
   font-weight: bold;
   color: #ffffff;
   margin: 0;
   white-space: nowrap;
+  line-height: 1;
 }
 
 .invite-container {
@@ -111,4 +156,10 @@
 
 .copy-and-paste-icon:hover {
   opacity: 0.7;
+}
+
+.copy-icon-img {
+  width: 25px;
+  fill: black;
+  stroke: black;
 }

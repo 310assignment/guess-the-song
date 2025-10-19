@@ -175,7 +175,7 @@ const SingleChoice: React.FC<SingleChoiceProps> = ({
           </button>
         )}
 
-        {/* Show wrong guess feedback */}
+        {/* Show wrong guess feedback - now centered under buttons */}
         {showWrongMessage && !hasGuessedCorrectly && (
           <div className="wrong-message">Try again! 🤔</div>
         )}

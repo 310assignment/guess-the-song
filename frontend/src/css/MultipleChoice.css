@@ -17,9 +17,8 @@
   justify-content: center;
 }
 
-
 .song-icon::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -60,13 +59,12 @@
   transition: background-color 0.2s;
 }
 
-
 .answer-btn:hover {
   background-color: #ddd;
 }
 
 .answer-btn.selected {
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
 }
 
@@ -81,11 +79,43 @@
 }
 
 .answer-btn.correct {
-  background-color: #4CAF50 !important;
+  background-color: #4caf50 !important;
   color: white !important;
 }
 
 .answer-btn.wrong {
-  background-color: #D32F2F !important;
+  background-color: #d32f2f !important;
   color: white !important;
+}
+
+.skip-button-container {
+  margin-top: 20px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.skip-btn {
+  padding: 15px 30px;
+  font-size: 16px;
+  border: none;
+  border-radius: 8px;
+  background-color: #6b7280;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.skip-btn:hover {
+  background-color: #4b5563;
+}
+
+.skip-btn--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.skip-btn--disabled:hover {
+  background-color: #6b7280;
 }

@@ -8,7 +8,7 @@ interface MultipleChoiceProps {
   selectedIndex: number | null;
   correctAnswer: string;
   showCorrectAnswer: boolean;
-  onSkip?: () => void;                 // Optional callback for skipping the round
+  onSkip?: () => void; // Optional callback for skipping the round
 }
 
 const MultipleChoice: React.FC<MultipleChoiceProps> = ({
@@ -80,11 +80,13 @@ const MultipleChoice: React.FC<MultipleChoiceProps> = ({
 
       {/* Skip button */}
       {onSkip && (
-        <div className="button-container">
+        <div className="skip-button-container">
           <button
             type="button"
             onClick={handleSkip}
-            className={`skip-btn ${selectedIndex !== null ? "skip-btn--disabled" : ""}`}
+            className={`skip-btn ${
+              selectedIndex !== null ? "skip-btn--disabled" : ""
+            }`}
             disabled={selectedIndex !== null}
           >
             Skip
