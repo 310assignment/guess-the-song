@@ -1,6 +1,10 @@
+// React import for component functionality
 import React from "react";
+// Component-specific styles
 import "../css/GameHeader.css";
+// Timer icon asset for displaying next to countdown
 import timerIcon from "../assets/Timer.png";
+// Copy icon asset (currently imported but not used - svg is referenced directly in JSX)
 import copyAndPasteIcon from "../assets/copy-and-paste.png";
 
 /**
@@ -36,14 +40,12 @@ const GameHeader: React.FC<GameHeaderProps> = ({
 }) => {
   /**
    * Handles copying the invite code to the user's clipboard
-   * Uses the browser's clipboard API to copy the invite code
-   */
-  /**
-   * Handles copying the invite code to the user's clipboard
-   * Uses the browser's clipboard API to copy the invite code
+   * Implements both modern clipboard API and fallback method for browser compatibility
+   * Shows console feedback to indicate copy success or failure
    */
   const handleCopy = async () => {
     try {
+      // Attempt to use the modern clipboard API (requires HTTPS or localhost)
       await navigator.clipboard.writeText(inviteCode);
       // Optional: Add visual feedback
       console.log("Invite code copied to clipboard!");
@@ -51,7 +53,7 @@ const GameHeader: React.FC<GameHeaderProps> = ({
       // Fallback for older browsers or when clipboard API fails
       console.error("Failed to copy: ", err);
 
-      // Fallback method
+      // Fallback method using deprecated execCommand (works in more contexts)
       const textArea = document.createElement("textarea");
       textArea.value = inviteCode;
       document.body.appendChild(textArea);
@@ -64,16 +66,18 @@ const GameHeader: React.FC<GameHeaderProps> = ({
 
   return (
     <header className="game-header">
-      {/* Left section: Round number and timer */}
+      {/* Left section: Round number and timer display */}
       <div className="header-left">
+        {/* Current round indicator */}
         <div className="round-label">ROUND {roundNumber}</div>
+        {/* Timer display with icon */}
         <div className="timer-container">
           <img src={timerIcon} alt="Timer Icon" className="timer-icon" />
           <span className="timer">{timer}</span>
         </div>
       </div>
 
-      {/* Center section: Game title */}
+      {/* Center section: Game title/branding */}
       <div className="header-center">
         <h1 className="title">Guessify</h1>
       </div>
@@ -81,9 +85,13 @@ const GameHeader: React.FC<GameHeaderProps> = ({
       {/* Right section: Invite code with copy functionality */}
       <div className="header-right">
         <div className="game-code-section">
+          {/* Label for the invite code */}
           <span className="invite-text">INVITE CODE:</span>
+          {/* Clickable button containing the code and copy icon */}
           <button className="game-code-button" onClick={handleCopy}>
+            {/* The actual invite code text */}
             <span className="code-text">{inviteCode}</span>
+            {/* Copy icon to indicate clickable copy functionality */}
             <span className="copy-icon">
               <img
                 src="/src/assets/copy-symbol.svg"

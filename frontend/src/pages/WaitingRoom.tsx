@@ -17,6 +17,10 @@ interface PlayerObj {
   socketId?: string;
 }
 
+/**
+ * WaitingRoom component for displaying the waiting room UI
+ * @returns JSX.Element
+ */
 const WaitingRoom: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -259,8 +263,11 @@ const WaitingRoom: React.FC = () => {
     }
   };
 
+  // Render component
   return (
+    // Main container for the waiting room
     <div className="waiting-room-container">
+      {/* Header section with room info */}
       <div className="waiting-header-section">
         <div className="waiting-header-left">
           <div className="waiting-room-label">WAITING ROOM</div>
@@ -290,7 +297,7 @@ const WaitingRoom: React.FC = () => {
         </div>
       </div>
 
-      {/* Move this div OUTSIDE of the header section */}
+      {/* Main content area for the waiting room */}
       <div className="waiting-room-content">
         {activeGameInfo && (
           <div className="active-game-banner">
@@ -306,6 +313,7 @@ const WaitingRoom: React.FC = () => {
             amountOfPlayersInRoom === 1 ? "single-player-mode" : ""
           }`}
         >
+          {/** List of players in the waiting room */}
           <h2>
             {amountOfPlayersInRoom === 1
               ? "Single Player Mode"

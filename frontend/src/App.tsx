@@ -1,43 +1,41 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import EnterName from './pages/EnterName'
-import JoinRoom from './pages/JoinRoom'
-import InGamePage from './pages/InGamePage'
-import SettingsPage from './pages/SettingsPage'
-import MultipleChoiceMode from './pages/MultipleChoiceMode'
-import EndGamePage from './pages/EndGamePage'
-import WaitingRoom from './pages/WaitingRoom';
-import { socket } from './socket';
-import { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import EnterName from "./pages/EnterName";
+import JoinRoom from "./pages/JoinRoom";
+import InGamePage from "./pages/InGamePage";
+import SettingsPage from "./pages/SettingsPage";
+import MultipleChoiceMode from "./pages/MultipleChoiceMode";
+import EndGamePage from "./pages/EndGamePage";
+import WaitingRoom from "./pages/WaitingRoom";
+import { socket } from "./socket";
+import { useEffect } from "react";
 
-
+/**
+ * Main application component
+ * @returns JSX.Element
+ */
 function App() {
-  // const [fooEvents, setFooEvents] = useState([]);
-
-
   useEffect(() => {
     function onConnect() {
-      console.log('Connected to server with ID:', socket.id);
+      console.log("Connected to server with ID:", socket.id);
     }
 
     function onDisconnect() {
-      console.log('Disconnected from server');
+      console.log("Disconnected from server");
     }
 
-    // function onFooEvent(value) {
-    //   setFooEvents(previous => [...previous, value]);
-    // }
+    // Register socket event listeners
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
 
-    socket.on('connect', onConnect);
-    socket.on('disconnect', onDisconnect);
-    // socket.on('foo', onFooEvent);
-
+    // Cleanup listeners on unmount
     return () => {
-      socket.off('connect', onConnect);
-      socket.off('disconnect', onDisconnect);
-      // socket.off('foo', onFooEvent);
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
     };
   }, []);
 
+  // Define application routes
+  // Each route maps to a specific page/component
   return (
     <Router>
       <Routes>
@@ -50,7 +48,7 @@ function App() {
         <Route path="/end_game" element={<EndGamePage />} />
       </Routes>
     </Router>
-  )
+  );
 }
 
-export default App
+export default App;

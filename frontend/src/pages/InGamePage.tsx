@@ -40,6 +40,13 @@ type Genre = "kpop" | "pop" | "hiphop" | "karaoke hits" | "top hits" | "r&b";
 
 interface GuessifyProps {}
 
+/**
+ * InGamePage Component for the game interface
+ * Contains game logic and UI for different game modes
+ * manages state for players, rounds, timers, and game modes
+ * 
+ * @returns {JSX.Element} The InGame page
+ */
 const InGamePage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();

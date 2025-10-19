@@ -1,28 +1,49 @@
-import React from 'react';
-import Avatar1 from '../assets/avatars/avatar1.png';
-import Avatar2 from '../assets/avatars/avatar2.png';
-import Avatar3 from '../assets/avatars/avatar3.png';
-import '../css/CharacterCustomiser.css';
+// React import for component functionality
+import React from "react";
+// Avatar image assets - three different character options
+import Avatar1 from "../assets/avatars/avatar1.png";
+import Avatar2 from "../assets/avatars/avatar2.png";
+import Avatar3 from "../assets/avatars/avatar3.png";
+// Component-specific styles
+import "../css/CharacterCustomiser.css";
 
+// Props interface defining the data and callbacks this component expects
 interface Props {
-  avatar: string;
-  setAvatar: (a: string) => void;
-  color: string;
-  setColor: (c: string) => void;
+  avatar: string; // Currently selected avatar ID
+  setAvatar: (a: string) => void; // Callback to update selected avatar
+  color: string; // Currently selected background color
+  setColor: (c: string) => void; // Callback to update selected color
 }
 
+// Available avatar options - maps IDs to their corresponding image assets
 const avatars = [
-  { id: 'a1', src: Avatar1 },
-  { id: 'a2', src: Avatar2 },
-  { id: 'a3', src: Avatar3 },
+  { id: "a1", src: Avatar1 },
+  { id: "a2", src: Avatar2 },
+  { id: "a3", src: Avatar3 },
 ];
 
-const colors = ['#FFD166', '#06D6A0', '#118AB2', '#EF476F'];
+// Available background color options for avatar customization
+// Colors chosen to provide good contrast and visual appeal
+const colors = ["#FFD166", "#06D6A0", "#118AB2", "#EF476F"];
 
-const CharacterCustomizer: React.FC<Props> = ({ avatar, setAvatar, color, setColor }) => {
+/**
+ * CharacterCustomizer component allows users to select an avatar and background color
+ * Used in player setup to personalize their game appearance
+ *
+ * @param avatar - Currently selected avatar ID
+ * @param setAvatar - Function to update the selected avatar
+ * @param color - Currently selected background color (hex code)
+ * @param setColor - Function to update the selected background color
+ */
+const CharacterCustomizer: React.FC<Props> = ({
+  avatar,
+  setAvatar,
+  color,
+  setColor,
+}) => {
   return (
     <div className="customizer">
-      {/* Row 1: labels (distinct cells) */}
+      {/* Header Labels Section - Two separate cells for avatar and color labels */}
       <div className="label-cell avatar-label">
         <div className="customizer-label">Choose avatar</div>
       </div>
@@ -30,16 +51,22 @@ const CharacterCustomizer: React.FC<Props> = ({ avatar, setAvatar, color, setCol
         <div className="customizer-label">Choose color</div>
       </div>
 
-      {/* Row 2: controls (distinct cells) */}
+      {/* Controls Section - Interactive elements for selection */}
+
+      {/* Avatar Selection Grid */}
       <div className="controls-cell avatar-controls">
         <div className="avatar-grid">
-          {avatars.map(a => (
+          {/* Map through available avatars and create clickable buttons */}
+          {avatars.map((a) => (
             <button
               key={a.id}
-              className={`avatar-btn ${avatar === a.id ? 'selected' : ''}`}
+              className={`avatar-btn ${avatar === a.id ? "selected" : ""}`}
               onClick={() => setAvatar(a.id)}
               type="button"
-              style={{ backgroundColor: avatar === a.id ? color : 'transparent' }}
+              // Apply selected color as background when this avatar is chosen
+              style={{
+                backgroundColor: avatar === a.id ? color : "transparent",
+              }}
               aria-label={`Choose ${a.id}`}
             >
               <img src={a.src} alt={a.id} />
@@ -48,13 +75,15 @@ const CharacterCustomizer: React.FC<Props> = ({ avatar, setAvatar, color, setCol
         </div>
       </div>
 
+      {/* Color Selection Grid */}
       <div className="controls-cell color-controls">
         <div className="color-grid">
-          {colors.map(c => (
+          {/* Map through available colors and create clickable color swatches */}
+          {colors.map((c) => (
             <button
               key={c}
-              className={`color-swatch ${color === c ? 'selected' : ''}`}
-              style={{ backgroundColor: c }}
+              className={`color-swatch ${color === c ? "selected" : ""}`}
+              style={{ backgroundColor: c }} // Display the actual color as background
               onClick={() => setColor(c)}
               type="button"
               aria-label={`Choose color ${c}`}

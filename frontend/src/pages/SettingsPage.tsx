@@ -10,9 +10,20 @@ import {
 } from "../components/Settings";
 import { socket } from "../socket";
 
-const GENRES = ["kpop", "pop", "hiphop", "karaoke hits", "top hits", "r&b"] as const;
-type Genre = typeof GENRES[number];
+const GENRES = [
+  "kpop",
+  "pop",
+  "hiphop",
+  "karaoke hits",
+  "top hits",
+  "r&b",
+] as const;
+type Genre = (typeof GENRES)[number];
 
+/**
+ * SettingsPage component for configuring game settings
+ * @returns Settings Page Component
+ */
 const SettingsPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
