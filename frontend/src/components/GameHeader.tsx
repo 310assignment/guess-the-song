@@ -1,7 +1,7 @@
-import React from 'react';
-import '../css/GameHeader.css';
-import timerIcon from '../assets/Timer.png';
-import copyAndPasteIcon from '../assets/copy-and-paste.png';
+import React from "react";
+import "../css/GameHeader.css";
+import timerIcon from "../assets/Timer.png";
+import copyAndPasteIcon from "../assets/copy-and-paste.png";
 
 /**
  * Props interface for the GameHeader component
@@ -15,21 +15,25 @@ interface GameHeaderProps {
   roundNumber: string;
   timer: string;
   inviteCode: string;
-  showInvite?: boolean; 
+  showInvite?: boolean;
 }
 
 /**
  * GameHeader Component
- * 
+ *
  * Displays the main game header containing:
  * - Round number and timer on the left
  * - Game title "Guessify" in the center
  * - Invite code with copy functionality on the right
- * 
+ *
  * @param {GameHeaderProps} props - Component props
  * @returns {JSX.Element} The game header component
  */
-const GameHeader: React.FC<GameHeaderProps> = ({ roundNumber, timer, inviteCode, showInvite = true }) => {
+const GameHeader: React.FC<GameHeaderProps> = ({
+  roundNumber,
+  timer,
+  inviteCode,
+}) => {
   /**
    * Handles copying the invite code to the user's clipboard
    * Uses the browser's clipboard API to copy the invite code
@@ -44,8 +48,8 @@ const GameHeader: React.FC<GameHeaderProps> = ({ roundNumber, timer, inviteCode,
       <div className="header-left">
         <div className="round-label">ROUND {roundNumber}</div>
         <div className="timer-container">
-            <img src={timerIcon} alt="Timer Icon" className="timer-icon" />
-            <span className="timer">{timer}</span>
+          <img src={timerIcon} alt="Timer Icon" className="timer-icon" />
+          <span className="timer">{timer}</span>
         </div>
       </div>
 
@@ -55,24 +59,22 @@ const GameHeader: React.FC<GameHeaderProps> = ({ roundNumber, timer, inviteCode,
       </div>
 
       {/* Right section: Invite code with copy functionality */}
-      {showInvite && (
-        <div className="header-right">
-          <div className="invite-container">
-            <span className="invite-label">INVITE CODE:</span>
-            <div className="invite-code-wrapper">
-              <span className="invite-code">{inviteCode}</span>
+      <div className="header-right">
+        <div className="game-code-section">
+          <span className="invite-text">INVITE CODE:</span>
+          <button className="game-code-button" onClick={handleCopy}>
+            <span className="code-text">{inviteCode}</span>
+            <span className="copy-icon">
               <img
-                src={copyAndPasteIcon}
-                alt="Copy code"
-                className="copy-and-paste-icon"
-                onClick={handleCopy}
+                src="/src/assets/copy-symbol.svg"
+                alt="Copy Icon"
+                className="copy-icon-img"
               />
-            </div>
-          </div>
+            </span>
+          </button>
         </div>
-      )}
+      </div>
     </header>
-
   );
 };
 

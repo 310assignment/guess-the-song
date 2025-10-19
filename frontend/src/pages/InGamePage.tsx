@@ -1239,9 +1239,11 @@ const InGamePage: React.FC = () => {
             inviteCode={inviteCode}
             showInvite={!isSinglePlayer}
           />
-          <div className="game-2-body">
-            <Scoreboard players={players} />
-            {renderGameModeComponent()}
+          <div className="game-content">
+            <div className="game-2-body">
+              <Scoreboard players={players} />
+              {renderGameModeComponent()}
+            </div>
           </div>
         </>
       )}

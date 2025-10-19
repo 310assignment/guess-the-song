@@ -16,24 +16,149 @@
   overflow-x: hidden;
 }
 
-.gradient {
-  height: 15vh;
-  background: linear-gradient(to right, transparent 0%, transparent 55%, rgba(55, 3, 133, 0.1) 60%, #280162 100%);
+.waiting-header-section {
+  width: 100%;
   display: flex;
-  justify-content: space-between;
+  justify-content: space-between; /* Change back to space-between */
   align-items: center;
-  padding: 2.5rem 4rem;
+  padding: 5vh 15vw;
+  background-color: transparent;
+  font-family: "Segoe UI", sans-serif;
+  z-index: 10;
+  flex-wrap: nowrap;
+  gap: 20px;
+  overflow: hidden;
+  position: relative;
 }
 
-.room-code-section {
+.waiting-header-left {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  color: #ffffff;
+  flex: 1; /* Add this */
+  min-width: 0; /* Add this */
 }
 
-.room-code-section h2 {
-  margin: 0;
+.waiting-header-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  white-space: nowrap;
+  flex: 0 0 auto; /* Add this - don't grow or shrink */
+}
+
+.waiting-header-right {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  color: #ffffff;
+  flex: 1; /* Add this */
+  justify-content: flex-end; /* Add this */
+  min-width: 0; /* Add this */
+}
+
+.waiting-room-label,
+.invite-label {
+  font-size: 30px;
+  font-weight: 500;
+  white-space: nowrap; /* keep text in one line */
+}
+
+/* Game Code Section */
+.game-code-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+}
+
+.invite-text {
   color: white;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.game-code-button {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 15px;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  gap: 0.5rem;
+}
+
+.game-code-button:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.code-text {
+  letter-spacing: 0.1em;
+}
+
+.copy-icon {
+  font-size: 0.9rem;
+}
+
+.title {
+  font-size: 70px;
+  font-weight: bold;
+  color: #ffffff;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.invite-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.invite-code-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 40px;
+  font-weight: bold;
+  background-color: #e0e0e0;
+  padding: 0px 8px;
+  border-radius: 6px;
+  font-family: monospace;
+  color: black;
+  white-space: nowrap;
+}
+
+.copy-and-paste-icon {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.copy-and-paste-icon:hover {
+  opacity: 0.7;
+}
+
+.copy-icon-img {
+  width: 25px;
+  fill: black;
+  stroke: black;
 }
 
 /* Content wrapper */
@@ -56,10 +181,7 @@
   margin: 0;
   line-height: inherit;
   letter-spacing: -0.025em;
-
 }
-
-/* */
 
 /* Players list section */
 .players-list-section {
@@ -89,7 +211,7 @@
 
 .player-item {
   padding: 12px;
-  background-color: #E9E9FF;
+  background-color: #e9e9ff;
   border-radius: 0.5rem;
   color: black;
   font-weight: bold;
@@ -112,7 +234,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding-bottom:2rem;
+  padding-bottom: 2rem;
 }
 
 .single-player .player-item {
@@ -148,33 +270,33 @@
 }
 
 .buttons-section {
-    display: flex;
-    flex-direction: row;
-    gap: 1.5rem;
-    align-items: center;
-    width:30%;
-    margin-right: auto;
-    margin-left: auto;
-    justify-content: center;
-    padding-top: 3rem;
-    > button {
-      flex-grow: 1;
-      flex-basis:0;
-      padding: 0.8rem;
-      border: none;
-      border-radius: 0.5rem;
-      font-size: 1.1rem;
-      cursor: pointer;
-      font-weight: bold;
-      transition: all 0.3s ease;
-      display: block;
-      line-height: 1.5;
-    }
-    > div {
-      flex-grow: 1;
-      flex-basis: 0;
-      width: 100%;
-    }
+  display: flex;
+  flex-direction: row;
+  gap: 1.5rem;
+  align-items: center;
+  width: 30%;
+  margin-right: auto;
+  margin-left: auto;
+  justify-content: center;
+  padding-top: 3rem;
+  > button {
+    flex-grow: 1;
+    flex-basis: 0;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1.1rem;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    display: block;
+    line-height: 1.5;
+  }
+  > div {
+    flex-grow: 1;
+    flex-basis: 0;
+    width: 100%;
+  }
 }
 
 .start-game-button {
@@ -192,7 +314,7 @@
   transform: translateY(0);
 }
 
-.leave-room-button{
+.leave-room-button {
   background: #b4afaf;
   color: black;
 }
@@ -209,10 +331,10 @@
 
 /* Non-host waiting section */
 .waiting-section {
-    padding: 0.8rem;
-    align-items: center;
-    background: #E9E9FF;
-    border-radius: 0.5rem;
+  padding: 0.8rem;
+  align-items: center;
+  background: #e9e9ff;
+  border-radius: 0.5rem;
 }
 
 .waiting-section p {
@@ -227,7 +349,8 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {

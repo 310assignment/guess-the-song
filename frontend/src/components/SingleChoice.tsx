@@ -159,25 +159,27 @@ const SingleChoice: React.FC<SingleChoiceProps> = ({
 
       {/* Submit + Skip + feedback */}
       <div className="controls">
-        <button
-          onClick={() => handleSubmitGuess()}
-          disabled={hasGuessedCorrectly}
-          className={`submit-btn ${hasGuessedCorrectly ? "submit-btn--disabled" : ""}`}
-        >
-          {hasGuessedCorrectly ? "Correct! ✅" : "Submit Guess"}
-        </button>
-
-        {onSkip && isHost && ( // Add "&& isHost" to this line
+        <div className="button-container">
           <button
-            className="skip-btn"
-            onClick={handleSkip}
+            onClick={() => handleSubmitGuess()}
             disabled={hasGuessedCorrectly}
+            className={`submit-btn ${hasGuessedCorrectly ? "submit-btn--disabled" : ""}`}
           >
-            Skip
+            {hasGuessedCorrectly ? "Correct! ✅" : "Submit Guess"}
           </button>
-        )}
 
-        {/* Show wrong guess feedback */}
+          {onSkip && isHost && (
+            <button
+              className="skip-btn"
+              onClick={handleSkip}
+              disabled={hasGuessedCorrectly}
+            >
+              Skip
+            </button>
+          )}
+        </div>
+
+        {/* Show wrong guess feedback - now centered under buttons */}
         {showWrongMessage && !hasGuessedCorrectly && (
           <div className="wrong-message">Try again! 🤔</div>
         )}
