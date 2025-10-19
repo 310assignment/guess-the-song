@@ -79,6 +79,8 @@ const WaitingRoom: React.FC = () => {
 
     // Add this handler for joining active games
     socket.on("join-active-game", (gameSettings) => {
+      console.log("Joining active game:", gameSettings);
+      
       // capture host when provided
       if (gameSettings?.host) {
         setHostName(gameSettings.host);
@@ -87,10 +89,13 @@ const WaitingRoom: React.FC = () => {
       // If a round is active, keep the joining client in the waiting room and show banner.
       // Store the full game settings so we can merge them with subsequent round events.
       if (gameSettings?.isRoundActive) {
+        console.log("Round is active, staying in waiting room");
         setActiveGameInfo(gameSettings);
         activeGameInfoRef.current = gameSettings;
       } else {
-        // If not mid-round, navigate straight into the room with full settings
+        // If game is not in active round (intermission, waiting for next round, etc.)
+        // Navigate straight into the game so they can see leaderboard or participate
+        console.log("Game not in active round, navigating to game");
         navigate(`/room/${code}`, {
           state: {
             ...gameSettings,
@@ -136,14 +141,16 @@ const WaitingRoom: React.FC = () => {
     });
 
     // If host continues to next round, also navigate waiting players in
-    socket.on("continue-to-next-round", ({ nextRound }) => {
+    socket.on("continue-to-next-round", (roundData) => {
       const settings = activeGameInfoRef.current || {};
+      
       navigate(`/room/${code}`, {
         state: {
           ...settings,
+          ...roundData, // Include all the enhanced round data from backend
           playerName,
           isHost: false,
-          nextRound,
+          currentRound: roundData.nextRound || roundData.currentRound,
         },
       });
     });

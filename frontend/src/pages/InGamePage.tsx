@@ -1285,12 +1285,12 @@ const InGamePage: React.FC = () => {
             inviteCode={inviteCode}
             showInvite={!isSinglePlayer}
           />
-          
+
           {/* CENTRALIZED HOST CONTROLS - Always visible when user is host */}
           {isCurrentUserHost && (
             <div className="host-controls">
-              <button 
-                className="skip-round-btn host-btn" 
+              <button
+                className="skip-round-btn host-btn"
                 onClick={handleHostSkip}
                 disabled={!isRoundActive}
               >
@@ -1298,7 +1298,7 @@ const InGamePage: React.FC = () => {
               </button>
             </div>
           )}
-          
+
           <button
             className="leave-game-room-btn"
             onClick={handleLeaveGame}

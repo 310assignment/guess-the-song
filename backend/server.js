@@ -300,7 +300,9 @@ io.on("connection", (socket) => {
 
     // Check if game is already active
     if (room.gameActive) {
-      // Game is in progress - send them directly to the game
+      console.log(`${playerName} joining active game in room ${code} (Round ${room.currentRound})`);
+      
+      // Game is in progress - send them to waiting room with game info
       socket.emit("join-active-game", {
         ...room.settings,
         playerName,
@@ -312,7 +314,19 @@ io.on("connection", (socket) => {
         players: room.players,
         playerScores: Array.from(room.playerScores.values()),
         host: room.host,
+        gameActive: room.gameActive,
+        // Include the current round data so they can join immediately if in intermission
+        currentRoundData: room.currentRoundData
       });
+      
+      // Also notify other players that someone joined
+      socket.to(code).emit("players-updated", {
+        players: room.players,
+        playerScores: Array.from(room.playerScores.values()),
+        maxPlayers: room.maxPlayers,
+        host: room.host,
+      });
+      
       return;
     } else {
       // Game hasn't started - normal waiting room flow
@@ -473,6 +487,14 @@ io.on("connection", (socket) => {
         multiSongs,
         shuffleSeed,
         currentRound: room.currentRound,
+        // Include additional data for players who joined mid-game
+        ...room.settings,
+        players: room.players,
+        playerScores: Array.from(room.playerScores.values()),
+        host: room.host,
+        isRoundActive: true,
+        isIntermission: false,
+        gameActive: true
       });
 
       // Broadcast initial finished state (everyone remaining)
@@ -540,9 +562,20 @@ io.on("connection", (socket) => {
       room.finishedPlayers = new Set();
     }
 
-    // Emit to all players in the room (including host)
-    socket.to(code).emit("continue-to-next-round", { nextRound });
-    socket.emit("continue-to-next-round", { nextRound }); // Also send to host
+    // Emit to all players in the room (including host and any mid-game joiners)
+    const roundData = {
+      nextRound,
+      currentRound: nextRound,
+      ...room.settings,
+      players: room.players,
+      playerScores: Array.from(room.playerScores.values()),
+      host: room.host,
+      isRoundActive: true,
+      isIntermission: false,
+      roundStartTime: room.roundStartTime
+    };
+
+    io.to(code).emit("continue-to-next-round", roundData);
   });
 
   // Handle host ending the game
