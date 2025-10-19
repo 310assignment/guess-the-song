@@ -50,7 +50,7 @@ html {
 }
 
 .song-icon::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -96,6 +96,75 @@ html {
 }
 
 .answer-btn.selected {
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
+}
+
+.leave-game-room-btn {
+  background-color: #ff4757;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.leave-game-room-btn:hover {
+  background-color: #ff3742;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.leave-game-room-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Host Controls */
+.host-controls {
+  position: fixed;
+  top: 80px; /* Below the header */
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 1000; /* High z-index to stay on top */
+}
+
+.host-btn {
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  min-width: 120px;
+}
+
+.host-btn:hover:not(:disabled) {
+  background-color: #357abd;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.host-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.skip-round-btn {
+  background-color: #ff6b35;
+}
+
+.skip-round-btn:hover:not(:disabled) {
+  background-color: #e55a2b;
 }
