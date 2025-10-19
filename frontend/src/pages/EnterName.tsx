@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../css/EnterName.css';
 interface GuessifyProps {}
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import CharacterCustomizer from '../components/CharacterCustomiser';
 
 const EnterName: React.FC<GuessifyProps> = () => {
@@ -9,13 +9,23 @@ const EnterName: React.FC<GuessifyProps> = () => {
   const [avatar, setAvatar] = useState<string>('a1');
   const [color, setColor] = useState<string>('#FFD166');
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    const savedName = localStorage.getItem('playerName');
+    // Check if player name is passed via navigation state (from leaving a game)
+    const state = location.state as { playerName?: string } | null;
+    const playerNameFromState = state?.playerName;
+    
+    // Use navigation state first, then localStorage
+    const savedName = playerNameFromState || localStorage.getItem('playerName');
     if (savedName) {
       setName(savedName);
+      // Update localStorage with the name from navigation state if it exists
+      if (playerNameFromState) {
+        localStorage.setItem('playerName', playerNameFromState);
+      }
     }
-  }, []);
+  }, [location.state]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

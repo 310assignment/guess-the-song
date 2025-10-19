@@ -186,8 +186,8 @@ const WaitingRoom: React.FC = () => {
     });
 
     socket.on("roomClosed", () => {
-      //Room was closed, redirect to home
-      window.location.href = "/";
+      // Room was closed, navigate home with player name preserved
+      navigate("/", { state: { playerName } });
     });
 
     return () => {
@@ -213,10 +213,8 @@ const WaitingRoom: React.FC = () => {
 
   const handleLeaveRoom = () => {
     socket.emit("leaveRoom");
-    window.location.href = "/";
-  };
-
-  return (
+    navigate("/", { state: { playerName } });
+  };  return (
     <div className="waiting-room-container">
       <div className="gradient">
         <h1 className="waiting-room-title">Waiting Room</h1>

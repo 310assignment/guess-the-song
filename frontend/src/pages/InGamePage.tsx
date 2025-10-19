@@ -1261,7 +1261,7 @@ const InGamePage: React.FC = () => {
 
   const handleLeaveGame = () => {
     socket.emit("leaveRoom");
-    window.location.href = "/";
+    navigate("/", { state: { playerName } });
   };
 
   return (
