@@ -1,4 +1,4 @@
-# Guess The Song!
+# Guessify!
 
 _A real-time multiplayer music guessing game built with Deezer_
 
@@ -6,10 +6,13 @@ _A real-time multiplayer music guessing game built with Deezer_
 
 > Developed as part of the University of Auckland SOFTENG 310 Assignment 1 (Semester 2, 2025)
 > **Team: Butter** | Members: Eddie Kim, Lucas Jung, Caleb Jung, Jaeha Chang, Kevin Kim, Andrew Jeon
+>
+> Developed as part of the University of Auckland SOFTENG 310 Assignment 2 (Semester 2, 2025)
+> **Team: Butter** | Members: Anna Chibel, Aye Thu, Ivory Huang, Jayde Lal, Rebecca Ngan, Seerat Mann
 
 ## What does this project do?
 
-**Guess The Song!** is a web-based, real-time multiplayer game where players listen to short song previews and try to guess either the song title or artist as quickly as possible. It's built to make music discovery fun, social, and competitive.
+**Guessify!** is a web-based, real-time multiplayer game where players listen to short song previews and try to guess either the song title or artist as quickly as possible. It's built to make music discovery fun, social, and competitive.
 
 ### Features included in part 1
 
