@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, use } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { socket } from "../socket";
 import CopyButton from "../components/CopyButton";
@@ -43,6 +43,7 @@ const WaitingRoom: React.FC = () => {
   const activeGameInfoRef = useRef<any | null>(null);
 
   const [isCurrentUserHost, setIsCurrentUserHost] = useState(isHost);
+  const [copyFeedback, setCopyFeedback] = useState<string>("");
 
   useEffect(() => {
     setIsCurrentUserHost(hostName === playerName);
@@ -217,12 +218,44 @@ const WaitingRoom: React.FC = () => {
   };
 
   const handleGameCodeClick = async () => {
+    if (!code) {
+      console.error("No code available to copy");
+      return;
+    }
+
     try {
-      if (code) {
-        await navigator.clipboard.writeText(code);
-      }
+      await navigator.clipboard.writeText(code);
+      setCopyFeedback("Copied!");
+      console.log("Game code copied to clipboard!");
+
+      // Clear feedback after 2 seconds
+      setTimeout(() => setCopyFeedback(""), 2000);
     } catch (err) {
-      console.error("Failed to copy room code: ", err);
+      console.error("Failed to copy game code: ", err);
+
+      // Fallback method for older browsers or when clipboard API fails
+      try {
+        const textArea = document.createElement("textarea");
+        textArea.value = code;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+
+        setCopyFeedback("Copied!");
+        console.log("Game code copied using fallback method!");
+
+        // Clear feedback after 2 seconds
+        setTimeout(() => setCopyFeedback(""), 2000);
+      } catch (fallbackErr) {
+        console.error("Fallback copy method also failed: ", fallbackErr);
+        setCopyFeedback("Copy failed");
+        setTimeout(() => setCopyFeedback(""), 2000);
+      }
     }
   };
 
@@ -249,6 +282,9 @@ const WaitingRoom: React.FC = () => {
                   className="copy-icon-img"
                 />
               </span>
+              {copyFeedback && (
+                <span className="copied-text">{copyFeedback}</span>
+              )}
             </button>
           </div>
         </div>
